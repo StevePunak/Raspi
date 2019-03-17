@@ -17,7 +17,7 @@ namespace KanoopCommon.Geometry
 
 		public PointDList PointList { get { return new PointDList(Points); } }
 
-		public Double Height 
+		public virtual Double Height 
 		{ 
 			get 
 			{
@@ -26,7 +26,7 @@ namespace KanoopCommon.Geometry
 			} 
 		}
 
-		public Double Width 
+		public virtual Double Width 
 		{ 
 			get 
 			{

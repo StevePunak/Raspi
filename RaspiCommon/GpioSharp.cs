@@ -50,6 +50,13 @@ namespace RaspiCommon
 			DelayMicroseconds((UInt32)microseconds);
 		}
 
+		public static void Sleep(int milliseconds)
+		{
+			TimeSpan time = TimeSpan.FromMilliseconds(milliseconds);
+			UInt64 microseconds = (UInt64)(time.Ticks / TimeSpanExtensions.MicrosecondsPerTick);
+			DelayMicroseconds((UInt32)microseconds);
+		}
+
 
 	}
 }

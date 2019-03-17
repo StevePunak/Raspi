@@ -1,26 +1,31 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace TrackBot.TTY
 {
-	[CommandText("exit")]
-	class ExitCommand : CommandBase
+	[CommandText("r")]
+	class Render : CommandBase
 	{
-		public ExitCommand()
-			: base(true) {}
+		public Render()
+			: base(true) { }
 
 		public override bool Execute(List<string> commandParts)
 		{
-			return false;
+			Console.WriteLine("Creating grid bitmap");
+
+			Widgets.Environment.SaveBitmap();
+
+			return true;
 		}
 
 		public override void Usage(out String commandSyntax, out String description)
 		{
-			commandSyntax = "exit";
-			description = "leave bot shell";
+			commandSyntax = "r";
+			description = "render the grid";
 		}
 	}
 }

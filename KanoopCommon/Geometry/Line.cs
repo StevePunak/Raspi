@@ -138,28 +138,28 @@ namespace KanoopCommon.Geometry
 	{
 		#region Public Properties
 
-		protected PointD	m_P1;
+		protected PointD	_p1;
 		public IPoint P1
 		{
-			get { return m_P1; }
-			set { m_P1 = value as PointD; }
+			get { return _p1; }
+			set { _p1 = value as PointD; }
 		}
 
-		protected PointD	m_P2;
+		protected PointD	_p2;
 		public IPoint P2
 		{
-			get { return m_P2; }
-			set { m_P2 = value as PointD; }
+			get { return _p2; }
+			set { _p2 = value as PointD; }
 		}
 
-		public List<PointD> Points { get { return new List<PointD>(){ m_P1, m_P2 }; } }
+		public List<PointD> Points { get { return new List<PointD>(){ _p1, _p2 }; } }
 
 		public IPoint MidPoint
 		{
 			get
 			{
-				return new PointD(	m_P2.X - ((m_P2.X - m_P1.X) / 2),
-				                    m_P2.Y - ((m_P2.Y - m_P1.Y) / 2));
+				return new PointD(	_p2.X - ((_p2.X - _p1.X) / 2),
+				                    _p2.Y - ((_p2.Y - _p1.Y) / 2));
 			}
 		}
 
@@ -167,8 +167,8 @@ namespace KanoopCommon.Geometry
 		{
 			get
 			{
-				Double	x = m_P1.X - m_P2.X;
-				Double	y = m_P1.Y - m_P2.Y;
+				Double	x = _p1.X - _p2.X;
+				Double	y = _p1.Y - _p2.Y;
 				return(Math.Sqrt((x*x) + (y*y)));
 			}
 		}
@@ -180,8 +180,8 @@ namespace KanoopCommon.Geometry
 			get
 			{
 				Double	ret = 0;
-				Double	y = m_P2.Y - m_P1.Y;
-				Double	x = m_P2.X - m_P1.X;
+				Double	y = _p2.Y - _p1.Y;
+				Double	x = _p2.X - _p1.X;
 				if(y == 0)
 				{
 					ret = Double.PositiveInfinity;
@@ -211,7 +211,7 @@ namespace KanoopCommon.Geometry
 				/** not vertical */
 				if(ret != Double.NegativeInfinity)
 				{
-					ret = m_P1.Y - (m_P1.X * slope);
+					ret = _p1.Y - (_p1.X * slope);
 				}
 				return ret;
 			}
@@ -250,7 +250,7 @@ namespace KanoopCommon.Geometry
 				Line	l = new Line(newLine.P1, new PointD(newLine.P1.X, newLine.P1.Y - 1));
 				Double	d = FlatGeo.VectorAngle(l, newLine);
 				Angle	angle = new Angle(d);
-				if(m_P2.X < m_P1.X)
+				if(_p2.X < _p1.X)
 				{
 					angle.Degrees = 360 - angle.Degrees;
 				}
@@ -274,8 +274,8 @@ namespace KanoopCommon.Geometry
 
 		public Line(PointD p1, PointD p2)
 		{
-			m_P1 = p1;
-			m_P2 = p2;
+			_p1 = p1;
+			_p2 = p2;
 			Tag = null;
 		}
 
@@ -372,14 +372,14 @@ namespace KanoopCommon.Geometry
 
 		public void Move(Double bearing, Double distance)
 		{
-			m_P1.Move(bearing, distance);
-			m_P2.Move(bearing, distance);
+			_p1.Move(bearing, distance);
+			_p2.Move(bearing, distance);
 		}
 
 		public void Rotate(PointD centroid, Double angle)
 		{
-			m_P1.Rotate(centroid, angle);
-			m_P2.Rotate(centroid, angle);
+			_p1.Rotate(centroid, angle);
+			_p2.Rotate(centroid, angle);
 		}
 
 		public bool Intersects(Line other, out PointD intersection)
@@ -410,7 +410,7 @@ namespace KanoopCommon.Geometry
 
 		public bool IsEndPoint(IPoint point, int precision = 0)
 		{
-			return m_P1.Equals(point, precision) || m_P2.Equals(point, precision);
+			return _p1.Equals(point, precision) || _p2.Equals(point, precision);
 		}
 
 		public void GetABC(out Double A, out Double B, out Double C)
@@ -460,7 +460,7 @@ namespace KanoopCommon.Geometry
 
 		public ILine Clone()
 		{
-			return new Line(m_P1.Clone(), m_P2.Clone());
+			return new Line(_p1.Clone(), _p2.Clone());
 		}
 
 		public bool Equals(ILine l)
@@ -470,7 +470,7 @@ namespace KanoopCommon.Geometry
 
 		public String ToString(int precision)
 		{
-			return String.Format("{0} - {1}", m_P1.ToString(precision), m_P2.ToString(precision));
+			return String.Format("{0} - {1}", _p1.ToString(precision), _p2.ToString(precision));
 		}
 
 		public override string ToString()

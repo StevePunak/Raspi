@@ -7,8 +7,8 @@ namespace KanoopCommon.Geometry
 {
 	public class Angle
 	{
-		Double m_Degrees;
-		public Double Degrees { get { return m_Degrees; }  set { m_Degrees = value; } }
+		Double _degrees;
+		public Double Degrees { get { return _degrees; }  set { _degrees = value; } }
 		
 		public static Angle operator+(Angle a1, Angle a2)
 		{
@@ -46,7 +46,7 @@ namespace KanoopCommon.Geometry
 
 		public Angle(Double degrees)
 		{
-			m_Degrees = degrees;
+			_degrees = degrees;
 		}
 
 		public static Double Reverse(Double degrees)
@@ -72,7 +72,7 @@ namespace KanoopCommon.Geometry
 
 		public override string ToString()
 		{
-			return(String.Format("{0} deg", m_Degrees));
+			return(String.Format("{0} deg", _degrees));
 		}
 
 	}

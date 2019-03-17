@@ -21,18 +21,20 @@ namespace TrackBot.TTY
 			}
 			if(Double.TryParse(commandParts[1], out value))
 			{
-				if(value < 0 || value > 359.9)
+				if(value < -359.9 || value > 359.9)
 				{
-					throw new CommandException("Value must be between 0 and 359.9");
+					throw new CommandException("Value must be between -359 and 359.9");
 				}
+				Widgets.GyMag.MagneticDeviation = value;
 				Program.Config.MagneticDeviation = value;
 			}
 			return true;
 		}
 
-		public override string Usage()
+		public override void Usage(out String commandSyntax, out String description)
 		{
-			return "dev [value]     Value is magnetic deviation between 0 and 359.9";
+			commandSyntax = "dev [value]";
+			description = "Value is magnetic deviation between -359.9 and 359.9";
 		}
 	}
 }

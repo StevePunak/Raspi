@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using KanoopCommon.Geometry;
 using RaspiCommon;
+using TrackBot.Spatial;
 using TrackBot.Tracks;
 
 namespace TrackBot
@@ -13,16 +15,19 @@ namespace TrackBot
 		public static BotTracks Tracks { get; private set; }
 		public static HCSR04_RangeFinder RangeFinder { get; private set; }
 		public static LSM9D51CompassAccelerometer GyMag { get; private set; }
+		public static Area Environment { get; private set; }
 
 		public static void StartWidgets()
 		{
 			StartRangeFinders();
 			StartTracks();
 			StartSpatial();
+			StartActivities();
 		}
 
 		public static void StopWidgets()
 		{
+			StopActivities();
 			Tracks.Stop();
 			StopRangeFinders();
 			StopSpatial();
@@ -35,10 +40,22 @@ namespace TrackBot
 			GyMag.MagneticDeviation = Program.Config.MagneticDeviation;
 			GyMag.XAdjust = Program.Config.CompassXAdjust;
 			GyMag.YAdjust = Program.Config.CompassYAdjust;
+
+			Environment = new Area(5, 5, .1, new PointD(2.5, 2.5));
+
 		}
 
 		private static void StopSpatial()
 		{
+		}
+
+		private static void StartActivities()
+		{
+		}
+
+		private static void StopActivities()
+		{
+			Activity.StopActivity();
 		}
 
 		private static void StartRangeFinders()

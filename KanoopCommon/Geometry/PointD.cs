@@ -349,6 +349,18 @@ namespace KanoopCommon.Geometry
 			return "GeomFromText('POINT("+m_X+" "+m_Y+")')";
 		}
 
+		public Double BearingTo(PointD other)
+		{
+			Line line = new Line(this, other);
+			return line.Bearing;
+		}
+
+		public Double DistanceTo(PointD other)
+		{
+			Line line = new Line(this, other);
+			return line.Length;
+		}
+
 		public Point ToPoint()
 		{
 			return new Point((int)Math.Round(X), (int)Math.Round(Y));
@@ -422,7 +434,7 @@ namespace KanoopCommon.Geometry
 
 		public override string ToString()
 		{
-			return ToString(0);
+			return ToString(2);
 		}
 
 		#endregion

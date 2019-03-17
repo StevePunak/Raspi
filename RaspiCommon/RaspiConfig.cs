@@ -67,6 +67,25 @@ namespace RaspiCommon
 		public Double CompassYAdjust { get; set; }
 		public Double MagneticDeviation { get; set; }
 
+		public Double StopDistance { get { return .15; } }
+		public TimeSpan RampUp { get { return TimeSpan.FromMilliseconds(50); } }
+		public TimeSpan RampDown { get { return TimeSpan.FromMilliseconds(50); } }
+		public Double MaxRangeDetect { get { return .5; } }
+
+		Dictionary<int, Double> _metersPerSecondAtPower;
+		public Dictionary<int, Double> MetersPerSecondAtPower
+		{
+			get
+			{
+				if(_metersPerSecondAtPower == null)
+				{
+					_metersPerSecondAtPower = new Dictionary<int, double>();
+				}
+				return _metersPerSecondAtPower;
+			}
+			set { _metersPerSecondAtPower = value; }
+		}
+
 		public static String GetDefaultConfigFileName()
 		{
 			return CONFIG_FILE;

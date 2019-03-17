@@ -47,7 +47,7 @@ namespace RaspiCommon
 
 		public static void SetMode(GpioPin gpioPin, PinMode mode)
 		{
-			Console.WriteLine("PIGS set mode {0} {1}", gpioPin, mode);
+//			Console.WriteLine("PIGS set mode {0} {1}", gpioPin, mode);
 
 			PigCommand command = new PigCommand(PigCommand.CommandType.MODES, gpioPin, (char)mode);
 			SendCommand(command);
@@ -55,7 +55,7 @@ namespace RaspiCommon
 
 		public static void SetPWM(GpioPin gpioPin, UInt32 dutyCycle)
 		{
-			Console.WriteLine("PIGS set duty cycle {0} {1}", gpioPin, dutyCycle);
+//			Console.WriteLine("PIGS set duty cycle {0} {1}", gpioPin, dutyCycle);
 
 			PigCommand command = new PigCommand(PigCommand.CommandType.PWM, gpioPin, dutyCycle);
 			SendCommand(command);
@@ -68,8 +68,9 @@ namespace RaspiCommon
 
 		public static void SetServoPosition(GpioPin gpioPin, UInt32 position)
 		{
+//			Console.WriteLine("Set servo {0} to {1}", gpioPin, position);
+
 			PigCommand command = new PigCommand(PigCommand.CommandType.SERVO, gpioPin, position);
-			Console.WriteLine("Set servo {0} to {1}", gpioPin, position);
 			SendCommand(command);
 		}
 

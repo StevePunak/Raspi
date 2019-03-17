@@ -3,24 +3,27 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using TrackBot.Spatial;
 
 namespace TrackBot.TTY
 {
-	[CommandText("exit")]
-	class ExitCommand : CommandBase
+	[CommandText("stop")]
+	class StopActivity : CommandBase
 	{
-		public ExitCommand()
-			: base(true) {}
+		public StopActivity()
+			: base(true) { }
 
 		public override bool Execute(List<string> commandParts)
 		{
-			return false;
+			Activity.StopActivity();
+
+			return true;
 		}
 
 		public override void Usage(out String commandSyntax, out String description)
 		{
-			commandSyntax = "exit";
-			description = "leave bot shell";
+			commandSyntax = "stop";
+			description = "stop all activities";
 		}
 	}
 }

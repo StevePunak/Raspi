@@ -5,9 +5,11 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using KanoopCommon.Geometry;
 using KanoopCommon.Logging;
 using KanoopCommon.PersistentConfiguration;
 using RaspiCommon;
+using TrackBot.Spatial;
 using TrackBot.Tracks;
 using TrackBot.TTY;
 
@@ -35,41 +37,17 @@ namespace TrackBot
 
 		private static void Test()
 		{
-		}
+			String syntax = "s [ms]";
+			String description = "This is my description";
 
-		static void Drive()
-		{
-			int speed = 75;
+			String output = String.Format("  {0,-16} - {1}", syntax, description);
 
-			GpioSharp.Sleep(TimeSpan.FromMilliseconds(1000));
+#if zero
+			Grid grid = new Grid("TrackGrid", 15, 15, .1);
 
-			Widgets.Tracks.Speed = 60;
+			Cell cells = grid.GetCellAtLocation(new PointD(4, 7.5));
+#endif
 
-			while(true)
-			{
-				Console.WriteLine("range: {0:0.00}", Widgets.RangeFinder.Range);
-
-				if(Widgets.RangeFinder.Range < .2)
-				{
-					Console.WriteLine("Hit range limit");
-					Widgets.Tracks.Speed = -speed;
-
-					GpioSharp.Sleep(TimeSpan.FromMilliseconds(500));
-
-					Widgets.Tracks.Stop();
-
-					break;
-
-				}
-				if(Console.KeyAvailable)
-				{
-					Console.WriteLine("got a key");
-					break;
-				}
-
-				Console.WriteLine("range: {0:0.00}", Widgets.RangeFinder.Range);
-				Thread.Sleep(100);
-			}
 		}
 
 		private static void OpenConfig()
@@ -90,7 +68,7 @@ namespace TrackBot
 		private static void OpenLog()
 		{
 			Log = new Log();
-			Log.Open(LogLevel.ALWAYS, Config.LogFileName, OpenFlags.COMBO_VERBOSE | OpenFlags.OUTPUT_TO_CONSOLE | OpenFlags.OUTPUT_TO_FILE);
+			Log.Open(LogLevel.ALWAYS, Config.LogFileName, OpenFlags.CONTENT_TIMESTAMP | OpenFlags.OUTPUT_TO_CONSOLE | OpenFlags.OUTPUT_TO_FILE);
 			Log.SystemLog = Log;
 		}
 	}

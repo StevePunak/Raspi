@@ -215,10 +215,10 @@ namespace KanoopCommon.Serialization
 		{
 			return Serialize(obj, parent, null);
 		}
-		static XmlNode Serialize(Object obj, XmlNode parent, String strPropertyName)
+		static XmlNode Serialize(Object obj, XmlNode parent, String propertyName)
 		{
 			/** default to failure */
-			bool bSerializeThisNode = false;
+			bool serializeThisNode = false;
 			Type objType = obj.GetType();
 
 			/** 
@@ -226,28 +226,28 @@ namespace KanoopCommon.Serialization
 			 * explicit name, otherwise, we will attempt to use the passed in name 
 			 * if there is one.
 			 */
-			bool bExplicitName = false;
+			bool explicitName = false;
 			Object[] attrs = objType.GetCustomAttributes(typeof(XmlNodeNameAttribute), true);
-			String strNodeName = objType.Name;
+			String nodeName = objType.Name;
 			if(attrs.Length > 0)
 			{
-				strNodeName = ((StringAttribute)attrs[0]).Value;
-				bExplicitName = true;
+				nodeName = ((StringAttribute)attrs[0]).Value;
+				explicitName = true;
 			}
-			else if(strPropertyName != null)
+			else if(propertyName != null)
 			{
-				strNodeName = strPropertyName;
+				nodeName = propertyName;
 			}
 
 			/** create the return node */
-			XmlNode retNode = parent.OwnerDocument.CreateElement(strNodeName);
+			XmlNode retNode = parent.OwnerDocument.CreateElement(nodeName);
 			parent.AppendChild(retNode);
 			retNode.AddAttribute(SerializationXML.ATTR_TYPE, objType.FullName);
 
 			/** if explicitly named, add an additional attribute */
-			if(bExplicitName)
+			if(explicitName)
 			{
-				retNode.AddAttribute(SerializationXML.ATTR_ORIGINAL, (strPropertyName != null) ? strPropertyName : objType.FullName);
+				retNode.AddAttribute(SerializationXML.ATTR_ORIGINAL, (propertyName != null) ? propertyName : objType.FullName);
 			}
 
 			/** 
@@ -256,7 +256,7 @@ namespace KanoopCommon.Serialization
 			 */
 			if(objType.GetCustomAttributes(typeof(IsSerializableAttribute), true).Length > 0)
 			{
-				bSerializeThisNode = true;
+				serializeThisNode = true;
 
 				/** 
 				 * if this object can be deserialized later with a string constructor, just use ToString 
@@ -297,25 +297,25 @@ namespace KanoopCommon.Serialization
 			else if(objType.IsPrimitive || objType.FullName == "System.String")
 			{
 				retNode.InnerText = obj.ToString();
-				bSerializeThisNode = true;
+				serializeThisNode = true;
 			}
 			/** if it's a byte array, base 64 it */
 			else if(objType.FullName == typeof(byte[]).FullName)
 			{
 				retNode.InnerText = Convert.ToBase64String((byte[])obj, 0, ((byte[])obj).Length);
-				bSerializeThisNode = true;
+				serializeThisNode = true;
 			}
 			/** Serialize DateTimes */
 			else if(objType.FullName == typeof(DateTime).FullName)
 			{
 				retNode.InnerText = ((DateTime)obj).Ticks.ToString();
-				bSerializeThisNode = true;
+				serializeThisNode = true;
 			}
 			/** Serialize Runtime Data Types */
 			else if(objType.FullName == "System.RuntimeType")
 			{
 				retNode.AddAttribute(SerializationXML.ATTR_KEY, obj.ToString());
-				bSerializeThisNode = true;
+				serializeThisNode = true;
 			}
 			/**
 			 * For generics, we only serialize Dictionaries and Lists
@@ -325,14 +325,14 @@ namespace KanoopCommon.Serialization
 				IDictionary dictionary = obj as IDictionary;
 				foreach(Object key in dictionary.Keys)
 				{										
-					String strEntry = SerializationXML.XML_DICT_ENTRY + "_" + strNodeName;
+					String strEntry = SerializationXML.XML_DICT_ENTRY + "_" + nodeName;
 					XmlElement subNode = ((XmlElement)retNode).AddSubNode(strEntry);
 						
 					subNode.AddAttribute(SerializationXML.ATTR_KEY, key.ToString());
 					subNode.AddAttribute(SerializationXML.ATTR_TYPE, key.GetType().FullName);
 					Serialize(dictionary[key], subNode);
 				}
-				bSerializeThisNode = true;
+				serializeThisNode = true;
 			}
 			else if(IsList(obj))
 			{
@@ -340,7 +340,7 @@ namespace KanoopCommon.Serialization
 				{
 					Serialize(element, retNode);
 				}
-				bSerializeThisNode = true;
+				serializeThisNode = true;
 			}
 			else if (IsSet(obj))
 			{
@@ -348,7 +348,7 @@ namespace KanoopCommon.Serialization
 				{
 					Serialize(element, retNode);
 				}
-				bSerializeThisNode = true;
+				serializeThisNode = true;
 			}
 
 			/** other serializable object */
@@ -364,15 +364,14 @@ namespace KanoopCommon.Serialization
 
 				retNode.AddAttribute(SerializationXML.ATTR_FORMAT, SerializationXML.VAL_BASE_64);
 
-				bSerializeThisNode = true;
+				serializeThisNode = true;
 			}
 			else
 			{
 				/** empty contents */
 				//        bSerializeThisNode = true;
 			}
-
-			if(bSerializeThisNode && parent != null)
+			if(serializeThisNode && parent != null)
 			{
 				parent.AppendChild(retNode);
 			}

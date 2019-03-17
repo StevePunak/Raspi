@@ -177,6 +177,7 @@
     <Compile Include="Geometry\Angle.cs" />
     <Compile Include="Geometry\Circle.cs" />
     <Compile Include="Geometry\CoordinateMap.cs" />
+    <Compile Include="Geometry\Degrees.cs" />
     <Compile Include="Geometry\EarthGeo.cs" />
     <Compile Include="Geometry\Ellipse.cs" />
     <Compile Include="Geometry\ExtendedRectangle.cs" />
@@ -195,6 +196,7 @@
     <Compile Include="Geometry\GeoTriangle.cs" />
     <Compile Include="Geometry\GeoXml.cs" />
     <Compile Include="Geometry\GridD.cs" />
+    <Compile Include="Geometry\GridLocation.cs" />
     <Compile Include="Geometry\ICircle.cs" />
     <Compile Include="Geometry\IClosedShape.cs" />
     <Compile Include="Geometry\IEllipse.cs" />
@@ -206,7 +208,9 @@
     <Compile Include="Geometry\IRectangle.cs" />
     <Compile Include="Geometry\IShape.cs" />
     <Compile Include="Geometry\ITriangle.cs" />
+    <Compile Include="Geometry\LevelRectangle.cs" />
     <Compile Include="Geometry\Line.cs" />
+    <Compile Include="Geometry\MappingGrid.cs" />
     <Compile Include="Geometry\Offset.cs" />
     <Compile Include="Geometry\PointCommon.cs" />
     <Compile Include="Geometry\PointD.cs" />
@@ -260,7 +264,7 @@
     <Compile Include="Reflection\ReflectionParsingException.cs" />
     <Compile Include="Reflection\ReflectionUtilities.cs" />
     <Compile Include="Serialization\Attributes.cs" />
-    <Compile Include="Serialization\KarmaSerializableObject.cs" />
+    <Compile Include="Serialization\KanoopSerializableObject.cs" />
     <Compile Include="TCP\Clients\TcpClientClient.cs" />
     <Compile Include="TCP\TcpConnectedClient.cs" />
     <Compile Include="TCP\TcpServer.cs" />

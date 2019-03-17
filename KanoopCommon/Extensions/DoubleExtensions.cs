@@ -428,5 +428,27 @@ namespace KanoopCommon.Extensions
 		{
 			return (UInt32)value;
 		}
+
+		public static Double AddDegrees(this Double value, Double count)
+		{
+			Double result = value + count;
+			if(result >= 360)
+				result -= 360;
+			return result;
+		}
+
+		public static Double SubtractDegrees(this Double value, Double count)
+		{
+			Double result = value - count;
+			if(result < 0)
+				result += 360;
+			return result;
+		}
+
+		public static bool IsWithinDegressOf(this Double value, Double degrees)
+		{
+			return Degrees.ClockwiseDifference(value, degrees) <= degrees && Degrees.CounterClockwiseDifference(value, degrees) <= degrees;
+		}
+
 	}
 }

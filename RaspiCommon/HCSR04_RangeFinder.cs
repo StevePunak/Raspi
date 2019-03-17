@@ -26,6 +26,8 @@ namespace RaspiCommon
 		[DllImport("libgpiosharp.so")]
 		public static extern void PulsePin(GpioPin pin, UInt32 microseconds);
 
+		static HCSR04_RangeFinder _instance;
+
 		public class RangeFinderThread : ThreadBase
 		{
 			public HCSR04_RangeFinder Parent { get; private set; }
@@ -52,7 +54,7 @@ namespace RaspiCommon
 		RangeFinderThread _workThread;
 		GpioPin _outputPin, _inputPin;
 
-		static UInt64 _startSweep;
+		UInt64 _startSweep;
 
 		public TimeSpan Interval { get { return _workThread.Interval; } set { _workThread.Interval = value; } }
 		public bool Running
@@ -65,26 +67,36 @@ namespace RaspiCommon
 		public HCSR04_RangeFinder(GpioPin inputPin, GpioPin outputPin)
 		{
 			Log.SysLogText(LogLevel.DEBUG, "Instantiating range finder on Echo {0}  Trigger {1}", inputPin, outputPin);
+			Console.WriteLine("Instantiating range finder on Echo {0}  Trigger {1}", inputPin, outputPin);
 			_inputPin = inputPin;
 			_outputPin = outputPin;
 			Range = 0;
 
 			_workThread = new RangeFinderThread(this);
+			_instance = this;
 
 			Interval = TimeSpan.FromMilliseconds(1000);
 		}
 
-		public void OnPinEdge(GpioPin pin, EdgeType edgeType, UInt64 nanoseconds)
+		public static void OnPinEdge(GpioPin pin, EdgeType edgeType, UInt64 nanoseconds)
 		{
-			if(edgeType == EdgeType.Rising)
+			try
 			{
-				_startSweep = nanoseconds;
+				if(edgeType == EdgeType.Rising)
+				{
+					_instance._startSweep = nanoseconds;
+				}
+				else
+				{
+					Double meters = (Double)(nanoseconds - _instance._startSweep);
+					meters = meters / 5800000; // 1000 / 5800;
+					_instance.Range = meters;
+				}
 			}
-			else
+			catch(Exception e)
 			{
-				Double meters = (Double)(nanoseconds - _startSweep);
-				meters = meters / 5800000; // 1000 / 5800;
-				Range = meters;
+				Console.WriteLine("EXCEPTION PinEdge {0}", e.Message);
+				Console.WriteLine("EXCEPTION PinEdge pin {0} {1} {2}", pin, edgeType, nanoseconds);
 			}
 		}
 

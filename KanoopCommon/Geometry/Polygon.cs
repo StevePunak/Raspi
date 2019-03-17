@@ -228,7 +228,7 @@ namespace KanoopCommon.Geometry
 			return ret;
 		}
 
-		public bool Contains(PointD point)
+		public virtual bool Contains(PointD point)
 		{
 			PointD		p1, p2;
 

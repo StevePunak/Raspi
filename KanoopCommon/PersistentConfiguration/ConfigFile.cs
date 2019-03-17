@@ -139,7 +139,7 @@ namespace KanoopCommon.PersistentConfiguration
 			doc.AppendChild(rootNode);
 			doc.Save(_fileName);
 
-			foreach (KeyValuePair<String, ProgramConfiguration> kvp in _configurations)
+			foreach(KeyValuePair<String, ProgramConfiguration> kvp in _configurations)
 			{
 //				XmlNode sectionNode = doc.AddSubNode(kvp.Key);
 				XmlNode subNode = KanoopSerializableObject.Serialize(kvp.Value, doc.DocumentElement);

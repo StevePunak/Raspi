@@ -23,7 +23,7 @@ namespace RaspiCommon
 			{
 				_leftspeed = value;
 				SetValue(Motors[LEFT_MOTOR], value);
-				Console.WriteLine("Set left speed to {0} going {1}", _leftspeed, Motors[LEFT_MOTOR].Direction);
+//				Console.WriteLine("Set left speed to {0} going {1}", _leftspeed, Motors[LEFT_MOTOR].Direction);
 			}
 			get { return _leftspeed; }
 		}
@@ -35,7 +35,7 @@ namespace RaspiCommon
 			{
 				_rightspeed = value;
 				SetValue(Motors[RIGHT_MOTOR], value);
-				Console.WriteLine("Set right speed to {0} going {1}", _rightspeed, Motors[RIGHT_MOTOR].Direction);
+//				Console.WriteLine("Set right speed to {0} going {1}", _rightspeed, Motors[RIGHT_MOTOR].Direction);
 			}
 			get { return _rightspeed; }
 		}

@@ -6,21 +6,24 @@ using System.Threading.Tasks;
 
 namespace TrackBot.TTY
 {
-	[CommandText("exit")]
-	class ExitCommand : CommandBase
+	[CommandText("cg")]
+	class ClearGrid : CommandBase
 	{
-		public ExitCommand()
-			: base(true) {}
+		public ClearGrid()
+			: base(true) { }
 
 		public override bool Execute(List<string> commandParts)
 		{
-			return false;
+			Widgets.Environment.Reset();
+			Widgets.Environment.SaveBitmap();
+
+			return true;
 		}
 
 		public override void Usage(out String commandSyntax, out String description)
 		{
-			commandSyntax = "exit";
-			description = "leave bot shell";
+			commandSyntax = "cg";
+			description = "Clear Grid";
 		}
 	}
 }

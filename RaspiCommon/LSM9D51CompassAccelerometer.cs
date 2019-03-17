@@ -31,7 +31,7 @@ namespace RaspiCommon
 
 		public Double MagneticDeviation { get; set; }
 
-		public Double Degrees
+		public Double Bearing
 		{
 			get
 			{
@@ -56,6 +56,7 @@ namespace RaspiCommon
 			MinY = 99;
 			MaxY = -99;
 
+			LSM9D51_Calibrate();
 		}
 
 		public void Calibrate()
