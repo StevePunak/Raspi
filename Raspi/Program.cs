@@ -111,7 +111,7 @@ namespace Raspi
 
 		private static void TestSensor()
 		{
-			HCSR04_RangeFinder rangeFinder = new HCSR04_RangeFinder(GpioPin.Pin21, GpioPin.Pin20);
+			HCSR04_RangeFinder rangeFinder = new HCSR04_RangeFinder(GpioPin.Pin21, GpioPin.Pin20, RFDir.Front);
 			rangeFinder.Start();
 
 			while(true)

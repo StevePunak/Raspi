@@ -25,9 +25,9 @@ namespace RaspiCommon
 
 			foreach(ThreadBase thread in ThreadBase.GetRunningThreads())
 			{
-				if(thread.GetType() == typeof(HCSR04_RangeFinder.RangeFinderThread))
+				if(thread.GetType() == typeof(HCSR04_RangeFinder.TriggerThread))
 				{
-					((HCSR04_RangeFinder.RangeFinderThread)thread).Parent.Stop();
+					((HCSR04_RangeFinder.TriggerThread)thread).Stop(); 
 				}
 			}
 

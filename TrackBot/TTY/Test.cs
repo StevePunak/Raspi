@@ -16,16 +16,15 @@ namespace TrackBot.TTY
 
 		public override bool Execute(List<string> commandParts)
 		{
-			Double _startBearing = Widgets.GyMag.Bearing;
-			PointD _startLocation = Widgets.Environment.Location;
-
-			Widgets.Tracks.Spin(SpinDirection.Clockwise, Widgets.Tracks.StandardSpeed);
-
-			for(int x =- 0;x < 20;x++)
+			for(int speed = 100;speed >= 70;speed = speed - 1)
 			{
-				Console.WriteLine("Started SpinSeek at {0}  bearing {1:0.00}°", _startLocation, _startBearing);
-				GpioSharp.Sleep(100);
+				Console.WriteLine("Speed = {0}", speed);
+				Widgets.Tracks.Speed = speed;
+				GpioSharp.Sleep(250);
 			}
+
+
+			Console.WriteLine("Done...");
 
 			return true;
 		}

@@ -55,7 +55,6 @@ namespace RaspiCommon
 		public GpioPin TracksRightEnaPin { get; set; }
 		public GpioPin TracksLeftEnaPin { get; set; }
 		public GpioPin EscControlPinPin { get; set; }
-		public GpioPin RangeFinderOuputPin { get; set; }
 		public GpioPin RangeFinderInputPin { get; set; }
 		public GpioPin ServoPin { get; set; }
 		public GpioPin StepperB1Pin { get; set; }
@@ -71,6 +70,20 @@ namespace RaspiCommon
 		public TimeSpan RampUp { get { return TimeSpan.FromMilliseconds(50); } }
 		public TimeSpan RampDown { get { return TimeSpan.FromMilliseconds(50); } }
 		public Double MaxRangeDetect { get { return .5; } }
+
+		Dictionary<RFDir, GpioPin> _rangeFinderOutputPins;
+		public Dictionary<RFDir, GpioPin>  RangeFinderEchoPins
+		{
+			get
+			{
+				if(_rangeFinderOutputPins == null)
+				{
+					_rangeFinderOutputPins = new Dictionary<RFDir, GpioPin>();
+				}
+				return _rangeFinderOutputPins;
+			}
+			set { _rangeFinderOutputPins = value; }
+		}
 
 		Dictionary<int, Double> _metersPerSecondAtPower;
 		public Dictionary<int, Double> MetersPerSecondAtPower

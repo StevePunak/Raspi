@@ -8,6 +8,14 @@ namespace RaspiCommon
 {
 	public delegate void GPIOInputCallback(GpioPin pin, EdgeType edgeType, UInt64 nanoseconds);
 
+	public enum RFDir
+	{
+		Front = 0,
+		Rear = 1,
+		Left = 2,
+		Right = 3
+	}
+
 	[Flags]
 	public enum EdgeType
 	{

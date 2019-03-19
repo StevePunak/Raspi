@@ -166,7 +166,7 @@ namespace TrackBot.Spatial
 			PointD location = Widgets.Environment.Location;
 			Double bearing = Widgets.GyMag.Bearing;
 			bool markObstacle = true;
-			Double range = Widgets.RangeFinder.Range;
+			Double range = Widgets.RangeFinders[RFDir.Front].Range;
 			if(range > Program.Config.MaxRangeDetect)
 			{
 				markObstacle = false;
@@ -267,7 +267,7 @@ namespace TrackBot.Spatial
 						break;
 					}
 
-					if(Widgets.RangeFinder.Range < .2)
+					if(Widgets.RangeFinders[RFDir.Front].Range < .2)
 					{
 						Console.WriteLine("Hit obstacle");
 						break;

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -17,15 +18,18 @@ namespace TrackBot
 {
 	class Program
 	{
+		[DllImport("libgpiosharp.so")]
+		public static extern void PulsePin(GpioPin pin, UInt32 microseconds);
+
 		public static Log Log { get; private set; }
 		public static RaspiConfig Config { get; private set; }
 
 		static void Main(string[] args)
 		{
-			Test();
-
 			OpenConfig();
 			OpenLog();
+
+			Test();
 
 			Widgets.StartWidgets();
 

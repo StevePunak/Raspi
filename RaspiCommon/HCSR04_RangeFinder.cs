@@ -26,16 +26,18 @@ namespace RaspiCommon
 		[DllImport("libgpiosharp.so")]
 		public static extern void PulsePin(GpioPin pin, UInt32 microseconds);
 
-		static HCSR04_RangeFinder _instance;
+		static MutexLock _lock;
+		static Dictionary<GpioPin, TriggerThread> _triggerThreads;
 
-		public class RangeFinderThread : ThreadBase
+		public class TriggerThread : ThreadBase
 		{
-			public HCSR04_RangeFinder Parent { get; private set; }
+			public GpioPin TriggerPin { get; private set; }
+			public int Count { get; set; }
 
-			public RangeFinderThread(HCSR04_RangeFinder parent)
-				: base(parent.ToString())
+			public TriggerThread(GpioPin triggerPin)
+				: base(String.Format("Trigger {0}", triggerPin))
 			{
-				Parent = parent;
+				TriggerPin = triggerPin;
 				Interval = TimeSpan.FromMilliseconds(200);
 			}
 
@@ -46,51 +48,85 @@ namespace RaspiCommon
 
 			protected override bool OnRun()
 			{
-				PulsePin(Parent._outputPin, 10);
+				PulsePin(TriggerPin, 10);
 				return true;
 			}
 		}
 
-		RangeFinderThread _workThread;
-		GpioPin _outputPin, _inputPin;
+		GpioPin _triggerPin, _echoPin;
 
 		UInt64 _startSweep;
 
-		public TimeSpan Interval { get { return _workThread.Interval; } set { _workThread.Interval = value; } }
+		TriggerThread _triggerThread;
+
+		public TimeSpan Interval { get { return _triggerThread.Interval; } set { _triggerThread.Interval = value; } }
 		public bool Running
 		{
-			get { return _workThread.State != ThreadBase.ThreadState.Stopped;  }
+			get { return _triggerThread.State != ThreadBase.ThreadState.Stopped;  }
 		}
 
 		public Double Range { get; private set; }
 
-		public HCSR04_RangeFinder(GpioPin inputPin, GpioPin outputPin)
+		public RFDir Direction { get; private set; }
+
+		static Dictionary<GpioPin, HCSR04_RangeFinder> _rangeFinders;
+
+		static HCSR04_RangeFinder()
 		{
-			Log.SysLogText(LogLevel.DEBUG, "Instantiating range finder on Echo {0}  Trigger {1}", inputPin, outputPin);
-			Console.WriteLine("Instantiating range finder on Echo {0}  Trigger {1}", inputPin, outputPin);
-			_inputPin = inputPin;
-			_outputPin = outputPin;
+			_lock = new MutexLock();
+			_triggerThreads = new Dictionary<GpioPin, TriggerThread>();
+			_rangeFinders = new Dictionary<GpioPin, HCSR04_RangeFinder>();
+		}
+
+		public HCSR04_RangeFinder(GpioPin echoPin, GpioPin triggerPin, RFDir direction)
+		{
+			Log.SysLogText(LogLevel.DEBUG, "Instantiating range finder on Echo {0}  Trigger {1}", echoPin, triggerPin);
+			_lock.Lock();
+
+			_echoPin = echoPin;
+			_triggerPin = triggerPin;
 			Range = 0;
+			Direction = direction;
 
-			_workThread = new RangeFinderThread(this);
-			_instance = this;
+			if(_triggerThreads.TryGetValue(_triggerPin, out _triggerThread) == false)
+			{
+				_triggerThread = new TriggerThread(_triggerPin);
+				_triggerThreads.Add(_triggerPin, _triggerThread);
+			}
+			_triggerThread.Count++;
 
+			if(_rangeFinders.ContainsKey(_echoPin) == false)
+			{
+				_rangeFinders.Add(echoPin, this);
+			}
+			else
+			{
+				_rangeFinders[_echoPin] = this;
+			}
 			Interval = TimeSpan.FromMilliseconds(1000);
+
+			_lock.Unlock();
 		}
 
 		public static void OnPinEdge(GpioPin pin, EdgeType edgeType, UInt64 nanoseconds)
 		{
+
 			try
 			{
-				if(edgeType == EdgeType.Rising)
+				HCSR04_RangeFinder rangeFinder;
+				_lock.Lock();
+				if(_rangeFinders.TryGetValue(pin, out rangeFinder))
 				{
-					_instance._startSweep = nanoseconds;
-				}
-				else
-				{
-					Double meters = (Double)(nanoseconds - _instance._startSweep);
-					meters = meters / 5800000; // 1000 / 5800;
-					_instance.Range = meters;
+					if(edgeType == EdgeType.Rising)
+					{
+						rangeFinder._startSweep = nanoseconds;
+					}
+					else
+					{
+						Double meters = (Double)(nanoseconds - rangeFinder._startSweep);
+						meters = meters / 5800000;
+						rangeFinder.Range = meters;
+					}
 				}
 			}
 			catch(Exception e)
@@ -98,19 +134,25 @@ namespace RaspiCommon
 				Console.WriteLine("EXCEPTION PinEdge {0}", e.Message);
 				Console.WriteLine("EXCEPTION PinEdge pin {0} {1} {2}", pin, edgeType, nanoseconds);
 			}
+			finally
+			{
+				_lock.Unlock();
+			}
 		}
 
 		public void Start()
 		{
-			Log.SysLogText(LogLevel.DEBUG, "-------------    Starting range finder (State {0}", _workThread.State);
+			Log.SysLogText(LogLevel.DEBUG, "-------------    Starting range finder (State {0}", _triggerThread.State);
 
 			IntPtr callback = Marshal.GetFunctionPointerForDelegate(new GPIOInputCallback(OnPinEdge));
-			RegisterDeviceCallback(callback, _inputPin, EdgeType.Falling | EdgeType.Rising, InputSetting.OpenSource);
+			RegisterDeviceCallback(callback, _echoPin, EdgeType.Falling | EdgeType.Rising, InputSetting.OpenSource);
 
+			_lock.Lock();
 			if(!Running)
 			{
-				_workThread.Start();
+				_triggerThread.Start();
 			}
+			_lock.Unlock();
 
 			Interval = TimeSpan.FromMilliseconds(100);
 			Log.SysLogText(LogLevel.DEBUG, "Done starting range finder");
@@ -118,11 +160,15 @@ namespace RaspiCommon
 
 		public void Stop()
 		{
-			UnregisterCallback(_inputPin);
-			if(Running)
+			_lock.Lock();
+			if(_triggerThread.Count == 1)       // we are the last one
 			{
-				_workThread.Stop();
+				_triggerThread.Stop();
+				_triggerThreads.Remove(_echoPin);
 			}
+			_triggerThread.Count--;
+			UnregisterCallback(_echoPin);
+			_lock.Unlock();
 		}
 
 	}

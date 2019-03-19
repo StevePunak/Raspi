@@ -121,7 +121,7 @@ namespace TrackBot.Tracks
 			TimeSpan timeToRun;
 			Double speedMPS;
 
-			Log.SysLogText(LogLevel.DEBUG, "Start move {0} meters at {1:0.00} distance from nearest obstacle", meters, Widgets.RangeFinder.Range);
+			Log.SysLogText(LogLevel.DEBUG, "Start move {0} meters at {1:0.00} distance from nearest obstacle", meters, Widgets.RangeFinders[RFDir.Front].Range);
 			if(TryGetTimeForDistance(meters, motorSpeed, out timeToRun, out speedMPS))
 			{
 				timeToRun += direction == Direction.Forward ? RampUp : -RampDown;
@@ -146,7 +146,7 @@ namespace TrackBot.Tracks
 					Widgets.Environment.Location = FlatGeo.GetPoint(Widgets.Environment.Location, Widgets.GyMag.Bearing, metersPerInterval);
 //					Log.SysLogText(LogLevel.DEBUG, "Moved to {0}", Widgets.Environment.Location);
 
-					if(direction == Direction.Forward && Widgets.RangeFinder.Range <= Program.Config.StopDistance)
+					if(direction == Direction.Forward && Widgets.RangeFinders[RFDir.Front].Range <= Program.Config.StopDistance)
 					{
 						Console.WriteLine("Stopping due to range");
 						result = false;
@@ -162,7 +162,7 @@ namespace TrackBot.Tracks
 				result = false;
 			}
 
-			Log.SysLogText(LogLevel.DEBUG, "Stopped move {0} meters at {1:0.00} distance from nearest obstacle", meters, Widgets.RangeFinder.Range);
+			Log.SysLogText(LogLevel.DEBUG, "Stopped move {0} meters at {1:0.00} distance from nearest obstacle", meters, Widgets.RangeFinders[RFDir.Front].Range);
 			return result;
 		}
 

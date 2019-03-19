@@ -227,7 +227,7 @@ namespace RaspiForm
 			GpioPin outputPin = GetGpioPin(listGpioRangeFinderOuput);
 			if(inputPin != GpioPin.Unset)
 			{
-				_rangeFinder = new HCSR04_RangeFinder(inputPin, outputPin);
+				_rangeFinder = new HCSR04_RangeFinder(inputPin, outputPin, RFDir.Front);
 				_rangeFinder.Start();
 			}
 		}
