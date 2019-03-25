@@ -22,7 +22,7 @@ namespace RaspiForm
 		static void Main()
 		{
 			Log = new Log();
-			Log.Open(LogLevel.ALWAYS, "/tmp/raspi.log", OpenFlags.COMBO_VERBOSE | OpenFlags.OUTPUT_TO_FILE);
+			Log.Open(LogLevel.ALWAYS, "/tmp/raspi.log", OpenFlags.COMBO_VERBOSE | OpenFlags.OUTPUT_TO_DEBUG | OpenFlags.OUTPUT_TO_FILE);
 			Log.SystemLog = Log;
 
 			Log.LogText(LogLevel.DEBUG, "Opened Log");

@@ -88,4 +88,17 @@ namespace RaspiCommon
 		Pin28 = 28,
 		Pin29 = 29,
 	}
+
+	public enum MotorSpeed
+	{
+		Stopped,
+		VerySlow,
+		Slow,
+		MediumSlow,
+		Medium,
+		MediumFast,
+		Fast,
+		VeryFast,
+		FullSpeed
+	}
 }

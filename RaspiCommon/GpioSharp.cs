@@ -21,7 +21,8 @@ namespace RaspiCommon
 
 		public static void DeInit()
 		{
-			CloseLibrary();
+			if(Environment.OSVersion.Platform == PlatformID.Unix)
+				CloseLibrary();
 
 			foreach(ThreadBase thread in ThreadBase.GetRunningThreads())
 			{
@@ -29,12 +30,12 @@ namespace RaspiCommon
 				{
 					((HCSR04_RangeFinder.TriggerThread)thread).Stop(); 
 				}
+				if(thread.GetType() == typeof(MotorDriver))
+				{
+					((MotorDriver)thread).Stop();
+				}
 			}
 
-			if(MotorDriver.Running)
-			{
-				MotorDriver.Stop();
-			}
 			if(Pigs.Running)
 			{
 				Pigs.Stop();

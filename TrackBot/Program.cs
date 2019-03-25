@@ -41,10 +41,8 @@ namespace TrackBot
 
 		private static void Test()
 		{
-			String syntax = "s [ms]";
-			String description = "This is my description";
-
-			String output = String.Format("  {0,-16} - {1}", syntax, description);
+			Program.Config.LidarComPort = "/dev/ttyUSB0";
+			Program.Config.Save();
 
 #if zero
 			Grid grid = new Grid("TrackGrid", 15, 15, .1);

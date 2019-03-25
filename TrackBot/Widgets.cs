@@ -5,7 +5,9 @@ using System.Text;
 using System.Threading.Tasks;
 using KanoopCommon.Geometry;
 using KanoopCommon.Logging;
+using KanoopCommon.Threading;
 using RaspiCommon;
+using TrackBot.ForkLift;
 using TrackBot.Spatial;
 using TrackBot.Tracks;
 
@@ -15,6 +17,8 @@ namespace TrackBot
 	{
 		public static BotTracks Tracks { get; private set; }
 		public static Dictionary<RFDir, HCSR04_RangeFinder> RangeFinders { get; private set; }
+		public static Lift Lift { get; private set; }
+		public static RPLidar Lidar { get; private set; }
 
 		public static LSM9D51CompassAccelerometer GyMag { get; private set; }
 		public static Area Environment { get; private set; }
@@ -25,15 +29,58 @@ namespace TrackBot
 			StartTracks();
 			StartSpatial();
 			StartActivities();
+			StartLift();
+			StartLidar();
 		}
 
 		public static void StopWidgets()
 		{
+			StopLift();
 			StopActivities();
 			Tracks.Stop();
 			StopRangeFinders();
 			StopSpatial();
 			GpioSharp.DeInit();
+			StopLidar();
+
+			foreach(ThreadBase thread in ThreadBase.GetRunningThreads())
+			{
+				Log.SysLogText(LogLevel.DEBUG, "Remaining: {0}", thread);
+			}
+		}
+
+		private static void StartLidar()
+		{
+			Lidar = new RPLidar(Program.Config.LidarComPort);
+			Lidar.Start();
+			if(Lidar.GetDeviceInfo())
+			{
+				Log.SysLogText(LogLevel.DEBUG, "Retrieved LIDAR info");
+				Lidar.StartScan();
+				Log.SysLogText(LogLevel.DEBUG, "LIDAR scan started");
+			}
+		}
+
+		private static void StopLidar()
+		{
+			Lidar.StopScan();
+			GpioSharp.Sleep(250);
+			Lidar.Reset();
+			GpioSharp.Sleep(250);
+			Lidar.Stop();
+
+			Log.SysLogText(LogLevel.DEBUG, "LIDAR stopped");
+		}
+
+		private static void StartLift()
+		{
+			Lift = new Lift();
+			Lift.Start();
+		}
+
+		private static void StopLift()
+		{
+			Lift.Stop();
 		}
 
 		private static void StartSpatial()

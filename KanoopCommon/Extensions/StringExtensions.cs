@@ -223,6 +223,13 @@ namespace KanoopCommon.Extensions
 			return haystack.IndexOf(needle, StringComparison.InvariantCultureIgnoreCase) >= 0;
 		}
 
+		public static String Terminate(this String value)
+		{
+			int x = 0;
+			for(x = 0;x < value.Length && value[x] >= 0x20 && value[x] <= 0x7f;x++) ;
+			return value.Substring(0, x);
+		}
+
 	}
 
 	public class CaseInsensitiveComparer : IComparer<String>

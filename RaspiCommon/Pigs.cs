@@ -82,6 +82,12 @@ namespace RaspiCommon
 			SendCommand(command);
 		}
 
+		public static void SetOutputPin(GpioPin gpioPin, bool value)
+		{
+			PigCommand command = new PigCommand(PigCommand.CommandType.WRITE, gpioPin, value ? (UInt32)1 : (UInt32)0);
+			SendCommand(command);
+		}
+
 		#endregion
 	}
 }

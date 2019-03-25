@@ -157,6 +157,7 @@
     <Compile Include="Extensions\Int32Extensions.cs" />
     <Compile Include="Extensions\ListDoubleExtensions.cs" />
     <Compile Include="Extensions\ListExtensions.cs" />
+    <Compile Include="Extensions\ListStringExtensions.cs" />
     <Compile Include="Extensions\ListViewExtensions.cs" />
     <Compile Include="Extensions\ObjectExtensions.cs" />
     <Compile Include="Extensions\RectangleExtensions.cs" />
@@ -240,6 +241,7 @@
     <Compile Include="Logging\LogRotationThread.cs" />
     <Compile Include="Logging\MemoryLog.cs" />
     <Compile Include="Logging\OpenFlags.cs" />
+    <Compile Include="Serial\MonoSerialPort.cs" />
     <Compile Include="Performance\BitRateMonitor.cs" />
     <Compile Include="Performance\Cache.cs" />
     <Compile Include="Performance\DoubleRateMonitor.cs" />

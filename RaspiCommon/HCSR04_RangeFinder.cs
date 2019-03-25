@@ -85,7 +85,7 @@ namespace RaspiCommon
 
 			_echoPin = echoPin;
 			_triggerPin = triggerPin;
-			Range = 0;
+			Range = 99;
 			Direction = direction;
 
 			if(_triggerThreads.TryGetValue(_triggerPin, out _triggerThread) == false)

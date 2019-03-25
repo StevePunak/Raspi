@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace RaspiCommon
 {
-	public class L298_DC_MotorControl
+	public class L298N_DC_MotorControl
 	{
 		public GpioPin IN1 { get; private set; }
 		public GpioPin IN2 { get; private set; }
@@ -49,7 +49,7 @@ namespace RaspiCommon
 			}
 		}
 
-		public L298_DC_MotorControl(GpioPin in1, GpioPin in2, GpioPin enable)
+		public L298N_DC_MotorControl(GpioPin in1, GpioPin in2, GpioPin enable)
 		{
 			IN1 = in1;
 			IN2 = in2;

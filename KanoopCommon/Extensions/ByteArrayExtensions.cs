@@ -19,6 +19,15 @@ namespace KanoopCommon.Extensions
 		{
 			return BitConverter.ToString(bytes);
 		}
+		public static String ToHexString(this byte[] bytes)
+		{
+			StringBuilder sb = new StringBuilder();
+			foreach(byte b in bytes)
+			{
+				sb.AppendFormat("{0:X2} ", b);
+			}
+			return sb.ToString().Trim();
+		}
 		public static byte [] GetChunk(this byte[] bytes,uint offset, uint length)
 		{
 			byte[] retVal = new byte[length];

@@ -68,7 +68,15 @@
     <Compile Include="GpioSharp.cs" />
     <Compile Include="HCSR04_RangeFinder.cs" />
     <Compile Include="L298N_DC_TankTracks.cs" />
-    <Compile Include="L298_DC_MotorControl.cs" />
+    <Compile Include="L298N_DC_MotorControl.cs" />
+    <Compile Include="Lidar\LidarSample.cs" />
+    <Compile Include="Lidar\LidarTypes.cs" />
+    <Compile Include="Lidar\LidarCommand.cs" />
+    <Compile Include="Lidar\LidarProtocol.cs" />
+    <Compile Include="Lidar\LidarResponse.cs" />
+    <Compile Include="Lidar\ExpressScanResponse.cs" />
+    <Compile Include="RPLidar.cs" />
+    <Compile Include="Lidar\ScanResponse.cs" />
     <Compile Include="LSM9D51CompassAccelerometer.cs" />
     <Compile Include="MotorDriver.cs" />
     <Compile Include="PigCommand.cs" />
@@ -77,6 +85,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="PWMDevice.cs" />
     <Compile Include="RaspiConfig.cs" />
+    <Compile Include="RaspiException.cs" />
     <Compile Include="Servo.cs" />
     <Compile Include="Types.cs" />
   </ItemGroup>

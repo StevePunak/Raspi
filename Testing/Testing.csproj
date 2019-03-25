@@ -4,10 +4,10 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{6B773885-06A6-43CD-AC14-15868C325596}</ProjectGuid>
+    <ProjectGuid>{60A7BC6C-FC97-42BA-82C5-53FE42E30B39}</ProjectGuid>
     <OutputType>Exe</OutputType>
-    <RootNamespace>TrackBot</RootNamespace>
-    <AssemblyName>TrackBot</AssemblyName>
+    <RootNamespace>Testing</RootNamespace>
+    <AssemblyName>Testing</AssemblyName>
     <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
@@ -35,7 +35,6 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
-    <Reference Include="System.Drawing" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -44,38 +43,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ForkLift\Lift.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Spatial\Activity.cs" />
-    <Compile Include="Spatial\Cell.cs" />
-    <Compile Include="Spatial\Area.cs" />
-    <Compile Include="Spatial\Grid.cs" />
-    <Compile Include="Spatial\RoamAndSeek.cs" />
-    <Compile Include="Spatial\Types.cs" />
-    <Compile Include="TrackBotException.cs" />
-    <Compile Include="TTY\Backward.cs" />
-    <Compile Include="TTY\CalibrateCompass.cs" />
-    <Compile Include="TTY\CalibrateSpeed.cs" />
-    <Compile Include="TTY\ClearGrid.cs" />
-    <Compile Include="TTY\CommandBase.cs" />
-    <Compile Include="TTY\CommandException.cs" />
-    <Compile Include="TTY\ExitCommand.cs" />
-    <Compile Include="TTY\Forward.cs" />
-    <Compile Include="TTY\LiftMove.cs" />
-    <Compile Include="TTY\Render.cs" />
-    <Compile Include="TTY\Roam.cs" />
-    <Compile Include="TTY\SaveConfig.cs" />
-    <Compile Include="TTY\SetMagneticDeviation.cs" />
-    <Compile Include="TTY\SpinClockwise.cs" />
-    <Compile Include="TTY\SpinCounterClockwise.cs" />
-    <Compile Include="TTY\Status.cs" />
-    <Compile Include="TTY\StopActivity.cs" />
-    <Compile Include="TTY\Terminal.cs" />
-    <Compile Include="Tracks\BotTracks.cs" />
-    <Compile Include="TTY\Test.cs" />
-    <Compile Include="TTY\TurnToBearing.cs" />
-    <Compile Include="Widgets.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
@@ -90,11 +59,9 @@
       <Name>RaspiCommon</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup>
-    <Content Include="README.txt" />
-  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>copy * \\raspi\pi\opt\trackbot</PostBuildEvent>
+    <PostBuildEvent>copy * c:\pub\tmp
+</PostBuildEvent>
   </PropertyGroup>
 </Project>

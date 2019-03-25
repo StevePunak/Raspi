@@ -62,6 +62,11 @@ namespace RaspiCommon
 		public GpioPin StepperA1Pin { get; set; }
 		public GpioPin StepperA2Pin { get; set; }
 
+		public GpioPin LiftInputPin1 { get; set; }
+		public GpioPin LiftInputPin2 { get; set; }
+		public GpioPin LiftInputPin3 { get; set; }
+		public GpioPin LiftInputPin4 { get; set; }
+
 		public Double CompassXAdjust { get; set; }
 		public Double CompassYAdjust { get; set; }
 		public Double MagneticDeviation { get; set; }
@@ -98,6 +103,8 @@ namespace RaspiCommon
 			}
 			set { _metersPerSecondAtPower = value; }
 		}
+
+		public String LidarComPort { get; set; }
 
 		public static String GetDefaultConfigFileName()
 		{

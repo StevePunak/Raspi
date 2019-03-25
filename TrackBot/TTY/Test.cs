@@ -16,13 +16,12 @@ namespace TrackBot.TTY
 
 		public override bool Execute(List<string> commandParts)
 		{
-			for(int speed = 100;speed >= 70;speed = speed - 1)
-			{
-				Console.WriteLine("Speed = {0}", speed);
-				Widgets.Tracks.Speed = speed;
-				GpioSharp.Sleep(250);
-			}
+			Program.Config.LiftInputPin1 = GpioPin.Pin12;
+			Program.Config.LiftInputPin2 = GpioPin.Pin26;
+			Program.Config.LiftInputPin3 = GpioPin.Pin16;
+			Program.Config.LiftInputPin4 = GpioPin.Pin20;
 
+			Program.Config.Save();
 
 			Console.WriteLine("Done...");
 
