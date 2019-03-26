@@ -594,6 +594,16 @@ namespace RaspiForm
 		static readonly Brush _eraserBrush = new SolidBrush(Color.Black);
 		static readonly Pen _eraserPen = new Pen(Color.Black, 2);
 		static readonly Pen _greenPen = new Pen(Color.Green, 1);
+
+		private void OnLidarBitmapPressed(object sender, EventArgs e)
+		{
+			if(_lidar != null)
+			{
+				Bitmap bm =_lidar.GenerateBitmap();
+				bm.Save(@"c:\pub\tmp\tmp.png");
+			}
+		}
+
 		static readonly Pen _redPen = new Pen(Color.Red);
 		Line _eraseLine;
 

@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.IO.Ports;
 using System.Linq;
 using System.Text;
@@ -31,6 +32,10 @@ namespace RaspiCommon
 		public MonoSerialPort Port { get; private set; }
 
 		public bool Active { get { return _lastGoodSampleTime > DateTime.UtcNow - TimeSpan.FromSeconds(1); } }
+
+		public Double Offset { get; set; }
+
+		public Double RenderPixelsPerMeter { get { return 50; } } 
 
 		#endregion
 
@@ -124,6 +129,34 @@ namespace RaspiCommon
 			return _tryGetResponse(waitTime, out response);
 		}
 
+		public Bitmap GenerateBitmap()
+		{
+			Bitmap bitmap = new Bitmap(1000, 1000);
+
+			PointD center = new PointD(bitmap.Width / 2, bitmap.Height / 2);
+
+			using(Graphics g = Graphics.FromImage(bitmap))
+			{
+				g.FillRectangle(new SolidBrush(Color.Black), new RectangleF(new PointF(0, 0), bitmap.Size));
+
+				Pen redPen = new Pen(Color.Red);
+				for(int degrees = 0;degrees < 360;degrees++)
+				{
+					Double distance = Vectors[degrees];
+					if(distance != 0)
+					{
+						Double lineLength = distance * RenderPixelsPerMeter;
+
+						PointD point = FlatGeo.GetPoint(center, degrees, lineLength);
+						g.FillRectangle(new SolidBrush(Color.Red), new RectangleF(point.ToPoint(), new Size(1, 1)));
+					}
+
+				}
+			}
+
+			return bitmap;
+		}
+
 		public bool StartExpressScan()
 		{
 			LidarCommand command = new StartExpressScanCommand();
@@ -158,9 +191,9 @@ namespace RaspiCommon
 		{
 			LidarCommand command = new StartScanCommand();
 			SendCommand(command);
-
+			return true;
 			LidarResponse response;
-			return true;  // _tryGetResponse(TimeSpan.FromMilliseconds(5000), out response);
+			return _tryGetResponse(TimeSpan.FromMilliseconds(5000), out response);
 		}
 
 		public bool StopScan()
@@ -264,7 +297,7 @@ namespace RaspiCommon
 						case State.SingleResponse:
 							if((completedState = Response()))
 							{
-#if true // DEBUG_SERIAL
+#if DEBUG_SERIAL
 								Log.SysLogText(LogLevel.DEBUG, "RECEVED COMPLETE SINGLE RESPONSE");
 #endif
 								LidarResponse response = LidarResponse.Create(_responseType, _responseData);
@@ -344,11 +377,10 @@ namespace RaspiCommon
 
 		private void ProcessScanResponse(ScanResponse response)
 		{
-//			Log.SysLogText(LogLevel.DEBUG, "RSP {0}", response);
-
-			if(response.Quality > 10 && response.CheckBit == 1 && response.StartFlag == 1)
+			if(response.Quality > 10 && response.CheckBit == 1 && response.StartFlag == 1 && response.Angle < 360 && response.Angle >= 0)
 			{
-				Vectors[(int)response.Angle] = response.Distance;
+				Double angle = response.Angle.AddDegrees(Offset);
+				Vectors[(int)angle] = Math.Max(response.Distance, .001);
 				_lastGoodSampleTime = DateTime.UtcNow;
 			}
 			//int intDeg = (int)response.Angle;

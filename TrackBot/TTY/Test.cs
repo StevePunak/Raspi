@@ -16,12 +16,10 @@ namespace TrackBot.TTY
 
 		public override bool Execute(List<string> commandParts)
 		{
-			Program.Config.LiftInputPin1 = GpioPin.Pin12;
-			Program.Config.LiftInputPin2 = GpioPin.Pin26;
-			Program.Config.LiftInputPin3 = GpioPin.Pin16;
-			Program.Config.LiftInputPin4 = GpioPin.Pin20;
-
-			Program.Config.Save();
+			for(int d = 0;d < 360;d++)
+			{
+				Console.WriteLine("@ {0}° range is {1:0.000}", d, Widgets.Lidar.Vectors[d]);
+			}
 
 			Console.WriteLine("Done...");
 

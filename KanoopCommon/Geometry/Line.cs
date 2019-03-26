@@ -7,7 +7,7 @@ using System.ComponentModel;
 
 namespace KanoopCommon.Geometry
 {
-	public class LineList : List<Line>
+	public class LineList : List<Line>, IEnumerable<Line>
 	{
 		#region Constructors
 
@@ -113,6 +113,15 @@ namespace KanoopCommon.Geometry
 					}
 				}
 				return result;
+			}
+		}
+
+		public Line Shortest
+		{
+			get
+			{
+				Line line = this.Aggregate((l1, l2) => l1.Length < l2.Length ? l1 : l2);
+				return line;
 			}
 		}
 

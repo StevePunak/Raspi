@@ -76,6 +76,8 @@ namespace RaspiCommon
 		public TimeSpan RampDown { get { return TimeSpan.FromMilliseconds(50); } }
 		public Double MaxRangeDetect { get { return .5; } }
 
+		public Double LidarOffsetDegrees { get; set; }
+
 		Dictionary<RFDir, GpioPin> _rangeFinderOutputPins;
 		public Dictionary<RFDir, GpioPin>  RangeFinderEchoPins
 		{

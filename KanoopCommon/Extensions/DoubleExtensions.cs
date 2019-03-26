@@ -445,9 +445,10 @@ namespace KanoopCommon.Extensions
 			return result;
 		}
 
-		public static bool IsWithinDegressOf(this Double value, Double degrees)
+		public static bool IsWithinDegressOf(this Double value, Double from, Double degrees)
 		{
-			return Degrees.ClockwiseDifference(value, degrees) <= degrees && Degrees.CounterClockwiseDifference(value, degrees) <= degrees;
+			Double diff = Math.Min(Degrees.ClockwiseDifference(value, from), Degrees.CounterClockwiseDifference(value, from)); ;
+			return diff <= degrees;
 		}
 
 	}

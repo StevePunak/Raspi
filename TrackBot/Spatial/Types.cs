@@ -9,6 +9,7 @@ namespace TrackBot.Spatial
 	public enum ActivityType
 	{
 		None,
+		RoamAndSeekUS,
 		RoamAndSeek
 	}
 

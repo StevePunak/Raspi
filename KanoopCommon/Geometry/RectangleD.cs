@@ -178,6 +178,11 @@ namespace KanoopCommon.Geometry
 			m_Points = new PointDList { PointD.Empty, PointD.Empty, PointD.Empty, PointD.Empty };
 		}
 
+		public static RectangleD SquareFromCenter(PointD center, Double offset)
+		{
+			return new RectangleD(center.X - offset, center.Y - offset, offset * 2, offset * 2);
+		}
+
 		#endregion
 
 		#region Public Access Methods

@@ -5,7 +5,6 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using KanoopCommon.Geometry;
-using KanoopCommon.Logging;
 using RaspiCommon;
 
 namespace TrackBot.Spatial
@@ -18,14 +17,13 @@ namespace TrackBot.Spatial
 		{
 			Init,
 			Idle,
-			SpinSeek,
 			TravelToDest,
 			Stuck
 		}
 
 		public RSState ActivityState { get; private set; }
 
-		public PointD Destination { get; private set; }
+		public Line Destination { get; private set; }
 
 		private DateTime _enterStateTime;
 
@@ -50,9 +48,6 @@ namespace TrackBot.Spatial
 					break;
 				case RSState.Idle:
 					RunIdleState();
-					break;
-				case RSState.SpinSeek:
-					RunSpinSeekState();
 					break;
 				case RSState.TravelToDest:
 					RunTravelToDestState();
@@ -124,7 +119,7 @@ namespace TrackBot.Spatial
 		void RunInitState()
 		{
 			Widgets.Tracks.Stop();
-			SwitchState(RSState.SpinSeek);
+			SwitchState(RSState.TravelToDest);
 		}
 
 		#endregion
@@ -145,80 +140,6 @@ namespace TrackBot.Spatial
 
 		#endregion
 
-		#region SpinSeek State
-
-		bool InitSpinSeekState()
-		{
-			Interval = TimeSpan.FromMilliseconds(50);
-
-			_startBearing = Widgets.GyMag.Bearing;
-			_leftStartBearing = false;
-			_startLocation = Widgets.Environment.Location;
-
-			Widgets.Tracks.Spin(SpinDirection.Clockwise, Widgets.Tracks.StandardSpeed);
-
-			Console.WriteLine("Started SpinSeek at {0}  bearing {1:0.00}°", _startLocation, _startBearing);
-			return true;
-		}
-
-		bool RunSpinSeekState()
-		{
-			PointD location = Widgets.Environment.Location;
-			Double bearing = Widgets.GyMag.Bearing;
-			bool markObstacle = true;
-			Double range = Widgets.RangeFinders[RFDir.Front].Range;
-			if(range > Program.Config.MaxRangeDetect)
-			{
-				markObstacle = false;
-				Log.LogText(LogLevel.DEBUG, "Range {0:0.00} is greater than max", range);
-				range = Program.Config.MaxRangeDetect;
-			}
-
-			PointD obstacleLocation = PointD.RelativeTo(location, bearing, range);
-			Console.WriteLine("I am at {0}. Obstacle is {1:0.00} away at {2} bearing {3:0.00}°", Widgets.Environment.Location, range, obstacleLocation, bearing);
-			Widgets.Environment.ClearPathToObstacle(obstacleLocation, markObstacle);
-
-			Widgets.Tracks.Spin(SpinDirection.Clockwise, Widgets.Tracks.StandardSpeed);
-			GpioSharp.Sleep(100);
-			Widgets.Tracks.Stop();
-			GpioSharp.Sleep(100);
-
-			bearing = Widgets.GyMag.Bearing;
-			Double diff = Degrees.AngularDifference(_startBearing, bearing);
-//			Console.WriteLine("Now bearing {0:0.0}°  angular diff: {1:0.0}°", bearing, diff);
-			if(_leftStartBearing == false && diff < 10)
-			{
-				_leftStartBearing = true;
-			}
-			else if(_leftStartBearing)
-			{
-				if(diff < 5)
-				{
-					Console.WriteLine("Spin-seek complete... going to roam");
-
-					SwitchState(RSState.TravelToDest);
-				}
-			}
-
-			if(DateTime.UtcNow > _enterStateTime + TimeSpan.FromSeconds(20))
-			{
-				Console.WriteLine("Giving up on spin-seek");
-				SwitchState(RSState.Idle);
-			}
-
-			return true;
-		}
-
-		bool StopSpinSeekState()
-		{
-			Console.WriteLine("Exiting SpinSeek");
-			Interval = TimeSpan.FromMilliseconds(50);
-
-			return true;
-		}
-
-		#endregion
-
 		#region TravelToDest State
 
 		bool InitTravelToDestState()
@@ -230,16 +151,12 @@ namespace TrackBot.Spatial
 				Console.WriteLine("Could not find a good destination");
 				return false;
 			}
-			Double bearing = Widgets.Environment.Location.BearingTo(Destination);
-			Widgets.Tracks.TurnToBearing(bearing);
+			Widgets.Tracks.TurnToBearing(Destination.Bearing);
 
-			Console.WriteLine("Found a good destination at {0} bearing {1:0.0}°", Destination, bearing);
+			Console.WriteLine("Found a good destination at {0} bearing {1:0.0}°", Destination, Destination.Bearing);
 
 
 			/*** DEBUG ONLY */
-			Cell dest = Widgets.Environment.Grid.GetCellAtLocation(Destination);
-			dest.Contents = CellContents.Special;
-
 			Widgets.Environment.SaveBitmap();
 
 			Widgets.Tracks.SetStart();
@@ -258,16 +175,16 @@ namespace TrackBot.Spatial
 				PointD location;
 				if(Widgets.Tracks.TryCalculateCurrentLocation(out location))
 				{
-					Widgets.Environment.Location = location;
+					Widgets.Environment.RelativeLocation = location;
 
-					if(location.DistanceTo(Destination) < .15)
+					if(location.DistanceTo(Destination.P2 as PointD) < .15)
 					{
 						Console.WriteLine("Arrived at location");
 						result = true;
 						break;
 					}
 
-					if(Widgets.RangeFinders[RFDir.Front].Range < .2)
+					if(Widgets.Environment.FuzzyRange() < .2)
 					{
 						Console.WriteLine("Hit obstacle");
 						break;
@@ -282,22 +199,22 @@ namespace TrackBot.Spatial
 			}
 			else
 			{
-				SwitchState(RSState.SpinSeek);
+				SwitchState(RSState.TravelToDest);
 			}
 
 
 			return result;
 		}
 
-#endregion
+		#endregion
 
-#region Stuck State
+		#region Stuck State
 
 		bool RunStuckState()
 		{
 			return true;
 		}
 
-#endregion
+		#endregion
 	}
 }

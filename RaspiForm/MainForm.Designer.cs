@@ -83,6 +83,7 @@
 			this.tabPageLidar = new System.Windows.Forms.TabPage();
 			this.splitContainer1 = new System.Windows.Forms.SplitContainer();
 			this.groupLidarCommands = new System.Windows.Forms.GroupBox();
+			this.btnReset = new System.Windows.Forms.Button();
 			this.btnTestLidar = new System.Windows.Forms.Button();
 			this.btnStopScan = new System.Windows.Forms.Button();
 			this.btnStartScan = new System.Windows.Forms.Button();
@@ -90,12 +91,12 @@
 			this.comboComPorts = new System.Windows.Forms.ComboBox();
 			this.btnStopLidar = new System.Windows.Forms.Button();
 			this.btnStartLidar = new System.Windows.Forms.Button();
+			this.panelBitmap = new System.Windows.Forms.Panel();
 			this.picLidar = new System.Windows.Forms.PictureBox();
 			this.statusStrip1 = new System.Windows.Forms.StatusStrip();
 			this.textLidarStatus = new System.Windows.Forms.ToolStripStatusLabel();
 			this.tabPageControl = new System.Windows.Forms.TabPage();
-			this.btnReset = new System.Windows.Forms.Button();
-			this.panelBitmap = new System.Windows.Forms.Panel();
+			this.btnBitmap = new System.Windows.Forms.Button();
 			((System.ComponentModel.ISupportInitialize)(this.sliderMotor)).BeginInit();
 			this.groupBox1.SuspendLayout();
 			((System.ComponentModel.ISupportInitialize)(this.sliderServo)).BeginInit();
@@ -701,6 +702,7 @@
 			// 
 			// groupLidarCommands
 			// 
+			this.groupLidarCommands.Controls.Add(this.btnBitmap);
 			this.groupLidarCommands.Controls.Add(this.btnReset);
 			this.groupLidarCommands.Controls.Add(this.btnTestLidar);
 			this.groupLidarCommands.Controls.Add(this.btnStopScan);
@@ -711,6 +713,16 @@
 			this.groupLidarCommands.TabIndex = 3;
 			this.groupLidarCommands.TabStop = false;
 			this.groupLidarCommands.Text = "Commands";
+			// 
+			// btnReset
+			// 
+			this.btnReset.Location = new System.Drawing.Point(169, 25);
+			this.btnReset.Name = "btnReset";
+			this.btnReset.Size = new System.Drawing.Size(43, 23);
+			this.btnReset.TabIndex = 0;
+			this.btnReset.Text = "Reset";
+			this.btnReset.UseVisualStyleBackColor = true;
+			this.btnReset.Click += new System.EventHandler(this.OnResetLidarClicked);
 			// 
 			// btnTestLidar
 			// 
@@ -783,6 +795,14 @@
 			this.btnStartLidar.UseVisualStyleBackColor = true;
 			this.btnStartLidar.Click += new System.EventHandler(this.OnStartLidarClicked);
 			// 
+			// panelBitmap
+			// 
+			this.panelBitmap.Location = new System.Drawing.Point(93, 70);
+			this.panelBitmap.Name = "panelBitmap";
+			this.panelBitmap.Size = new System.Drawing.Size(405, 325);
+			this.panelBitmap.TabIndex = 1;
+			this.panelBitmap.Paint += new System.Windows.Forms.PaintEventHandler(this.OnPanelPaint);
+			// 
 			// picLidar
 			// 
 			this.picLidar.Dock = System.Windows.Forms.DockStyle.Fill;
@@ -823,23 +843,15 @@
 			this.tabPageControl.Text = "Control";
 			this.tabPageControl.UseVisualStyleBackColor = true;
 			// 
-			// btnReset
+			// btnBitmap
 			// 
-			this.btnReset.Location = new System.Drawing.Point(169, 25);
-			this.btnReset.Name = "btnReset";
-			this.btnReset.Size = new System.Drawing.Size(43, 23);
-			this.btnReset.TabIndex = 0;
-			this.btnReset.Text = "Reset";
-			this.btnReset.UseVisualStyleBackColor = true;
-			this.btnReset.Click += new System.EventHandler(this.OnResetLidarClicked);
-			// 
-			// panelBitmap
-			// 
-			this.panelBitmap.Location = new System.Drawing.Point(93, 70);
-			this.panelBitmap.Name = "panelBitmap";
-			this.panelBitmap.Size = new System.Drawing.Size(405, 325);
-			this.panelBitmap.TabIndex = 1;
-			this.panelBitmap.Paint += new System.Windows.Forms.PaintEventHandler(this.OnPanelPaint);
+			this.btnBitmap.Location = new System.Drawing.Point(218, 24);
+			this.btnBitmap.Name = "btnBitmap";
+			this.btnBitmap.Size = new System.Drawing.Size(43, 23);
+			this.btnBitmap.TabIndex = 0;
+			this.btnBitmap.Text = "BM";
+			this.btnBitmap.UseVisualStyleBackColor = true;
+			this.btnBitmap.Click += new System.EventHandler(this.OnLidarBitmapPressed);
 			// 
 			// MainForm
 			// 
@@ -952,6 +964,7 @@
 		private System.Windows.Forms.PictureBox picLidar;
 		private System.Windows.Forms.Button btnReset;
 		private System.Windows.Forms.Panel panelBitmap;
+		private System.Windows.Forms.Button btnBitmap;
 	}
 }
 

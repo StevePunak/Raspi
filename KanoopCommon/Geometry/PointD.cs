@@ -241,6 +241,21 @@ namespace KanoopCommon.Geometry
 			Name = String.Empty;
 		}
 
+		/// <summary>
+		/// Given a rectangle, return the upper left which will cause it to be centered
+		/// </summary>
+		/// <param name="rect"></param>
+		/// <returns></returns>
+		public static PointD FindCenterUpperLeft(Rectangle rect)
+		{
+			return new PointD(rect.Left - (rect.Width / 2), rect.Top - (rect.Height / 2));
+		}
+
+		public static PointD FindCenterUpperLeft(PointD from, SizeF size)
+		{
+			return new PointD(from.X - (size.Width / 2), from.Y - (size.Height / 2));
+		}
+
 		#endregion
 
 		#region Public Geometry Methods
@@ -364,6 +379,11 @@ namespace KanoopCommon.Geometry
 		public Point ToPoint()
 		{
 			return new Point((int)Math.Round(X), (int)Math.Round(Y));
+		}
+
+		public PointF ToPointF()
+		{
+			return new PointF((float)X, (float)Y);
 		}
 
 		public GeoPoint ToGeoPoint()

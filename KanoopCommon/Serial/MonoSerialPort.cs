@@ -131,6 +131,11 @@ namespace KanoopCommon.Serial
 				}
 				return true;
 			}
+
+			protected override bool OnException(Exception e)
+			{
+				return true;
+			}
 		}
 	}
 }

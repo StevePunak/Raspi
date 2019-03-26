@@ -23,7 +23,7 @@ namespace TrackBot.TTY
 			{
 				Console.WriteLine("Calibrating speed at {0}", motorSpeed);
 
-				Double startRange = Widgets.RangeFinders[RFDir.Front].Range;
+				Double startRange = Widgets.Environment.Range;
 
 				// move out
 				Widgets.Tracks.Speed = motorSpeed;
@@ -31,7 +31,7 @@ namespace TrackBot.TTY
 				Widgets.Tracks.Stop();
 
 				GpioSharp.Sleep(1000);
-				Double endRange = Widgets.RangeFinders[RFDir.Front].Range;
+				Double endRange = Widgets.Environment.Range;
 				Double speed = (startRange - endRange) / runtime.Seconds;
 				Console.WriteLine("travelled {0:00} meters in {1}ms for speed of {2:0.00}m/s", (startRange - endRange), runtime, speed);
 

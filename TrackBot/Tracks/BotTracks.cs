@@ -39,6 +39,14 @@ namespace TrackBot.Tracks
 				  Program.Config.TracksRightA2Pin, 
 				  Program.Config.TracksRightEnaPin)
 		{
+			Log.SysLogText(LogLevel.DEBUG, "Tracks at L1 {0} L2 {1} LENA {2} R1 {3} R2 {4} RENA {5}",
+				  Program.Config.TracksLeftA1Pin,
+				  Program.Config.TracksLeftA2Pin,
+				  Program.Config.TracksLeftEnaPin,
+				  Program.Config.TracksRightA1Pin,
+				  Program.Config.TracksRightA2Pin,
+				  Program.Config.TracksRightEnaPin);
+
 			RampUp = Program.Config.RampUp;
 			RampDown = Program.Config.RampDown;
 		}
@@ -121,7 +129,7 @@ namespace TrackBot.Tracks
 			TimeSpan timeToRun;
 			Double speedMPS;
 
-			Log.SysLogText(LogLevel.DEBUG, "Start move {0} meters at {1:0.00} distance from nearest obstacle", meters, Widgets.RangeFinders[RFDir.Front].Range);
+			Log.SysLogText(LogLevel.DEBUG, "Start move {0} meters at {1:0.00} distance from nearest obstacle", meters, Widgets.Environment.FuzzyRange());
 			if(TryGetTimeForDistance(meters, motorSpeed, out timeToRun, out speedMPS))
 			{
 				timeToRun += direction == Direction.Forward ? RampUp : -RampDown;
@@ -143,10 +151,10 @@ namespace TrackBot.Tracks
 					GpioSharp.Sleep(interval);
 					metersTraveled += metersPerInterval;
 
-					Widgets.Environment.Location = FlatGeo.GetPoint(Widgets.Environment.Location, Widgets.GyMag.Bearing, metersPerInterval);
+					Widgets.Environment.RelativeLocation = FlatGeo.GetPoint(Widgets.Environment.Location, Widgets.GyMag.Bearing, metersPerInterval);
 //					Log.SysLogText(LogLevel.DEBUG, "Moved to {0}", Widgets.Environment.Location);
 
-					if(direction == Direction.Forward && Widgets.RangeFinders[RFDir.Front].Range <= Program.Config.StopDistance)
+					if(direction == Direction.Forward && Widgets.Environment.FuzzyRange() <= Program.Config.StopDistance)
 					{
 						Console.WriteLine("Stopping due to range");
 						result = false;
@@ -162,7 +170,7 @@ namespace TrackBot.Tracks
 				result = false;
 			}
 
-			Log.SysLogText(LogLevel.DEBUG, "Stopped move {0} meters at {1:0.00} distance from nearest obstacle", meters, Widgets.RangeFinders[RFDir.Front].Range);
+			Log.SysLogText(LogLevel.DEBUG, "Stopped move {0} meters at {1:0.00} distance from nearest obstacle", meters, Widgets.Environment.FuzzyRange());
 			return result;
 		}
 

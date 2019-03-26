@@ -27,6 +27,7 @@ namespace TrackBot.TTY
 				}
 				Widgets.GyMag.MagneticDeviation = value;
 				Program.Config.MagneticDeviation = value;
+				Program.Config.Save();
 			}
 			return true;
 		}

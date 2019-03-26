@@ -21,7 +21,7 @@ namespace TrackBot
 		public static RPLidar Lidar { get; private set; }
 
 		public static LSM9D51CompassAccelerometer GyMag { get; private set; }
-		public static Area Environment { get; private set; }
+		public static LidarEnvironment Environment { get; private set; }
 
 		public static void StartWidgets()
 		{
@@ -52,6 +52,7 @@ namespace TrackBot
 		private static void StartLidar()
 		{
 			Lidar = new RPLidar(Program.Config.LidarComPort);
+			Lidar.Offset = Program.Config.LidarOffsetDegrees;
 			Lidar.Start();
 			if(Lidar.GetDeviceInfo())
 			{
@@ -90,7 +91,7 @@ namespace TrackBot
 			GyMag.XAdjust = Program.Config.CompassXAdjust;
 			GyMag.YAdjust = Program.Config.CompassYAdjust;
 
-			Environment = new Area(5, 5, .1, new PointD(2.5, 2.5));
+			Environment = new LidarEnvironment(); // new Area(5, 5, .1, new PointD(2.5, 2.5));
 
 		}
 

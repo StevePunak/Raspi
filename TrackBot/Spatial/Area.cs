@@ -100,7 +100,7 @@ namespace TrackBot.Spatial
 
 		public void SaveBitmap()
 		{
-			Bitmap bitmap = Widgets.Environment.Grid.ConvertToBitmap(10);
+			Bitmap bitmap = Widgets.Lidar.GenerateBitmap();  // Widgets.Environment.Grid.ConvertToBitmap(10);
 			bitmap.Save("/var/www/html/grid.png");
 
 			Console.WriteLine("Bitmap saved");

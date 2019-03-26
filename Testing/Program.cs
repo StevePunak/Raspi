@@ -1,14 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Emgu.CV;
+using Emgu.CV.Structure;
+using KanoopCommon.Geometry;
 using KanoopCommon.Logging;
 using KanoopCommon.Queueing;
 using KanoopCommon.Threading;
 using RaspiCommon.Lidar;
+using RaspiCommon.Lidar.Environs;
 
 namespace RaspiCommon
 {
@@ -21,9 +26,35 @@ namespace RaspiCommon
 		{
 			OpenLog();
 
-			RunLidar();
+			PointD p1 = new PointD(500, 500);
+			PointD p2 = FlatGeo.GetPoint(p1, 0, 30);
 
+			EMGUTest();
+
+			RunLidar();
 		}
+
+		private static void EMGUTest()
+		{
+			String root = Environment.OSVersion.Platform == PlatformID.Unix ? "./" : @"\\raspi\pi\tmp\";
+			String inFile = root + "angle.png";
+			String outFile = root + "output.png";
+
+			Double PixelsPerMeter = 50;
+
+			Image<Bgr, Byte> image = new Image<Bgr, byte>(inFile);
+
+			PointD currentPoint = new PointD(image.Width / 2, image.Height / 2);
+
+			LidarEnvironment mapper = new LidarEnvironment(15, PixelsPerMeter);
+			mapper.ProcessImage(image, currentPoint, 0);
+
+			Log.LogText(LogLevel.DEBUG, "Done");
+
+			image.Save(outFile);
+		}
+
+
 
 		static void RunMotor()
 		{
@@ -47,6 +78,8 @@ namespace RaspiCommon
 			RPLidar lidar = new RPLidar("COM5");
 			lidar.Start();
 
+#if zero
+			{
 			{
 				LidarCommand command = new ResetCommand();
 				lidar.SendCommand(command);
@@ -90,8 +123,6 @@ namespace RaspiCommon
 				}
 			}
 			Thread.Sleep(1000);
-#if zero
-			{
 				lidar.SendCommand(new StartExpressScanCommand());
 
 				Log.SysLogText(LogLevel.DEBUG, "I'm anout to die!!");
@@ -152,7 +183,7 @@ namespace RaspiCommon
 		private static void OpenLog()
 		{
 			Log = new Log();
-			Log.Open(LogLevel.ALWAYS, "lidar.log", OpenFlags.CONTENT_TIMESTAMP | OpenFlags.OUTPUT_TO_FILE | OpenFlags.OUTPUT_TO_CONSOLE);
+			Log.Open(LogLevel.ALWAYS, "lidar.log", OpenFlags.CONTENT_TIMESTAMP | OpenFlags.OUTPUT_TO_FILE | OpenFlags.OUTPUT_TO_DEBUG | OpenFlags.OUTPUT_TO_CONSOLE);
 			Log.SystemLog = Log;
 		}
 	}
