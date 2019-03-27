@@ -36,22 +36,41 @@ namespace RaspiCommon
 
 		private static void EMGUTest()
 		{
-			String root = Environment.OSVersion.Platform == PlatformID.Unix ? "./" : @"\\raspi\pi\tmp\";
-			String inFile = root + "angle.png";
-			String outFile = root + "output.png";
+			String root = Environment.OSVersion.Platform == PlatformID.Unix ? "./" : @"c:\pub\tmp\";
 
-			Double PixelsPerMeter = 50;
+			List<String> files = new List<string>()
+			{
+				"1.png", "2.png", "3.png"
+			};
 
-			Image<Bgr, Byte> image = new Image<Bgr, byte>(inFile);
+			List<Double> bearings = new List<double>()
+			{
+				0, 0, 90
+			};
 
-			PointD currentPoint = new PointD(image.Width / 2, image.Height / 2);
+			for(int x = 0;x < files.Count;x++)
+			{
+				while(true)
+				{
+				String file = files[x];
+				String inFile = root + file;
+				String outFile = root + "output." + file;
 
-			LidarEnvironment mapper = new LidarEnvironment(15, PixelsPerMeter);
-			mapper.ProcessImage(image, currentPoint, 0);
+				Double PixelsPerMeter = 50;
+
+				Image<Bgr, Byte> image = new Image<Bgr, byte>(inFile);
+
+				PointD currentPoint = new PointD(image.Width / 2, image.Height / 2);
+
+				LidarEnvironment env = new LidarEnvironment(10, PixelsPerMeter);
+				env.ProcessImage(image, bearings[x], PixelsPerMeter);
+
+				Image output = env.ToImage();
+				output.Save(outFile);
+				}
+			}
 
 			Log.LogText(LogLevel.DEBUG, "Done");
-
-			image.Save(outFile);
 		}
 
 
@@ -75,7 +94,7 @@ namespace RaspiCommon
 		{
 
 //			RPLidar lidar = new RPLidar("/dev/ttyUSB0");
-			RPLidar lidar = new RPLidar("COM5");
+			RPLidar lidar = new RPLidar("COM5", .25);
 			lidar.Start();
 
 #if zero

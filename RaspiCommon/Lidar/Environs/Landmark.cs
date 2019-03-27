@@ -9,6 +9,11 @@ namespace RaspiCommon.Lidar.Environs
 {
 	public class LandmarkList : List<Landmark>
 	{
+		public bool Contains(PointD landmark, Double withinMeters, Double scale)
+		{
+			Double withinPixels = withinMeters * scale;
+			return this.Find(l => l.Location.DistanceTo(landmark) <= withinPixels) != null;
+		}
 	}
 
 	public class Landmark
@@ -18,11 +23,6 @@ namespace RaspiCommon.Lidar.Environs
 		public Landmark(PointD location)
 		{
 			Location = location;
-		}
-
-		public static Landmark FromSource(PointD point, PointD sourceOrigin, Double sourceOrientation, LidarEnvironment destination)
-		{
-
 		}
 
 		public override string ToString()

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System;
 using System.ComponentModel;
+using KanoopCommon.Extensions;
 
 namespace KanoopCommon.Geometry
 {
@@ -461,6 +462,25 @@ namespace KanoopCommon.Geometry
 			Double maxL2 = Math.Max(other.P1.Y, other.P2.Y);
 
 			return maxL1 > maxL2;
+		}
+
+		public bool SharesEndPointWith(Line other, Double distance)
+		{
+			bool result =
+				((PointD)P1).DistanceTo(other.P1 as PointD) <= distance ||
+				((PointD)P1).DistanceTo(other.P2 as PointD) <= distance ||
+				((PointD)P2).DistanceTo(other.P1 as PointD) <= distance ||
+				((PointD)P2).DistanceTo(other.P2 as PointD) <= distance;
+			return result;
+		}
+
+		public bool SharesEndpointAndBearing(Line other, Double distance, Double bearingSlack)
+		{
+			bool result =
+				SharesEndPointWith(other, distance) &&
+				(Bearing.AngularDifference(other.Bearing) <= bearingSlack || Bearing.AddDegrees(180).AngularDifference(other.Bearing) <= bearingSlack);
+			return result;
+
 		}
 
 		#endregion

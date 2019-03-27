@@ -445,6 +445,11 @@ namespace KanoopCommon.Extensions
 			return result;
 		}
 
+		public static Double AngularDifference(this Double value, Double other)
+		{
+			return Degrees.AngularDifference(value, other);
+		}
+
 		public static bool IsWithinDegressOf(this Double value, Double from, Double degrees)
 		{
 			Double diff = Math.Min(Degrees.ClockwiseDifference(value, from), Degrees.CounterClockwiseDifference(value, from)); ;

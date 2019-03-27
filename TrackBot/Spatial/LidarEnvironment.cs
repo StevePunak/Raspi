@@ -27,13 +27,13 @@ namespace TrackBot.Spatial
 
 			Double startBearing = Widgets.GyMag.Bearing;
 			PointD currentLocation = new PointD(0, 0);
-			for(double x = 0;x < 360;x += 10)
+			for(double x = 0;x < 360;x += 5)
 			{
-				if(Widgets.Lidar.Vectors[(int)x] != 0)
+				if(Widgets.Lidar.GetDistance(x) != 0)
 				{
 					Double bearing = startBearing.AddDegrees(x);
 					//				Console.WriteLine("From {0:0}° to {1:0}°", startBearing, bearing);
-					Line line = new Line(currentLocation, FlatGeo.GetPoint(currentLocation, bearing, Widgets.Lidar.Vectors[(int)x]));
+					Line line = new Line(currentLocation, FlatGeo.GetPoint(currentLocation, bearing, Widgets.Lidar.GetDistance(x)));
 					if(line != null)
 					{
 						if(longestLine == null || line.Length > longestLine.Length)
@@ -57,6 +57,7 @@ namespace TrackBot.Spatial
 			Pen linePen = new Pen(Color.Green);
 			using(Graphics g = Graphics.FromImage(bitmap))
 			{
+#if zero
 				// lines and circles
 				List<Double> offsets = new List<Double>() { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
 				foreach(Double offset in offsets)
@@ -68,7 +69,7 @@ namespace TrackBot.Spatial
 				g.DrawLine(linePen, (float)center.X, 0, (float)center.X, bitmap.Height);
 				g.DrawLine(linePen, 0, (float)center.Y, bitmap.Width, (float)center.Y);
 
-
+#endif
 				Font font = new Font("Times New Roman", 12.0f);
 
 				SizeF size;
@@ -101,7 +102,7 @@ namespace TrackBot.Spatial
 			List<Double> allDistances = new List<double>();
 			for(Double d = (int)start;d <= (int)end;d = d.AddDegrees(1))
 			{
-				Double distance = Widgets.Lidar.Vectors[(int)d];
+				Double distance = Widgets.Lidar.GetDistance(d);
 				Log.SysLogText(LogLevel.DEBUG, "At {0}° range is {1:0.000}", d, distance);
 				if(distance != 0)
 				{

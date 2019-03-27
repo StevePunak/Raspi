@@ -51,7 +51,7 @@ namespace TrackBot
 
 		private static void StartLidar()
 		{
-			Lidar = new RPLidar(Program.Config.LidarComPort);
+			Lidar = new RPLidar(Program.Config.LidarComPort, .25);
 			Lidar.Offset = Program.Config.LidarOffsetDegrees;
 			Lidar.Start();
 			if(Lidar.GetDeviceInfo())

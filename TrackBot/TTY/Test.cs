@@ -16,9 +16,9 @@ namespace TrackBot.TTY
 
 		public override bool Execute(List<string> commandParts)
 		{
-			for(int d = 0;d < 360;d++)
+			for(Double d = 0;d < 360;d += Widgets.Lidar.VectorSize)
 			{
-				Console.WriteLine("@ {0}° range is {1:0.000}", d, Widgets.Lidar.Vectors[d]);
+				Console.WriteLine("@ {0}° range is {1:0.000}", d, Widgets.Lidar.GetDistance(d));
 			}
 
 			Console.WriteLine("Done...");

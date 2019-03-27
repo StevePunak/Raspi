@@ -36,7 +36,7 @@ namespace RaspiCommon.Lidar.Environs
 
 		public override string ToString()
 		{
-			return String.Format("{0} to {1}", Line1, Line2);
+			return String.Format("{0} l: {1:0.000} to {2} l: {3:0.000}", Line1, Line1.Length, Line2, Line2.Length);
 		}
 	}
 }
