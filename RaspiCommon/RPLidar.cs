@@ -140,7 +140,7 @@ namespace RaspiCommon
 
 		public Bitmap GenerateBitmap()
 		{
-			Bitmap bitmap = new Bitmap(1000, 1000);
+			Bitmap bitmap = new Bitmap((int)RenderPixelsPerMeter * 10, (int)RenderPixelsPerMeter * 10);
 
 			PointD center = new PointD(bitmap.Width / 2, bitmap.Height / 2);
 

@@ -429,6 +429,12 @@ namespace KanoopCommon.Extensions
 			return (UInt32)value;
 		}
 
+		/// <summary>
+		/// Add the given number of degrees to the given angle
+		/// </summary>
+		/// <param name="value"></param>
+		/// <param name="count"></param>
+		/// <returns></returns>
 		public static Double AddDegrees(this Double value, Double count)
 		{
 			Double result = value + count;
@@ -437,6 +443,12 @@ namespace KanoopCommon.Extensions
 			return result;
 		}
 
+		/// <summary>
+		/// Subtract the given number of degrees to the given angle
+		/// </summary>
+		/// <param name="value"></param>
+		/// <param name="count"></param>
+		/// <returns></returns>
 		public static Double SubtractDegrees(this Double value, Double count)
 		{
 			Double result = value - count;
@@ -450,6 +462,13 @@ namespace KanoopCommon.Extensions
 			return Degrees.AngularDifference(value, other);
 		}
 
+		/// <summary>
+		/// Is this angle within 'degrees' of the 'from' value?
+		/// </summary>
+		/// <param name="value">this Double</param>
+		/// <param name="from">Value to see if we are within range of</param>
+		/// <param name="degrees">How many degrees slack?</param>
+		/// <returns></returns>
 		public static bool IsWithinDegressOf(this Double value, Double from, Double degrees)
 		{
 			Double diff = Math.Min(Degrees.ClockwiseDifference(value, from), Degrees.CounterClockwiseDifference(value, from)); ;
