@@ -68,7 +68,7 @@ namespace KanoopCommon.Serial
 		{
 			try
 			{
-				int bytes = Port.Read(_recvBuffer, 0, _recvBuffer.Length);
+				int bytes = Port.BaseStream.EndRead(ar);
 
 				if(bytes > 0)
 				{
