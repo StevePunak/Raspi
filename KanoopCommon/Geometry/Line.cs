@@ -53,6 +53,26 @@ namespace KanoopCommon.Geometry
 			return closestPoint;
 		}
 
+		public Double AverageBearing
+		{
+			get
+			{
+				List<Double> bearings = new List<Double>();
+				Double firstBearing = this[0].Bearing;
+
+				bearings.Add(firstBearing);
+
+				for(int x = 1;x < this.Count;x++)
+				{
+					Double bearing = this[x].Bearing.AngularDifference(firstBearing) < this[x].Bearing.AngularDifference(firstBearing.AddDegrees(180))
+						? this[x].Bearing : this[x].Bearing.AddDegrees(180);
+					bearings.Add(bearing);
+				}
+
+				return bearings.Average();
+			}
+		}
+
 		public Line LeftMost
 		{
 			get
@@ -124,6 +144,30 @@ namespace KanoopCommon.Geometry
 				Line line = this.Aggregate((l1, l2) => l1.Length < l2.Length ? l1 : l2);
 				return line;
 			}
+		}
+
+		/// <summary>
+		/// Does any line in the list contain a line lying along the path of any line in the given list
+		/// </summary>
+		/// <param name="other"></param>
+		/// <param name="pathWidth"></param>
+		/// <returns></returns>
+		public bool ContainsLinesAlongThePathOf(LineList other, double pathWidth, Double extend = 0)
+		{
+			bool result = false;
+			for(int x = 0;x < Count && result == false;x++)
+			{
+				foreach(Line otherLine in other)
+				{
+					RectangleD rect1, rect2;
+					if(this[x].LiesAlongThePathOf(otherLine, pathWidth, out rect1, out rect2, extend))
+					{
+						result = true;
+						break;
+					}
+				}
+			}
+			return result;
 		}
 
 		#endregion
@@ -339,6 +383,92 @@ namespace KanoopCommon.Geometry
 			return ret;
 		}
 
+		/// <summary>
+		/// Get a rectangle which contains a path along the given line 'pathWidth' wide
+		/// </summary>
+		/// <param name="pathWidth"></param>
+		/// <returns></returns>
+		public RectangleD GetPathRectangle(Double pathWidth, Double extend)
+		{
+			PointD p1 = P1.GetPointAt(Bearing.AddDegrees(90), pathWidth / 2) as PointD;
+			PointD p2 = P1.GetPointAt(Bearing.SubtractDegrees(90), pathWidth / 2) as PointD;
+			PointD p3 = P2.GetPointAt(Bearing.SubtractDegrees(90), pathWidth / 2) as PointD;
+			PointD p4 = P2.GetPointAt(Bearing.AddDegrees(90), pathWidth / 2) as PointD;
+
+			if(extend > 0)
+			{
+				p1 = p1.GetPointAt(Bearing, extend) as PointD;
+				p2 = p2.GetPointAt(Bearing, extend) as PointD;
+				p3 = p3.GetPointAt(Bearing.AddDegrees(180), extend) as PointD;
+				p4 = p4.GetPointAt(Bearing.AddDegrees(180), extend) as PointD;
+			}
+
+			return new RectangleD(p1, p2, p3, p4);
+		}
+
+		/// <summary>
+		/// Does either endpoint of the given line fall along a 'pathWidth' path of this line,
+		/// or does either endpoint of this line fall along the path of the given line
+		/// </summary>
+		/// <param name="line"></param>
+		/// <param name="pathWidth"></param>
+		/// <returns></returns>
+		public bool LiesAlongThePathOf(Line line, Double pathWidth, out RectangleD rect1, out RectangleD rect2, Double extend = 0)
+		{
+			bool result = false;
+			rect2 = null;
+
+			// get a rectangle which contains the path of the given line
+			rect1 = line.GetPathRectangle(pathWidth, extend);
+			if((result = rect1.Contains(P1 as PointD)) == false && (result = rect1.Contains(P2 as PointD)) == false)
+			{
+				rect2 = GetPathRectangle(pathWidth, extend);
+				if((result = rect2.Contains(line.P1 as PointD)) == false && (result = rect2.Contains(line.P2 as PointD)) == false)
+				{
+					// wil return false;
+				}
+			}
+			return result;
+		}
+
+		public static Line ConsolidateLongest(Line l1, Line l2)
+		{
+			Line line = null;
+			PointD p = l1.P1 as PointD;
+			List<Double> distances = new List<double>()
+			{
+				((PointD)l1.P1).DistanceTo(((PointD)l2.P1)),
+				((PointD)l1.P1).DistanceTo(((PointD)l2.P2)),
+				((PointD)l1.P2).DistanceTo(((PointD)l2.P1)),
+				((PointD)l1.P2).DistanceTo(((PointD)l2.P2))
+			};
+			Double max = distances.Max();
+			if(max > l1.Length && max > l2.Length)
+			{
+				if(max == distances[0])
+					line = new Line(l1.P1, l2.P1);
+				else if(max == distances[1])
+					line = new Line(l1.P1, l2.P2);
+				else if(max == distances[2])
+					line = new Line(l1.P2, l2.P1);
+				else if(max == distances[3])
+					line = new Line(l1.P2, l2.P2);
+			}
+			else
+			{
+				line = l1.Length > l2.Length ? l1 : l2;
+			}
+			return line;
+		}
+
+		public IPoint FurthestPointFrom(IPoint pt)
+		{
+			Double distance;
+			PointD closest = ClosestPointTo(pt, out distance);
+			IPoint furthest = closest.Equals(P1) ? P2 : P1;
+			return furthest;
+		}
+
 		public PointD ClosestPointTo(IPoint pt)
 		{
 			Double distance;
@@ -499,7 +629,11 @@ namespace KanoopCommon.Geometry
 
 		public String ToString(int precision)
 		{
-			return String.Format("{0} - {1}", _p1.ToString(precision), _p2.ToString(precision));
+			String result = Tag == null
+				? String.Format("{0} - {1}  {2:0.0}°  len: {3:0.000}", _p1.ToString(precision), _p2.ToString(precision), Bearing, Length)
+				: String.Format("{0}  {1} - {2}  {3:0.0}°  len: {4:0.000}", Tag, _p1.ToString(precision), _p2.ToString(precision), Bearing, Length);
+
+			return result;
 		}
 
 		public override string ToString()
