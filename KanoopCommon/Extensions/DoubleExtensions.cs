@@ -462,6 +462,11 @@ namespace KanoopCommon.Extensions
 			return Degrees.AngularDifference(value, other);
 		}
 
+		public static bool Between(this Double value, Double d1, Double d2)
+		{
+			return value >= d1 && value <= d2;
+		}
+
 		/// <summary>
 		/// Is this angle within 'degrees' of the 'from' value?
 		/// </summary>

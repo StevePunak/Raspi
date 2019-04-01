@@ -76,6 +76,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ESC.cs" />
+    <Compile Include="Extensions\GraphicsExtensions.cs" />
     <Compile Include="GpioSharp.cs" />
     <Compile Include="HCSR04_RangeFinder.cs" />
     <Compile Include="L298N_DC_TankTracks.cs" />
@@ -90,6 +91,7 @@
     <Compile Include="Lidar\LidarProtocol.cs" />
     <Compile Include="Lidar\LidarResponse.cs" />
     <Compile Include="Lidar\ExpressScanResponse.cs" />
+    <Compile Include="Lidar\LidarVector.cs" />
     <Compile Include="Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -106,6 +108,8 @@
     <Compile Include="PWMDevice.cs" />
     <Compile Include="RaspiConfig.cs" />
     <Compile Include="RaspiException.cs" />
+    <Compile Include="Server\LidarServer.cs" />
+    <Compile Include="Server\LidarClient.cs" />
     <Compile Include="Servo.cs" />
     <Compile Include="Types.cs" />
   </ItemGroup>
@@ -120,11 +124,13 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="License-LGPL.txt" />
-    <None Include="Resources\tank.png" />
+    <None Include="Resources\tank.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Resources.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
+      <Generator>PublicResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
   </ItemGroup>

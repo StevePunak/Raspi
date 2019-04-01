@@ -35,15 +35,27 @@ namespace RaspiCommon
 
 		public Double Offset { get; set; }
 
-		public Double RenderPixelsPerMeter { get { return 50; } } 
+		public Double Bearing { get; set; }
+
+		public Double RenderPixelsPerMeter { get; set; } 
 
 		public Double VectorSize { get; private set; }
 
+		public TimeSpan VectorRefreshTime { get; set; }
+
+		public Double DebugAngle { get; set; }
+
+		public Double[] Vectors { get { return _vectors; } }
+
+		public int _lastScanOffset;
+
 		#endregion
 
-		#region Privte Member Variables
+		#region Private Member Variables
 
 		Double[] _vectors;
+		DateTime[] _lastSetTimes;
+		DateTime _lastTrimTime;
 
 		byte[] _receiveBuffer;
 		int _bytesInBuffer;
@@ -83,9 +95,14 @@ namespace RaspiCommon
 
 		public RPLidar(String portName, Double vectorSize)
 		{
+			RenderPixelsPerMeter = 50;
+
 			VectorSize = vectorSize;
 			_vectors = new double[(int)(360 / vectorSize)];
 			Array.Clear(_vectors, 0, _vectors.Length);
+			_lastSetTimes = new DateTime[_vectors.Length];
+
+			Bearing = 0;
 
 			List<String> ports = new List<String>(SerialPort.GetPortNames());
 			ports.TerminateAll();
@@ -98,14 +115,24 @@ namespace RaspiCommon
 			_responseQueue = new MemoryQueue<LidarResponse>();
 			_responseWaiters = 0;
 
+			_lastScanOffset = 0;
+
 			LidarResponseData += delegate { };
 			Sample += delegate { };
+
+			VectorRefreshTime = TimeSpan.FromSeconds(1);
 		}
 
-		public Double GetDistance(Double bearing)
+		public Double GetRangeAtBearing(Double bearing)
 		{
 			Double offset = bearing / VectorSize;
 			return _vectors[(int)offset];
+		}
+
+		public DateTime GetLastSampleTimeAtBearing(Double bearing)
+		{
+			Double offset = bearing / VectorSize;
+			return _lastSetTimes[(int)offset];
 		}
 
 		public void Start()
@@ -201,8 +228,6 @@ namespace RaspiCommon
 			LidarCommand command = new StartScanCommand();
 			SendCommand(command);
 			return true;
-			LidarResponse response;
-			return _tryGetResponse(TimeSpan.FromMilliseconds(5000), out response);
 		}
 
 		public bool StopScan()
@@ -386,18 +411,55 @@ namespace RaspiCommon
 
 		private void ProcessScanResponse(ScanResponse response)
 		{
+			Double angle = response.Angle.AddDegrees(Offset).AddDegrees(Bearing);
+			if(DebugAngle >= 0 && angle.AngularDifference(DebugAngle) < 1)
+			{
+				Log.SysLogText(LogLevel.DEBUG, "response Angle {0:0.000}°  adjusted {1:000}° to {2:0.000}°  Range: {3:0.00}m  Quality {4}",
+					response.Angle, Bearing, angle, response.Distance, response.Quality);
+			}
 			if(response.Quality > 10 && response.CheckBit == 1 && response.StartFlag == 1 && response.Angle < 360 && response.Angle >= 0)
 			{
-				Double angle = response.Angle.AddDegrees(Offset);
 				Double offset = angle / VectorSize;
-				_vectors[(int)offset] = Math.Max(response.Distance, .001);
-				_lastGoodSampleTime = DateTime.UtcNow;
-			}
-			//int intDeg = (int)response.Angle;
-			//for(int u = (int)_lastScanHeading.AddDegrees(1);intDeg != response.Angle;intDeg++)
-			//{
+				int intOffset = (int)offset;
 
-			//}
+//				Console.WriteLine("Got entry at {0}... Clear from {1} to {2}", intOffset, VectorArrayInc(_lastScanOffset), intOffset);
+				Double distance = Math.Max(response.Distance, .001);
+				_vectors[intOffset] = distance;
+				DateTime now = DateTime.UtcNow;
+				_lastSetTimes[intOffset] = now;
+				_lastGoodSampleTime = now;
+
+				LidarSample sample = new LidarSample(angle, distance, now);
+				Sample(sample);
+
+				_lastScanOffset = intOffset;
+			}
+
+			if(DateTime.UtcNow > _lastTrimTime + VectorRefreshTime)
+			{
+				TrimVectors();
+			}
+		}
+
+		private void TrimVectors()
+		{
+			DateTime now = DateTime.UtcNow;
+			for(int x = 0;x < _lastSetTimes.Length;x++)
+			{
+				if(now > _lastSetTimes[x] + VectorRefreshTime)
+				{
+					_vectors[x] = 0;
+				}
+			}
+
+			_lastTrimTime = now;
+		}
+
+		private int VectorArrayInc(int index)
+		{
+			if(++index >= _vectors.Length)
+				index = 0;
+			return index;
 		}
 
 		private void ProcessExpressScanResponse(ExpressScanResponse response)
@@ -502,5 +564,14 @@ namespace RaspiCommon
 			Port.Write(data, 0, data.Length);
 		}
 
+		public void ClearDistanceVectors()
+		{
+			Array.Clear(_vectors, 0, _vectors.Length);
+		}
+
+		public override string ToString()
+		{
+			return String.Format("RPLIDAR @ {0}", PortName);
+		}
 	}
 }

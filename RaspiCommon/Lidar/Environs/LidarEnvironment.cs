@@ -7,9 +7,12 @@ using System.Threading.Tasks;
 using Emgu.CV;
 using Emgu.CV.CvEnum;
 using Emgu.CV.Structure;
+using Emgu.CV.Util;
 using KanoopCommon.Extensions;
 using KanoopCommon.Geometry;
 using KanoopCommon.Logging;
+using RaspiCommon.Extensions;
+using RaspiCommon.Server;
 
 namespace RaspiCommon.Lidar.Environs
 {
@@ -17,31 +20,36 @@ namespace RaspiCommon.Lidar.Environs
 	{
 		#region Constants
 
-		const Double MINIMUM_LANDMARK_SEGMENT = .15;		// line segments must be at least this many meters in order to be considered
+		const Double MINIMUM_LANDMARK_SEGMENT = .10;		// line segments must be at least this many meters in order to be considered
 		const Double MINIMUM_CONNECT_LENGTH = .025;			// right angle rays must be within this many meters to connect
 		const Double MAXIMUM_CONNECT_LENGTH = 1;			// will not connect right angle this far apart
 		const Double RIGHT_ANGLE_SLACK_DEGREES = 1;			// slack from 90° which may still constitute right angle
 		const Double MINIMUM_LANDMARK_SEPARATION = .1;		// landmarks must be this many meters apart
 		const Double BEARING_SLACK = 2;                     // degrees slack when computing similar angles
-		const Double LINE_PATH_WIDTH = .1;					// lines must be within this many meters to be consolidated into a single line
+		const Double LINE_PATH_WIDTH = .1;                  // lines must be within this many meters to be consolidated into a single line
+
+		public const Double RANGE_FUZZ = 2;
 
 		#endregion
 
 		public Double MetersSquare { get; private set; }
-		public Double PixelsPerMeter { get; private set; }
-		public Double Orientation { get; private set; }
+		public Double PixelsPerMeter { get; set; }
 
-		public PointD Location { get; private set; }
-		public Double Bearing { get; set; }
+		public PointD Location { get; set; }
+		public Double Bearing { get { return Lidar.Bearing; }  set { Lidar.Bearing = value; } }
 
 		public LandmarkList Landmarks { get; private set; }
 		public BarrierList Barriers { get; private set; }
 		public List<RectangleD> Paths { get; private set; }
 
-		public Image<Bgr, Byte> Image { get; private set; }
+		public Mat Image { get; private set; }
 
 		public PointD BitmapCenter { get { return new PointD(Image.Width / 2, Image.Height / 2); } }
 		public PointD GeoCenter { get { return BitmapCenter; } }
+
+		public RPLidar Lidar { get; set; }
+
+		public PointD RelativeLocation { get; set; }
 
 		Color NextColor
 		{
@@ -61,44 +69,70 @@ namespace RaspiCommon.Lidar.Environs
 		};
 		int _colorIndex;
 
-		List<String> _debugTags = new List<string>() { "_000", "_020", "_004", "_028" };
+		LidarServer _server;
 
-		public LidarEnvironment(Double metersSquare, Double pixelsPerMeter, Double orientation = 0)
+		List<String> _debugTags = new List<string>() { "006", "009", "014" };
+
+		public LidarEnvironment(Double metersSquare, Double pixelsPerMeter)
 		{
+			Log.SysLogText(LogLevel.DEBUG, "Init 1");
 			MetersSquare = metersSquare;
 			PixelsPerMeter = pixelsPerMeter;
-			Orientation = orientation;
 
-			Image = new Image<Bgr, byte>((int)(MetersSquare * PixelsPerMeter), (int)(MetersSquare * PixelsPerMeter));
-			Image.Draw(new Rectangle(0, 0, Image.Size.Width, Image.Size.Height), new Bgr(Color.Black), 0);
+			Log.SysLogText(LogLevel.DEBUG, "Init 1-1");
+			//			Image = new Image<Bgr, byte>((int)(MetersSquare * PixelsPerMeter), (int)(MetersSquare * PixelsPerMeter));
+			//			Image.Draw(new Rectangle(0, 0, Image.Size.Width, Image.Size.Height), new Bgr(Color.Black), 0);
 
-			Location = new PointD(Image.Width / 2, Image.Height / 2);
+			//Location = new PointD(Image.Width / 2, Image.Height / 2);
 
+			Log.SysLogText(LogLevel.DEBUG, "Init 2");
 			Landmarks = new LandmarkList();
 			Barriers = new BarrierList();
 			Paths = new List<RectangleD>();
 
-			Bearing = 0;
-
+			Log.SysLogText(LogLevel.DEBUG, "Init 3");
 			_colorIndex = 0;
 		}
 
-		public void ProcessImage(Image<Bgr, Byte> image, Double imageOrientation, Double imagePixelsPerMeter)
+		public void ProcessImage(Mat image, Double imageOrientation, Double imagePixelsPerMeter)
 		{
-			PointD imageCenter = new PointD(image.Width / 2, image.Height / 2);
+			Image = image;
 
-			Double cannyThreshold = 120;			// 180
-			Double cannyThresholdLinking = 120;     // 120
+			Double cannyThreshold = 120;				// 180
+			Double cannyThresholdLinking = 120;         // 120
 
-			LineSegment2D[][] segments = image.HoughLines(cannyThreshold, cannyThresholdLinking, 1, Math.PI / 45, 20, 1, 10);
+			Double rhoRes = 2;
+			Double thetaRes = Math.PI / 45;
+			int threshold = 20;							// decrease to get more lines
+
+			Mat outputImage = Image.Clone();
+
+			CvInvoke.Canny(Image, outputImage, cannyThreshold, cannyThresholdLinking);
+			LineSegment2D[] segments = CvInvoke.HoughLinesP(outputImage, rhoRes, thetaRes, (int)threshold);
+			LineList lines = segments.ToLineList();
+			lines.RemoveInvalid();
+
+			lines.DumpToLog();
+
+			Log.SysLogText(LogLevel.DEBUG, "---------------Sort ----------------");
+
+			lines.SortUpperLeft();
+			lines.DumpToLog();
+
+			Log.SysLogText(LogLevel.DEBUG, "Have {0} segments", lines.Count);
+
+			Mat temp = Image.Clone();
+			foreach(Line line in lines)
+			{
+				CvInvoke.Line(temp, line.P1.ToPoint(), line.P2.ToPoint(), new Bgr(Color.GreenYellow).MCvScalar, 3);
+			}
+			temp.Save(@"\\raspi\pi\tmp\junk.png");
 
 			LandmarkList landmarks;
 			BarrierList barriers;
-			FindLandmarks(segments[0], new PointD(image.Width / 2, image.Height / 2), out landmarks, out barriers);
+			FindLandmarks(lines, out landmarks, out barriers);
 
-			Log.SysLogText(LogLevel.DEBUG, "Have {0} segments", segments[0].Length);
-
-
+			PointD imageCenter = new PointD(Image.Width / 2, Image.Height / 2);
 			foreach(Landmark landmark in landmarks)
 			{
 				PointD p = ImagePointToInternalPoint(landmark.Location, imageCenter, imageOrientation, imagePixelsPerMeter);
@@ -107,6 +141,11 @@ namespace RaspiCommon.Lidar.Environs
 					Landmarks.Add(new Landmark(p));
 				}
 			}
+
+			Mat output = Image.Clone();
+			output.Save(@"\\raspi\pi\tmp\junk3.png");
+			Log.SysLogText(LogLevel.DEBUG, "Have {0} segments", lines.Count);
+
 
 			Log.SysLogText(LogLevel.DEBUG, "******** {0} landmarks found", landmarks.Count);
 
@@ -135,8 +174,7 @@ namespace RaspiCommon.Lidar.Environs
 			return internalLine.P2 as PointD;
 		}
 
-		private LandmarkList FindLandmarks(	IEnumerable<LineSegment2D> segments, 
-											PointD center, 
+		private LandmarkList FindLandmarks(	LineList segments, 
 											out LandmarkList landmarks, 
 											out BarrierList barriers)
 		{
@@ -149,7 +187,7 @@ namespace RaspiCommon.Lidar.Environs
 
 			// get rid of any short segments, and aggregate into Line objects
 			int lineNumber = 0;
-			foreach(LineSegment2D segment in segments)
+			foreach(Line segment in segments)
 			{
 				Line line = new Line(segment.P1, segment.P2);
 				Double actualLength = line.Length / PixelsPerMeter;
@@ -159,19 +197,17 @@ namespace RaspiCommon.Lidar.Environs
 				if(actualLength < MINIMUM_LANDMARK_SEGMENT)
 				{
 					Log.SysLogText(LogLevel.DEBUG, "Abandoning segment");
-					continue;
+					//continue;
 				}
 
-				if(line.P1.Y > 400)
-				{
-					int i = 1;
-				}
 				line.Tag = String.Format("Line_{0:000}", lineNumber++);
 //				if(_debugTags.Find(c => line.ToString().Contains(c)) != null)
 				{
 					lines.Add(line);
 
-					barriers.Add(new Barrier(line));
+					Barrier barrier = new Barrier(line);
+					barriers.Add(barrier);
+					Log.SysLogText(LogLevel.DEBUG, "Keeping Barrier @{0} ", barrier);
 				}
 			}
 
@@ -180,7 +216,7 @@ namespace RaspiCommon.Lidar.Environs
 			Double pathWidthPixels = LINE_PATH_WIDTH * PixelsPerMeter;
 			while(lines.Count > 0)
 			{
-//				Double extendPath = 1 * PixelsPerMeter;
+				Double extendPath = .15 * PixelsPerMeter;
 
 				Line l1 = lines[0];
 				LineList similarLines = new LineList();
@@ -207,7 +243,7 @@ namespace RaspiCommon.Lidar.Environs
 
 				// if there are more than one line in the similar bucket, add them to the right slot
 				// and remove them from the list
-				if(similarLines.Count > 1)
+				if(similarLines.Count > 0)
 				{
 					bool foundGroup = false;
 					for(int x = 0;x < groups.Count;x++)
@@ -253,7 +289,7 @@ namespace RaspiCommon.Lidar.Environs
 
 			lines = consolidatedLines;
 
-			bool remakeBarriers = false;
+			bool remakeBarriers = true;
 			if(remakeBarriers)
 			{
 				barriers = new BarrierList();
@@ -309,31 +345,90 @@ namespace RaspiCommon.Lidar.Environs
 			return length * PixelsPerMeter;
 		}
 
-		public Bitmap ToImage()
+		public Mat GetEnvironmentImage(bool drawDebugLines)
 		{
-			Image<Bgr, Byte> image = Image.Clone();
+			Mat image = Image.Clone();
 
-			image.Draw(new Cross2DF(BitmapCenter.ToPoint(), 4, 4), new Bgr(Color.GreenYellow), 2);
+
+			Cross2DF cross = new Cross2DF(BitmapCenter.ToPoint(), 4, 4);
+			CvInvoke.Line(image, cross.Vertical.P1.ToPoint(), cross.Vertical.P2.ToPoint(), new Bgr(Color.GreenYellow).MCvScalar);
+			CvInvoke.Line(image, cross.Horizontal.P1.ToPoint(), cross.Horizontal.P2.ToPoint(), new Bgr(Color.GreenYellow).MCvScalar);
 
 			int last = 0;
 			foreach(Barrier barrier in Barriers)
 			{
 				Color color = NextColor;
-				image.Draw(new LineSegment2D(barrier.Line.P1.ToPoint(), barrier.Line.P2.ToPoint()), new Bgr(color), 2, LineType.EightConnected);
-				PointD where = ((PointD)barrier.Line.P1).GetPointAt(180, 20 + last) as PointD;
-//				image.Draw(barrier.ToString(), where.ToPoint(), FontFace.HersheyPlain, 1, new Bgr(color));
-
-				//last += 5;
-				Log.SysLogText(LogLevel.DEBUG, "---- {0}", barrier);
+				CvInvoke.Line(image, barrier.Line.P1.ToPoint(), barrier.Line.P2.ToPoint(), new Bgr(color).MCvScalar, 2);
 			}
 
 			foreach(Landmark landmark in Landmarks)
 			{
 				CircleF circle1 = new CircleF(landmark.Location.ToPoint(), 3);
-				image.Draw(circle1, new Bgr(Color.Red), 1);
+				CvInvoke.Circle(image, circle1.Center.ToPoint(), (int)circle1.Radius, new Bgr(Color.Red).MCvScalar, 1);
 			}
 
-			return image.ToBitmap();
+			return image;
+		}
+
+		public Double ShortestRangeAtBearing(Double trueBearing = 0, Double angularWidth = RANGE_FUZZ)
+		{
+			Double start = trueBearing.SubtractDegrees(angularWidth / 2);
+			Double end = trueBearing.AddDegrees((angularWidth / 2) + 1);
+
+			List<Double> allDistances = new List<double>();
+			Double angle = start;
+			while(angle.IsWithinDegressOf(end, Lidar.VectorSize) == false)
+			{
+				Double distance = Lidar.GetRangeAtBearing(angle);
+				//Log.SysLogText(LogLevel.DEBUG, "At {0:0.000}° range is {1:0.000}", angle, distance);
+				if(distance != 0)
+				{
+					allDistances.Add(distance);
+				}
+
+				angle = angle.AddDegrees(Lidar.VectorSize);
+			}
+
+			return allDistances.Count > 0 ? allDistances.Min() : 0;
+		}
+
+		public Double FuzzyRangeAtBearing(Double trueBearing = 0, Double angularWidth = RANGE_FUZZ)
+		{
+			Double start = trueBearing.SubtractDegrees(angularWidth / 2);
+			Double end = trueBearing.AddDegrees((angularWidth / 2) + 1);
+
+			List<Double> allDistances = new List<double>();
+			Double angle = start;
+			while(angle.IsWithinDegressOf(end, Lidar.VectorSize) == false)
+			{
+				Double distance = Lidar.GetRangeAtBearing(angle);
+				 //Log.SysLogText(LogLevel.DEBUG, "At {0:0.000}° range is {1:0.000}", angle, distance);
+				if(distance != 0)
+				{
+					allDistances.Add(distance);
+				}
+
+				angle = angle.AddDegrees(Lidar.VectorSize);
+			}
+
+			return allDistances.Count > 0 ? allDistances.Average() : 0;
+		}
+
+		public void Reset()
+		{
+			Lidar.ClearDistanceVectors();
+		}
+
+		public void StartRangeServer()
+		{
+			_server = new LidarServer(Lidar);
+			_server.Start();
+		}
+
+		public void StopRangeServer()
+		{
+			_server.Stop();
+			_server = null;
 		}
 
 	}

@@ -10,7 +10,8 @@ namespace TrackBot.Spatial
 	{
 		None,
 		RoamAndSeekUS,
-		RoamAndSeek
+		RoamAndSeek,
+		TravelLongestPath
 	}
 
 	public enum CellContents

@@ -24,11 +24,11 @@ namespace KanoopCommon.Addresses
 
 		#region Private Member Variables
 
-		private String					m_strHostName;
-		private UInt16					m_Port;
+		private String					_hostName;
+		private UInt16					_port;
 
-		bool							m_bResolved;
-		IPv4ResolvedAddressPort			m_ResolvedAddress;
+		bool							_resolved;
+		IPv4ResolvedAddressPort			_resolvedAddress;
 
 		#endregion
 
@@ -41,17 +41,17 @@ namespace KanoopCommon.Addresses
 		
 		public UInt16 Port
 		{
-			get { return m_Port; }
+			get { return _port; }
 			set 
 			{
-				m_Port = value; 
-				Address = String.Format("{0}:{1}", AddressAsIPv4Address.Address, m_Port);
+				_port = value; 
+				Address = String.Format("{0}:{1}", AddressAsIPv4Address.Address, _port);
 			}
 		}
 
 		public String HostName
 		{
-			get { return m_strHostName; }
+			get { return _hostName; }
 		}
 
 		public static IPv4AddressPort EmptyAddress
@@ -63,12 +63,12 @@ namespace KanoopCommon.Addresses
 		{
 			get 
 			{
-				if (!m_bResolved)
+				if (!_resolved)
 				{
 					ResolveHostName();
 				}
 
-				return (m_bResolved) ? m_ResolvedAddress.ToString() : _address;
+				return (_resolved) ? _resolvedAddress.ToString() : _address;
 			}
 			set 
 			{
@@ -80,13 +80,13 @@ namespace KanoopCommon.Addresses
 		{
 			get 
 			{
-				if(m_bResolved == false && ResolveHostName() == false)
+				if(_resolved == false && ResolveHostName() == false)
 				{
 					return new IPv4Address();
 				}
 				else
 				{
-					return m_ResolvedAddress.AddressAsIPv4Address;
+					return _resolvedAddress.AddressAsIPv4Address;
 				}
 			}
 			set { this.Address = value.Address; }
@@ -96,21 +96,21 @@ namespace KanoopCommon.Addresses
 		{
 			get 
 			{
-				if(m_bResolved == false && ResolveHostName() == false)
+				if(_resolved == false && ResolveHostName() == false)
 				{
 					return new byte[0];
 				}
 				else
 				{
-					return m_ResolvedAddress.AddressAsByteArray;
+					return _resolvedAddress.AddressAsByteArray;
 				}
 			}
 			set 
 			{
-				if (m_ResolvedAddress == null)
-					m_ResolvedAddress = new IPv4ResolvedAddressPort();
-				m_ResolvedAddress.AddressAsByteArray = value;
-				m_bResolved = true;
+				if (_resolvedAddress == null)
+					_resolvedAddress = new IPv4ResolvedAddressPort();
+				_resolvedAddress.AddressAsByteArray = value;
+				_resolved = true;
 				_type = AddressType.IP4_PORT;
 			}
 		}
@@ -119,19 +119,19 @@ namespace KanoopCommon.Addresses
 		{
 			get 
 			{
-				if(m_bResolved == false && ResolveHostName() == false)
+				if(_resolved == false && ResolveHostName() == false)
 				{
 					return new IPEndPoint(IPAddress.Any, 0);
 				}
 				else
 				{
-					return m_ResolvedAddress.AddressAsIPEndPoint;
+					return _resolvedAddress.AddressAsIPEndPoint;
 				}
 			}
 			set 
 			{
-				m_ResolvedAddress.AddressAsIPEndPoint = value;
-				m_bResolved = true;
+				_resolvedAddress.AddressAsIPEndPoint = value;
+				_resolved = true;
 				_type = AddressType.IP4_PORT;
 			}
 		}
@@ -143,10 +143,10 @@ namespace KanoopCommon.Addresses
 		public IPv4AddressPort()
 			: base(EMPTY_ADDRESS, AddressType.IP4_PORT)
 		{
-			m_Port = 0;
-			m_bResolved = false;
-			m_ResolvedAddress = null;
-			m_strHostName = String.Empty;
+			_port = 0;
+			_resolved = false;
+			_resolvedAddress = null;
+			_hostName = String.Empty;
 		}
 
 		public IPv4AddressPort(byte[] inArray) 
@@ -221,21 +221,21 @@ namespace KanoopCommon.Addresses
 			bool result = false;
 			try
 			{
-				IPHostEntry hostEntry = Dns.GetHostEntry(m_strHostName);
+				IPHostEntry hostEntry = Dns.GetHostEntry(_hostName);
 				IPAddress[] addressList = hostEntry.AddressList;
 				for(int x = 0;x < addressList.Length && result == false;x++)
 				{
 					if (addressList[x].AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork && addressList[x].GetAddressBytes()[0] != 169)
 					{
-						m_ResolvedAddress = new IPv4ResolvedAddressPort(String.Format("{0}:{1}", addressList[x].ToString(), m_Port));
-						m_bResolved = true;
+						_resolvedAddress = new IPv4ResolvedAddressPort(String.Format("{0}:{1}", addressList[x].ToString(), _port));
+						_resolved = true;
 						result = true;
 					}
 				}
 			}
 			catch(Exception e)
 			{
-				Log.SysLogText(LogLevel.WARNING, "IPv4AddressPort Resolve Host '{0}' Exception {1}", m_strHostName, e.Message);
+				Log.SysLogText(LogLevel.WARNING, "IPv4AddressPort Resolve Host '{0}' Exception {1}", _hostName, e.Message);
 			}
 			return result;
 		}
@@ -244,24 +244,24 @@ namespace KanoopCommon.Addresses
 		{
 			String[] splitByPort;
 			splitByPort = value.Split(':');
-			m_strHostName = "";
+			_hostName = "";
 
 			if (splitByPort.Length == 2)
 			{
-				m_strHostName = splitByPort[0];
-				m_Port = UInt16.Parse(splitByPort[1], System.Globalization.NumberStyles.Integer);
+				_hostName = splitByPort[0];
+				_port = UInt16.Parse(splitByPort[1], System.Globalization.NumberStyles.Integer);
 			}
 
 			List<String> splitByDots = new List<String>(splitByPort[0].Split('.'));
 			if(splitByDots.Count == AddressLengths.IP4_NOPORT && splitByDots.AreAllDigits())
 			{
-				m_ResolvedAddress = new IPv4ResolvedAddressPort(value);
-				m_bResolved = true;
+				_resolvedAddress = new IPv4ResolvedAddressPort(value);
+				_resolved = true;
 			}
-			else if(m_strHostName.Length == 0)
+			else if(_hostName.Length == 0)
 			{
-				m_strHostName = splitByPort[0];
-				m_bResolved = false;
+				_hostName = splitByPort[0];
+				_resolved = false;
 			}
 			_type = AddressType.IP4_PORT;
 			_address = value;

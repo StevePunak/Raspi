@@ -4,6 +4,7 @@ using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Emgu.CV;
 using KanoopCommon.Extensions;
 using KanoopCommon.Geometry;
 
@@ -88,7 +89,7 @@ namespace TrackBot.Spatial
 				{
 					if(longestLine == null || line.Length > longestLine.Length)
 					{
-						Console.WriteLine("Got longest line {0:0.0} meters [{1} to {2}] at {3:0.00}°", line.Length, line.P1, line.P2, line.Bearing);
+//						Console.WriteLine("Got longest line {0:0.0} meters [{1} to {2}] at {3:0.00}°", line.Length, line.P1, line.P2, line.Bearing);
 						longestLine = line;
 					}
 				}
@@ -100,7 +101,7 @@ namespace TrackBot.Spatial
 
 		public void SaveBitmap()
 		{
-			Bitmap bitmap = Widgets.Lidar.GenerateBitmap();  // Widgets.Environment.Grid.ConvertToBitmap(10);
+			Mat bitmap = Widgets.Environment.GenerateBitmap(false, false);  // Widgets.Environment.Grid.ConvertToBitmap(10);
 			bitmap.Save("/var/www/html/grid.png");
 
 			Console.WriteLine("Bitmap saved");

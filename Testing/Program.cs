@@ -2,18 +2,24 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Emgu.CV;
+using Emgu.CV.CvEnum;
 using Emgu.CV.Structure;
+using Emgu.CV.Util;
+using KanoopCommon.Extensions;
 using KanoopCommon.Geometry;
 using KanoopCommon.Logging;
 using KanoopCommon.Queueing;
 using KanoopCommon.Threading;
+using RaspiCommon.Extensions;
 using RaspiCommon.Lidar;
 using RaspiCommon.Lidar.Environs;
+using RaspiCommon.Server;
 
 namespace RaspiCommon
 {
@@ -26,54 +32,131 @@ namespace RaspiCommon
 		{
 			OpenLog();
 
-			PointD p1 = new PointD(500, 500);
-			PointD p2 = FlatGeo.GetPoint(p1, 0, 30);
+
+			TestServer();
 
 			EMGUTest();
 
 			RunLidar();
 		}
 
+		private static void TestServer()
+		{
+			LidarServer server = new LidarServer(null);
+			server.Start();
+
+			Thread.Sleep(1000000);
+		}
+
 		private static void EMGUTest()
 		{
-			String root = Environment.OSVersion.Platform == PlatformID.Unix ? "./" : @"c:\pub\tmp\";
+			String root = Environment.OSVersion.Platform == PlatformID.Unix ? "./" : @"\\raspi\pi\tmp";
 
-			List<String> files = new List<string>()
+			while(true)
 			{
-				"1.png", "2.png", "3.png"
-			};
+				TestImage();
 
-			List<Double> bearings = new List<double>()
-			{
-				0, 0, 90
-			};
-
-			for(int x = 0;x < files.Count;x++)
-			{
-				while(true)
+				foreach(String file in Directory.GetFiles(root, "grid*png"))
 				{
-				String file = files[x];
-				String inFile = root + file;
-				String outFile = root + "output." + file;
+					//if(file.Contains("000") == false)
+					//	continue;
 
-				Double PixelsPerMeter = 50;
+					Log.SysLogText(LogLevel.DEBUG, "\n\n\n\n\n");
+					int index = file.IndexOf("grid");
+					if(index > 0 && Char.IsDigit(file[index + 4]))
+					{
+						String part = file.Substring(index + 4, 3);
+						index = int.Parse(part);
+					}
 
-				Image<Bgr, Byte> image = new Image<Bgr, byte>(inFile);
+					String inFile = root + file;
 
-				PointD currentPoint = new PointD(image.Width / 2, image.Height / 2);
+					Double PixelsPerMeter = 50;
 
-				LidarEnvironment env = new LidarEnvironment(10, PixelsPerMeter);
-				env.ProcessImage(image, bearings[x], PixelsPerMeter);
+					Mat image = new Mat(file);
+					PointD currentPoint = new PointD(image.Width / 2, image.Height / 2);
 
-				Image output = env.ToImage();
-				output.Save(outFile);
+					LidarEnvironment env = new LidarEnvironment(10, PixelsPerMeter);
+					env.Location = currentPoint;
+					env.ProcessImage(image, 0, PixelsPerMeter);
+
+					Mat output = env.GetEnvironmentImage(false);
+					String outFile = String.Format(@"{0}\output_{1:000}-a.png", root, index);
+					output.Save(outFile);
+					output = env.GetEnvironmentImage(true);
+					outFile = String.Format(@"{0}\output_{1:000}-b.png", root, index);
+					output.Save(outFile);
+
 				}
 			}
-
+		
 			Log.LogText(LogLevel.DEBUG, "Done");
 		}
 
+		private static void TestImage()
+		{
+			Double angle = 356.5;
+			Double DebugAngle = 0;
+			if(angle.AngularDifference(DebugAngle) < 4)
+			{
 
+			}
+
+			Mat mat = new Mat(@"\\raspi\pi\tmp\grid008.png");
+			PointD center = new PointD(mat.Width / 2, mat.Height / 2);
+
+			MCvScalar c1 = new Bgr(Color.Green).MCvScalar;
+			MCvScalar c2 = new Bgr(Color.Blue).MCvScalar;
+			MCvScalar c3 = new Bgr(Color.Orange).MCvScalar;
+			MCvScalar c4 = new Bgr(Color.Purple).MCvScalar;
+
+			Mat tank = new Mat("tank2.png");
+			CvInvoke.Resize(tank, tank, new Size(25, 25));
+
+			PointD tankcenter = tank.CenterPoint();
+			Mat rotationMatrix = new Mat();
+			CvInvoke.GetRotationMatrix2D(tankcenter.ToPoint(), 270, 1, rotationMatrix);
+			Mat rotated = new Mat();
+			CvInvoke.WarpAffine(tank, rotated, rotationMatrix, tank.Size);
+
+			PointD drawLocation = new PointD(center.X - tank.Width / 2, center.Y - tank.Height / 2);
+
+			Rectangle roi = new Rectangle((int)drawLocation.X, (int)drawLocation.Y, tank.Width, tank.Height);
+			rotated.CopyTo(new Mat(mat, roi));
+
+
+
+
+			//			Mat tmp = new Mat(mat, roi);
+			//			tank.CopyTo(tmp);
+
+			//Rectangle r = CvInvoke.cvGetImageROI(mat);
+			//CvInvoke.cvSetImageROI(mat, roi);
+			//tank.CopyTo(mat);
+
+			//			Line l1 = new Line(new PointD(100, 100), new PointD(200, 200));
+			//			CvInvoke.Line(mat, l1.P1.ToPoint(), l1.P2.ToPoint(), c1);
+
+#if z
+			Line l2 = new Line(new PointD(205, 205), new PointD(400, 400));
+			CvInvoke.Line(mat, l2.P1.ToPoint(), l2.P2.ToPoint(), c2);
+
+			RectangleD rect1, rect2;
+			if(l1.LiesAlongThePathOf(l2, 6, out rect1, out rect2, 8))
+			{
+			}
+
+			VectorOfPoint v1 = new VectorOfPoint(rect1.ToPointDList().ToPointArray());
+			CvInvoke.Polylines(mat, v1, true, c3);
+			if(rect2 != null)
+			{
+				VectorOfPoint v2 = new VectorOfPoint(rect2.ToPointDList().ToPointArray());
+				CvInvoke.Polylines(mat, v2, true, c4);
+			}
+
+#endif
+			mat.Save(@"\\raspi\pi\tmp\junk.png");
+		}
 
 		static void RunMotor()
 		{

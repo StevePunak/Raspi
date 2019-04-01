@@ -40,6 +40,16 @@ namespace KanoopCommon.Geometry
 
 		#region Conversions
 
+		public Point[] ToPointArray()
+		{
+			List<Point> points = new List<Point>();
+			foreach(PointD point in this)
+			{
+				points.Add(point.ToPoint());
+			}
+			return points.ToArray();
+		}
+
 		public LineList ToLineList()
 		{
 			LineList list = new LineList();
