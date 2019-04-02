@@ -1,4 +1,4 @@
-﻿using KanoopCommon.Types;
+using KanoopCommon.Types;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Text;

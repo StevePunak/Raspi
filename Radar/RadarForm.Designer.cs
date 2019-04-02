@@ -1,4 +1,4 @@
-﻿namespace Radar
+namespace Radar
 {
 	partial class RadarForm
 	{

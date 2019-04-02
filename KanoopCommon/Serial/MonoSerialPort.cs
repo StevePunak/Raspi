@@ -1,4 +1,4 @@
-﻿#undef ASYNC_READ
+#undef ASYNC_READ
 using System;
 using System.Collections.Generic;
 using System.IO.Ports;

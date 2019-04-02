@@ -1,4 +1,4 @@
-﻿using KanoopCommon.CommonObjects;
+using KanoopCommon.CommonObjects;
 using KanoopCommon.Conversions;
 using KanoopCommon.Database;
 using System.Collections.Generic;

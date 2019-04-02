@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using KanoopCommon.Geometry;
 using KanoopCommon.Database;
 using System.Globalization;

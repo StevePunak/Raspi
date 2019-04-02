@@ -1,4 +1,4 @@
-﻿#undef DEBUG_SERIAL
+#undef DEBUG_SERIAL
 
 using System;
 using System.Collections.Generic;

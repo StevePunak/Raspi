@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Runtime.Caching;
 using System.Collections.Generic;
 using KanoopCommon.Logging;
