@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Emgu.CV;
 using KanoopCommon.Geometry;
+using RaspiCommon.Lidar.Environs;
 
 namespace TrackBot.Spatial
 {
@@ -25,17 +26,18 @@ namespace TrackBot.Spatial
 		Double VectorSize { get; }
 		PointD Location { get; set; }
 		PointD RelativeLocation { get; set; }
+		Double RangeFuzz { get; }
+		FuzzyPath FuzzyPath { get; set; }
 
 		void ProcessImage(Mat image, Double imageOrientation, Double imagePixelsPerMeter);
 		Mat GetEnvironmentImage(bool drawDebugLines);
 
 		Double GetRangeAtBearing(Double bearing);
-		Double FuzzyRangeAtBearing(Double bearing, Double fuzz = 2);
-		Double ShortestRangeAtBearing(Double bearing, Double fuzz = 2);
+		Double FuzzyRangeAtBearing(Double bearing, Double fuzz);
+		Double ShortestRangeAtBearing(Double bearing, Double fuzz);
 		DateTime GetLastSampleTimeAtBearing(Double bearing);
 		Mat GenerateBitmap(bool radarLines, bool drawVehicle);
-
-		Line FindGoodDestination();
+		FuzzyPath FindGoodDestination();
 
 		void Reset();
 	}

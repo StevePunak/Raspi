@@ -1,124 +1,68 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using KanoopCommon.Addresses;
 using KanoopCommon.CommonObjects;
+using KanoopCommon.Logging;
 using KanoopCommon.TCP.Clients;
 using KanoopCommon.Threading;
+using MQTT;
+using MQTT.Examples;
+using MQTT.Packets;
 using RaspiCommon.Lidar;
+using RaspiCommon.Lidar.Environs;
 
 namespace RaspiCommon.Server
 {
-	public class LidarClient : TcpClientClient
+	public class LidarClient : SubscribeThread
 	{
 		public const Double VectorSize = .25;
 
-		public IPv4AddressPort Host { get; private set; }
-
-		byte[] _recvBuffer;
-		int _bytes;
-
-		MutexLock _lock;
-
 		public LidarVector[] Vectors;
 
-		public LidarClient(String host)
+		public FuzzyPath FuzzyPath { get; private set; }
+
+		public LidarClient(String host, String clientID, List<String> topics)
+			: base(host, clientID, topics)
 		{
-			IPv4AddressPort address;
-			if(!IPv4AddressPort.TryParseHostPort(host, out address))
-			{
-				throw new CommonException("Could not parse address");
-			}
-			Host = address;
-
-			_recvBuffer = new byte[16364];
-			_bytes = 0;
-
-			_lock = new MutexLock();
-
 			Vectors = new LidarVector[(int)(360 / VectorSize)];
-		}
-
-		public void Connect()
-		{
-			DataReceived += OnDataReceived;
-			base.Connect(Host);
-		}
-	
-		private void OnDataReceived(byte[] data)
-		{
-			try
+			for(int offset = 0;offset < Vectors.Length;offset++)
 			{
-				_lock.Lock();
-
-				if(data.Length + _bytes > _recvBuffer.Length)
+				Vectors[offset] = new LidarVector()
 				{
-					_bytes = 0;
-					return;
-				}
-
-				Array.Copy(data, 0, _recvBuffer, _bytes, data.Length);
-				_bytes += data.Length;
-				while(_bytes > 0 && _recvBuffer[0] != '!')
-				{
-					RemoveBytes(1);
-				}
-
-				while(_bytes >= LidarServer.PacketSize)
-				{
-					TakePacket();
-				}
-			}
-			finally
-			{
-				_lock.Unlock();
-			}
-		}
-
-		int parsed = 0;
-		void TakePacket()
-		{
-			try
-			{
-				String sangle = ASCIIEncoding.UTF8.GetString(_recvBuffer, 1, 7);
-				String srange = ASCIIEncoding.UTF8.GetString(_recvBuffer, 8, 4);
-
-				Double angle, range;
-				if(Double.TryParse(sangle, out angle) == false || Double.TryParse(srange, out range) == false)
-				{
-					throw new CommonException("Parse error");
-				}
-				parsed++;
-
-				LidarVector vector = new LidarVector()
-				{
-					Bearing = angle,
-					Range = range,
+					Bearing = (Double)offset * VectorSize,
+					Range = 0,
 					RefreshTime = DateTime.UtcNow
 				};
-
-				int offset = (int)(angle / VectorSize);
-				if(offset >= Vectors.Length)
-				{
-					throw new CommonException("Parse error 2");
-				}
-
-				Vectors[offset] = vector;
-
-				RemoveBytes(LidarServer.PacketSize);
 			}
-			catch(Exception)
-			{
-				_bytes = 0;
-			}
+			InboundSubscribedMessage += OnLidarClientInboundSubscribedMessage;
 		}
 
-		void RemoveBytes(int count)
+		private void OnLidarClientInboundSubscribedMessage(MqttClient client, PublishMessage packet)
 		{
-			Array.Copy(_recvBuffer, count, _recvBuffer, 0, (_bytes - count));
-			_bytes -= count;
+			if(packet.Topic == LidarServer.RangeBlobTopic)
+			{
+				using(BinaryReader br = new BinaryReader(new MemoryStream(packet.Message)))
+				{
+					for(int offset = 0;offset < Vectors.Length;offset++)
+					{
+						Double range = br.ReadDouble();
+						Vectors[offset].Range = range;
+						Vectors[offset].RefreshTime = DateTime.UtcNow;
+					}
+
+				}
+			}
+			else if(packet.Topic == LidarServer.CurrentPathTopic)
+			{
+				FuzzyPath path = new FuzzyPath(packet.Message);
+				FuzzyPath = path;
+			}
+
 		}
+
 	}
 }

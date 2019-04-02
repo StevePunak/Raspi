@@ -17,6 +17,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Testing", "Testing\Testing.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Radar", "Radar\Radar.csproj", "{573B503C-3E2C-45C2-B2E3-47FF0E0BD0A0}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MQTT", "MQTT\MQTT.csproj", "{52296CEF-4BC8-423A-A1D9-9B900B3E99B9}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -111,6 +113,18 @@ Global
 		{573B503C-3E2C-45C2-B2E3-47FF0E0BD0A0}.Release|x64.Build.0 = Release|Any CPU
 		{573B503C-3E2C-45C2-B2E3-47FF0E0BD0A0}.Release|x86.ActiveCfg = Release|Any CPU
 		{573B503C-3E2C-45C2-B2E3-47FF0E0BD0A0}.Release|x86.Build.0 = Release|Any CPU
+		{52296CEF-4BC8-423A-A1D9-9B900B3E99B9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{52296CEF-4BC8-423A-A1D9-9B900B3E99B9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{52296CEF-4BC8-423A-A1D9-9B900B3E99B9}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{52296CEF-4BC8-423A-A1D9-9B900B3E99B9}.Debug|x64.Build.0 = Debug|Any CPU
+		{52296CEF-4BC8-423A-A1D9-9B900B3E99B9}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{52296CEF-4BC8-423A-A1D9-9B900B3E99B9}.Debug|x86.Build.0 = Debug|Any CPU
+		{52296CEF-4BC8-423A-A1D9-9B900B3E99B9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{52296CEF-4BC8-423A-A1D9-9B900B3E99B9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{52296CEF-4BC8-423A-A1D9-9B900B3E99B9}.Release|x64.ActiveCfg = Release|Any CPU
+		{52296CEF-4BC8-423A-A1D9-9B900B3E99B9}.Release|x64.Build.0 = Release|Any CPU
+		{52296CEF-4BC8-423A-A1D9-9B900B3E99B9}.Release|x86.ActiveCfg = Release|Any CPU
+		{52296CEF-4BC8-423A-A1D9-9B900B3E99B9}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

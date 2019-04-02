@@ -19,7 +19,7 @@ namespace TrackBot.Spatial
 {
 	class TrackLidar : LidarEnvironment, IEnvironment
 	{
-		public Double Range { get { return FuzzyRangeAtBearing(Widgets.GyMag.Bearing); } }
+		public Double Range { get { return FuzzyRangeAtBearing(Widgets.GyMag.Bearing, Widgets.Environment.RangeFuzz); } }
 		public Double CompassOffset { get { return Lidar.Offset; } set { Lidar.Offset = value; } }
 		public Size PixelSize { get { return new Size((int)(PixelsPerMeter * MetersSquare), (int)(PixelsPerMeter * MetersSquare)); } }
 		public PointD PixelCenter { get { return new PointD((int)(PixelsPerMeter * MetersSquare) / 2, (int)(PixelsPerMeter * MetersSquare) / 2); } }
@@ -58,7 +58,7 @@ namespace TrackBot.Spatial
 			Log.SysLogText(LogLevel.DEBUG, "LIDAR stopped");
 		}
 
-		public Line FindGoodDestination()
+		public FuzzyPath FindGoodDestination()
 		{
 			Console.WriteLine("Finding a destination");
 
@@ -68,7 +68,7 @@ namespace TrackBot.Spatial
 			PointD currentLocation = new PointD(0, 0);
 			for(double x = 1;x < 360;x ++)
 			{
-				if(FuzzyRangeAtBearing(x) != 0)
+				if(FuzzyRangeAtBearing(x, RangeFuzz) != 0)
 				{
 					Double bearing = startBearing.AddDegrees(x);
 					//				Console.WriteLine("From {0:0}° to {1:0}°", startBearing, bearing);
@@ -84,7 +84,13 @@ namespace TrackBot.Spatial
 				}
 			}
 
-			return longestLine;
+			FuzzyPath path = null;
+			if(longestLine != null)
+			{
+				path = MakeFuzzyPath(longestLine.Bearing, RangeFuzz);
+			}
+
+			return path;
 
 		}
 

@@ -1,103 +1,137 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
 using KanoopCommon.Addresses;
+using KanoopCommon.CommonObjects;
+using KanoopCommon.Extensions;
 using KanoopCommon.Logging;
 using KanoopCommon.TCP;
 using KanoopCommon.Threading;
+using MQTT;
+using RaspiCommon.Lidar;
+using RaspiCommon.Lidar.Environs;
 
 namespace RaspiCommon.Server
 {
-	public class LidarServer : TcpServer
+	public class LidarServer : ThreadBase
 	{
-		public const int PacketSize = 13;
-		static readonly TimeSpan ReceiveTimeout = TimeSpan.FromSeconds(5);
+		public const String RangeBlobTopic = "trackbot/lidar/rangeblob";
+		public const String BarrierTopic = "trackbot/lidar/barriers";
+		public const String CurrentPathTopic = "trackbot/lidar/currentpath";
 
-		public RPLidar Lidar { get; set; }
+		public const int RangeBlobPacketSize = sizeof(Double);
+		static readonly TimeSpan SlowRunInterval = TimeSpan.FromSeconds(1);
+		static readonly TimeSpan StandardRunInterval = TimeSpan.FromMilliseconds(250);
 
-		public LidarServer(RPLidar lidar) 
-			: base(IPAddress.Any, 1234, typeof(LidarServer).Name)
+		public LidarEnvironment Environment { get; set; }
+		
+		public MqttClient Client { get; private set; }
+
+		public String MqqtClientID { get; private set; }
+
+		public IPAddress Address { get; private set; }
+
+		private FuzzyPath _fuzzyPath;
+		private bool _fuzzyPathChanged;
+
+		public LidarServer(LidarEnvironment environment, String mqqtBrokerAddress, String mqqtClientID)
+			: base(typeof(LidarServer).Name)
 		{
-			Lidar = lidar;
+			IPAddress address;
+
+			if( IPAddress.TryParse(mqqtBrokerAddress, out address) == false &&
+				IPAddressExtensions.TryResolve(mqqtBrokerAddress, out address) == false)
+			{
+				throw new CommonException("Could not resolve '{0}' to a host", mqqtBrokerAddress);
+			}
+			Address = address;
+			MqqtClientID = mqqtClientID;
+			Environment = environment;
+
+			Environment.FuzzyPathChanged += OnEnvironment_FuzzyPathChanged;
+			_fuzzyPathChanged = false;
 
 			Interval = TimeSpan.FromMilliseconds(250);
-
-			ConnectionDebugLogging = true;
 		}
 
-		protected override TcpConnectedClient OnConnectionReceived(TcpClient client, TcpListener listener)
+		protected override bool OnStart()
 		{
-			Console.WriteLine("Received new connection to range server");
-			return new RangeServerClient(client, listener, this);
+			return base.OnStart();
 		}
 
 		protected override bool OnRun()
 		{
-			List<TcpConnectedClient> clients = Clients;
-
-			if(clients.Count > 0)
+			try
 			{
-				foreach(RangeServerClient client in clients)
+				if(Client == null || Client.Connected == false)
 				{
-					StringBuilder sb = new StringBuilder(PacketSize * (int)(Lidar.VectorSize / 360));
+					GetConnected();
+				}
 
-					for(int offset = 0;offset < Lidar.Vectors.Length;offset++)
-					{
-						Double angle = (Double)offset * Lidar.VectorSize;
+				if(Client.Connected)
+				{
+					SendRangeData();
 
-						sb.AppendFormat("!{0:000.000}{1:0.000}", angle, Lidar.Vectors[offset]);
+					if(_fuzzyPathChanged)
+					{
+						SendFuzzyPath();
 					}
-					String output = sb.ToString();
+				}
 
-					if(DateTime.UtcNow > client.LastReceiveTime + ReceiveTimeout)
-					{
-						//Console.WriteLine("Disconnecting server");
-						//client.Close();
-					}
-					else if(client.IsConnected)
-					{
-						Log.LogText(LogLevel.DEBUG, "Sending {0} bytes to client", output.Length);
-						client.Send(output);
-					}
+			}
+			catch(Exception e)
+			{
+				Log.SysLogText(LogLevel.ERROR, "{0} EXCEPTION: {1}", Name, e.Message);
+				Interval = TimeSpan.FromSeconds(1);
+			}
+			return true;
+		}
+
+		private void SendFuzzyPath()
+		{
+			Log.LogText(LogLevel.DEBUG, "Sending fuzzy path");
+
+			byte[] output = _fuzzyPath.Serizalize();
+			Client.Publish(CurrentPathTopic, output);
+			_fuzzyPathChanged = false;
+		}
+
+		void SendRangeData()
+		{
+			byte[] output = new byte[RangeBlobPacketSize * Environment.Lidar.Vectors.Length];
+
+			using(BinaryWriter bw = new BinaryWriter(new MemoryStream(output)))
+			{
+				for(int offset = 0;offset < Environment.Lidar.Vectors.Length;offset++)
+				{
+					LidarVector vector = Environment.Lidar.Vectors[offset];
+					bw.Write(vector.Range);
 				}
 			}
 
-			return base.OnRun();
-		}
-	}
-
-	class RangeServerClient : TcpConnectedClient
-	{
-		public DateTime LastReceiveTime { get; private set; }
-
-		public RangeServerClient(TcpClient tcpClient, TcpListener listener, TcpServer parent) 
-			: base(tcpClient, listener, parent)
-		{
-			LastReceiveTime = DateTime.UtcNow;
-			Log.SysLogText(LogLevel.DEBUG, "Client connected");
-//			((LidarServer)parent).Lidar.Sample += OnLidarSample;
-			Log.SysLogText(LogLevel.DEBUG, "registered event");
+			File.WriteAllBytes(@"/home/pi/tmp/blob.bin", output);
+			Client.Publish(RangeBlobTopic, output);
 		}
 
-		private void OnLidarSample(Lidar.LidarSample sample)
+		private void OnEnvironment_FuzzyPathChanged(FuzzyPath path)
 		{
-			String output = String.Format("!{0:000.000}{1:0.000}", sample.Bearing, sample.Distance);
-			Send(output);
+			Log.LogText(LogLevel.DEBUG, "FuzzyPath path changed");
+			_fuzzyPath = path.Clone();
+			_fuzzyPathChanged = true;
 		}
 
-		protected override void OnDataReceived(byte[] buffer)
+		void GetConnected()
 		{
-			LastReceiveTime = DateTime.UtcNow;
-		}
-
-		protected override void OnDisconnect()
-		{
-			Log.SysLogText(LogLevel.DEBUG, "Client disconnected");
-			((LidarServer)_server).Lidar.Sample -= OnLidarSample;
+			Client = new MqttClient(Address, MqqtClientID)
+			{
+				QOS = QOSTypes.Qos0
+			};
+			Client.Connect();
 		}
 	}
 }

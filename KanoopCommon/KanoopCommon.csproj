@@ -155,6 +155,7 @@
     <Compile Include="Extensions\FileExtensions.cs" />
     <Compile Include="Extensions\ImageExtensions.cs" />
     <Compile Include="Extensions\Int32Extensions.cs" />
+    <Compile Include="Extensions\IPAddressExtensions.cs" />
     <Compile Include="Extensions\ListDoubleExtensions.cs" />
     <Compile Include="Extensions\ListExtensions.cs" />
     <Compile Include="Extensions\ListStringExtensions.cs" />
@@ -216,6 +217,7 @@
     <Compile Include="Geometry\PointCommon.cs" />
     <Compile Include="Geometry\PointD.cs" />
     <Compile Include="Geometry\Polygon.cs" />
+    <Compile Include="Geometry\BearingAndRange.cs" />
     <Compile Include="Geometry\RectangleD.cs" />
     <Compile Include="Geometry\SizeD.cs" />
     <Compile Include="Geometry\Triangle.cs" />

@@ -28,7 +28,13 @@ namespace RaspiCommon.Lidar.Environs
 		const Double BEARING_SLACK = 2;                     // degrees slack when computing similar angles
 		const Double LINE_PATH_WIDTH = .1;                  // lines must be within this many meters to be consolidated into a single line
 
-		public const Double RANGE_FUZZ = 2;
+		public Double RangeFuzz { get { return 2; } }
+
+		#endregion
+
+		#region Events
+
+		public event FuzzyPathChangedHandler FuzzyPathChanged;
 
 		#endregion
 
@@ -50,6 +56,17 @@ namespace RaspiCommon.Lidar.Environs
 		public RPLidar Lidar { get; set; }
 
 		public PointD RelativeLocation { get; set; }
+
+		FuzzyPath _fuzzyPath;
+		public FuzzyPath FuzzyPath
+		{
+			get{ return _fuzzyPath; }
+			set
+			{
+				_fuzzyPath = value;
+				FuzzyPathChanged(value);
+			}
+		}
 
 		Color NextColor
 		{
@@ -75,20 +92,19 @@ namespace RaspiCommon.Lidar.Environs
 
 		public LidarEnvironment(Double metersSquare, Double pixelsPerMeter)
 		{
-			Log.SysLogText(LogLevel.DEBUG, "Init 1");
 			MetersSquare = metersSquare;
 			PixelsPerMeter = pixelsPerMeter;
 
-			Log.SysLogText(LogLevel.DEBUG, "Init 1-1");
 			//			Image = new Image<Bgr, byte>((int)(MetersSquare * PixelsPerMeter), (int)(MetersSquare * PixelsPerMeter));
 			//			Image.Draw(new Rectangle(0, 0, Image.Size.Width, Image.Size.Height), new Bgr(Color.Black), 0);
 
 			//Location = new PointD(Image.Width / 2, Image.Height / 2);
 
-			Log.SysLogText(LogLevel.DEBUG, "Init 2");
 			Landmarks = new LandmarkList();
 			Barriers = new BarrierList();
 			Paths = new List<RectangleD>();
+
+			FuzzyPathChanged += delegate {};
 
 			Log.SysLogText(LogLevel.DEBUG, "Init 3");
 			_colorIndex = 0;
@@ -354,7 +370,6 @@ namespace RaspiCommon.Lidar.Environs
 			CvInvoke.Line(image, cross.Vertical.P1.ToPoint(), cross.Vertical.P2.ToPoint(), new Bgr(Color.GreenYellow).MCvScalar);
 			CvInvoke.Line(image, cross.Horizontal.P1.ToPoint(), cross.Horizontal.P2.ToPoint(), new Bgr(Color.GreenYellow).MCvScalar);
 
-			int last = 0;
 			foreach(Barrier barrier in Barriers)
 			{
 				Color color = NextColor;
@@ -370,7 +385,7 @@ namespace RaspiCommon.Lidar.Environs
 			return image;
 		}
 
-		public Double ShortestRangeAtBearing(Double trueBearing = 0, Double angularWidth = RANGE_FUZZ)
+		public Double ShortestRangeAtBearing(Double trueBearing, Double angularWidth)
 		{
 			Double start = trueBearing.SubtractDegrees(angularWidth / 2);
 			Double end = trueBearing.AddDegrees((angularWidth / 2) + 1);
@@ -392,7 +407,7 @@ namespace RaspiCommon.Lidar.Environs
 			return allDistances.Count > 0 ? allDistances.Min() : 0;
 		}
 
-		public Double FuzzyRangeAtBearing(Double trueBearing = 0, Double angularWidth = RANGE_FUZZ)
+		public Double FuzzyRangeAtBearing(Double trueBearing, Double angularWidth)
 		{
 			Double start = trueBearing.SubtractDegrees(angularWidth / 2);
 			Double end = trueBearing.AddDegrees((angularWidth / 2) + 1);
@@ -419,9 +434,9 @@ namespace RaspiCommon.Lidar.Environs
 			Lidar.ClearDistanceVectors();
 		}
 
-		public void StartRangeServer()
+		public void StartRangeServer(String mqqtBroker)
 		{
-			_server = new LidarServer(Lidar);
+			_server = new LidarServer(this, mqqtBroker, "trackbot-lidar");
 			_server.Start();
 		}
 
@@ -429,6 +444,27 @@ namespace RaspiCommon.Lidar.Environs
 		{
 			_server.Stop();
 			_server = null;
+		}
+
+		public FuzzyPath MakeFuzzyPath(Double bearing, Double rangeFuzz)
+		{
+			Double start = bearing.SubtractDegrees(rangeFuzz / 2);
+			Double end = bearing.AddDegrees((rangeFuzz / 2) + 1);
+
+			BearingAndRangeList vectors = new BearingAndRangeList();
+			Double angle = start;
+			while(angle.IsWithinDegressOf(end, Lidar.VectorSize) == false)
+			{
+				Double range = Lidar.GetRangeAtBearing(angle);
+				if(range != 0)
+				{
+					vectors.Add(new BearingAndRange(angle, range));
+				}
+
+				angle = angle.AddDegrees(Lidar.VectorSize);
+			}
+			FuzzyPath path = new FuzzyPath(bearing, vectors);
+			return path;
 		}
 
 	}

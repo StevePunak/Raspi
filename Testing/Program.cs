@@ -32,20 +32,9 @@ namespace RaspiCommon
 		{
 			OpenLog();
 
-
-			TestServer();
-
 			EMGUTest();
 
 			RunLidar();
-		}
-
-		private static void TestServer()
-		{
-			LidarServer server = new LidarServer(null);
-			server.Start();
-
-			Thread.Sleep(1000000);
 		}
 
 		private static void EMGUTest()

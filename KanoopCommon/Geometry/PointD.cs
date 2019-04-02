@@ -8,6 +8,7 @@ using System.Linq;
 using System.Runtime.Serialization;
 using System.Text;
 using System;
+using System.IO;
 
 namespace KanoopCommon.Geometry
 {
@@ -194,39 +195,45 @@ namespace KanoopCommon.Geometry
 	[Serializable]	// Needed for Web Client
 	public class PointD : IPoint, IPoint2DReadOnly
 	{
+		#region Constants
+
+		public const int ByteArraySize = sizeof(Double) + sizeof(Double);
+
+		#endregion
+
 		#region Public Properties
 
-		Double	m_X;
+		Double  _X;
 		[ColumnName("X_POS","LONGITUDE")]
 		public Double X
 		{
-			get { return m_X; }
-			set { m_X = value; }
+			get { return _X; }
+			set { _X = value; }
 		}
 
-		Double	m_Y;
+		Double	_Y;
 		[ColumnName("Y_POS", "LATITUDE")]
 		public Double Y
 		{
-			get { return m_Y; }
-			set { m_Y = value; }
+			get { return _Y; }
+			set { _Y = value; }
 		}
 
-		int		m_Precision;
+		int		_precision;
 		public int Precision
 		{
-			get { return m_Precision; }
+			get { return _precision; }
 			set
 			{
-				m_Precision = value;
-				m_X = Math.Round(m_X, value);
-				m_X = Math.Round(m_X, value);
+				_precision = value;
+				_X = Math.Round(_X, value);
+				_X = Math.Round(_X, value);
 			}
 		}
 
 		public String Name { get; set; }
 
-		public String HashName { get { return String.Format("{0:0.000000}, {1:0.000000}", m_X, m_Y); } }
+		public String HashName { get { return String.Format("{0:0.000000}, {1:0.000000}", _X, _Y); } }
 
 		#endregion
 
@@ -246,9 +253,18 @@ namespace KanoopCommon.Geometry
 
 		public PointD(Double x, Double y)
 		{
-			m_X = x;
-			m_Y = y;
+			_X = x;
+			_Y = y;
 			Name = String.Empty;
+		}
+
+		public PointD(byte[] serialized)
+		{
+			using(BinaryReader br = new BinaryReader(new MemoryStream(serialized)))
+			{
+				_X = br.ReadDouble();
+				_Y = br.ReadDouble();
+			}
 		}
 
 		/// <summary>
@@ -285,33 +301,33 @@ namespace KanoopCommon.Geometry
 		public void Move(Double bearing, Double distance)
 		{
 			PointD np = FlatGeo.GetPoint(this, bearing, distance);
-			m_X = np.X;
-			m_Y = np.Y;
+			_X = np.X;
+			_Y = np.Y;
 		}
 
 		public void Move(IPoint where)
 		{
-			m_Y = where.Y;
-			m_X = where.X;
+			_Y = where.Y;
+			_X = where.X;
 		}
 
 		public void Rotate(PointD centroid, Double angle)
 		{
-			m_X += (0 - centroid.X);
-			m_Y += (0 - centroid.Y);
+			_X += (0 - centroid.X);
+			_Y += (0 - centroid.Y);
 
 			PointD np = new PointD();
-			np.X = ((m_X * Math.Cos(angle * (Math.PI / 180))) - (m_Y * Math.Sin(angle * (Math.PI / 180)))) + centroid.X;
-			np.Y = (Math.Sin(angle * (Math.PI / 180)) * m_X + Math.Cos(angle * (Math.PI / 180)) * m_Y) + centroid.Y;
+			np.X = ((_X * Math.Cos(angle * (Math.PI / 180))) - (_Y * Math.Sin(angle * (Math.PI / 180)))) + centroid.X;
+			np.Y = (Math.Sin(angle * (Math.PI / 180)) * _X + Math.Cos(angle * (Math.PI / 180)) * _Y) + centroid.Y;
 
-			m_X = np.X;
-			m_Y = np.Y;
+			_X = np.X;
+			_Y = np.Y;
 		}
 
 		public void Scale(Double scale)
 		{
-			m_X *= scale;
-			m_Y *= scale;
+			_X *= scale;
+			_Y *= scale;
 		}
 
 		public IPoint GetPointAt(Double bearing, Double distance)
@@ -326,22 +342,22 @@ namespace KanoopCommon.Geometry
 
 		public bool IsLeftOf(PointD other)
 		{
-			return m_X < other.m_X;
+			return _X < other._X;
 		}
 
 		public bool IsRightOf(PointD other)
 		{
-			return m_X > other.m_X;
+			return _X > other._X;
 		}
 
 		public bool IsAbove(PointD other)
 		{
-			return m_Y < other.m_Y;
+			return _Y < other._Y;
 		}
 
 		public bool IsLowerThan(PointD other)
 		{
-			return m_Y > other.m_Y;
+			return _Y > other._Y;
 		}
 
 		#endregion
@@ -371,7 +387,7 @@ namespace KanoopCommon.Geometry
 		public string ToSQLString()
 		{
 			//return String.Format("GeomFromText('POINT({0:0.000000} {1:0.000000})')", m_X, m_Y);
-			return "GeomFromText('POINT("+m_X+" "+m_Y+")')";
+			return "GeomFromText('POINT("+_X+" "+_Y+")')";
 		}
 
 		public Double BearingTo(PointD other)
@@ -452,14 +468,25 @@ namespace KanoopCommon.Geometry
 
 		public IPoint Clone()
 		{
-			return new PointD(m_X, m_Y);
+			return new PointD(_X, _Y);
+		}
+
+		public byte[] ToByteArray()
+		{
+			byte[] output = new byte[ByteArraySize];
+			using(BinaryWriter bw = new BinaryWriter(new MemoryStream(output)))
+			{
+				bw.Write(X);
+				bw.Write(Y);
+			}
+			return output;
 		}
 
 		public String ToString(int precision)
 		{
 			String	format = String.Format("F{0}", precision);
 			String	name = String.IsNullOrEmpty(Name) ? String.Empty : String.Format(" {0}", Name);
-			return String.Format("{0}, {1}{2}", m_X.ToString(format), m_Y.ToString(format), name);
+			return String.Format("{0}, {1}{2}", _X.ToString(format), _Y.ToString(format), name);
 		}
 
 		public override string ToString()

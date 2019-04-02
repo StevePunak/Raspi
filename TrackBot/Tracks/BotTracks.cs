@@ -232,7 +232,7 @@ namespace TrackBot.Tracks
 			Double bearing = Widgets.GyMag.Bearing;
 			if(direction == Direction.Backward)
 				bearing = bearing.AddDegrees(180);
-			Double range = Widgets.Environment.FuzzyRangeAtBearing(bearing);
+			Double range = Widgets.Environment.FuzzyRangeAtBearing(bearing, Widgets.Environment.RangeFuzz);
 			Log.SysLogText(LogLevel.DEBUG, "Range at {0} bearing {1:0.00}° is {2:0.000}m", direction, bearing, range);
 			return range;
 		}
@@ -244,7 +244,7 @@ namespace TrackBot.Tracks
 			TimeSpan timeToRun;
 			Double speedMPS;
 
-			Log.SysLogText(LogLevel.DEBUG, "Start move {0} meters at {1:0.00} distance from nearest obstacle", meters, Widgets.Environment.FuzzyRangeAtBearing(Widgets.GyMag.Bearing));
+			Log.SysLogText(LogLevel.DEBUG, "Start move {0} meters at {1:0.00} distance from nearest obstacle", meters, Widgets.Environment.FuzzyRangeAtBearing(Widgets.GyMag.Bearing, Widgets.Environment.RangeFuzz));
 			if(TryGetTimeForDistance(meters, motorSpeed, out timeToRun, out speedMPS))
 			{
 				timeToRun += direction == Direction.Forward ? RampUp : -RampDown;
@@ -269,7 +269,7 @@ namespace TrackBot.Tracks
 					Widgets.Environment.RelativeLocation = FlatGeo.GetPoint(Widgets.Environment.Location, Widgets.GyMag.Bearing, metersPerInterval);
 //					Log.SysLogText(LogLevel.DEBUG, "Moved to {0}", Widgets.Environment.Location);
 
-					if(direction == Direction.Forward && Widgets.Environment.FuzzyRangeAtBearing(Widgets.GyMag.Bearing) <= Program.Config.StopDistance)
+					if(direction == Direction.Forward && Widgets.Environment.FuzzyRangeAtBearing(Widgets.GyMag.Bearing, Widgets.Environment.RangeFuzz) <= Program.Config.StopDistance)
 					{
 						Console.WriteLine("Stopping due to range");
 						result = false;
@@ -285,7 +285,7 @@ namespace TrackBot.Tracks
 				result = false;
 			}
 
-			Log.SysLogText(LogLevel.DEBUG, "Stopped move {0} meters at {1:0.00} distance from nearest obstacle", meters, Widgets.Environment.FuzzyRangeAtBearing(Widgets.GyMag.Bearing));
+			Log.SysLogText(LogLevel.DEBUG, "Stopped move {0} meters at {1:0.00} distance from nearest obstacle", meters, Widgets.Environment.FuzzyRangeAtBearing(Widgets.GyMag.Bearing, Widgets.Environment.RangeFuzz));
 			return result;
 		}
 

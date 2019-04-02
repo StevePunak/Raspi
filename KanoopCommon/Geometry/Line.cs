@@ -7,6 +7,7 @@ using System.ComponentModel;
 using KanoopCommon.Extensions;
 using KanoopCommon.CommonObjects;
 using KanoopCommon.Logging;
+using System.IO;
 
 namespace KanoopCommon.Geometry
 {
@@ -229,6 +230,12 @@ namespace KanoopCommon.Geometry
 
 	public class Line : ILine
 	{
+		#region Constants
+
+		public const int ByteArraySize = PointD.ByteArraySize * 2;
+
+		#endregion
+
 		#region Public Properties
 
 		protected PointD	_p1;
@@ -389,6 +396,17 @@ namespace KanoopCommon.Geometry
 
 		public Line()
 			: this(new PointD(0, 0), new PointD(0, 0))	{}
+
+		public Line(byte[] serialized)
+		{
+			using(BinaryReader br = new BinaryReader(new MemoryStream(serialized)))
+			{
+				byte[] p1 = br.ReadBytes(PointD.ByteArraySize);
+				byte[] p2 = br.ReadBytes(PointD.ByteArraySize);
+				P1 = new PointD(p1);
+				P2 = new PointD(p2);
+			}
+		}
 
 		#endregion
 
@@ -683,6 +701,21 @@ namespace KanoopCommon.Geometry
 				: String.Format("[{0}]  [{1}] - {2}  {3:0.0}°  len: {4:0.000}", Tag, _p1.ToString(precision), _p2.ToString(precision), Bearing, Length);
 
 			return result;
+		}
+
+		public byte[] ToByteArray()
+		{
+			if(P1 is PointD == false || P2 is PointD == false)
+			{
+				throw new InvalidCastException("Points must be POINTD");
+			}
+			byte[] output = new byte[ByteArraySize];
+			using(BinaryWriter bw = new BinaryWriter(new MemoryStream(output)))
+			{
+				bw.Write(((PointD)P1).ToByteArray());
+				bw.Write(((PointD)P2).ToByteArray());
+			}
+			return output;
 		}
 
 		public override string ToString()

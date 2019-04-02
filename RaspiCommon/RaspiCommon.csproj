@@ -82,6 +82,7 @@
     <Compile Include="L298N_DC_TankTracks.cs" />
     <Compile Include="L298N_DC_MotorControl.cs" />
     <Compile Include="Lidar\Environs\Barrier.cs" />
+    <Compile Include="Lidar\Environs\FuzzyPath.cs" />
     <Compile Include="Lidar\Environs\Landmark.cs" />
     <Compile Include="Lidar\Environs\LidarEnvironment.cs" />
     <Compile Include="Lidar\Environs\LinePair.cs" />
@@ -108,8 +109,8 @@
     <Compile Include="PWMDevice.cs" />
     <Compile Include="RaspiConfig.cs" />
     <Compile Include="RaspiException.cs" />
-    <Compile Include="Server\LidarServer.cs" />
     <Compile Include="Server\LidarClient.cs" />
+    <Compile Include="Server\LidarServer.cs" />
     <Compile Include="Servo.cs" />
     <Compile Include="Types.cs" />
   </ItemGroup>
@@ -120,6 +121,10 @@
     <ProjectReference Include="..\KanoopCommon\KanoopCommon.csproj">
       <Project>{5c9d80a6-6fc0-4b59-b1cf-d2ec261b4b00}</Project>
       <Name>KanoopCommon</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\MQTT\MQTT.csproj">
+      <Project>{52296cef-4bc8-423a-a1d9-9b900b3e99b9}</Project>
+      <Name>MQTT</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

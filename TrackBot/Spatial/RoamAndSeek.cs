@@ -60,7 +60,7 @@ namespace TrackBot.Spatial
 		bool InitTravelToDestState()
 		{
 			// find a place to travel to
-			Destination = Widgets.Environment.FindGoodDestination();
+			Destination = Widgets.Environment.FindGoodDestination().GetLineFrom(Widgets.Environment.Location);
 			if(Destination == null)
 			{
 				Console.WriteLine("Could not find a good destination");
@@ -99,7 +99,7 @@ namespace TrackBot.Spatial
 						break;
 					}
 
-					if(Widgets.Environment.FuzzyRangeAtBearing(Widgets.GyMag.Bearing) < .2)
+					if(Widgets.Environment.FuzzyRangeAtBearing(Widgets.GyMag.Bearing, Widgets.Environment.RangeFuzz) < .2)
 					{
 						Console.WriteLine("Hit obstacle");
 						break;

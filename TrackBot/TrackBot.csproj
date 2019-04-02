@@ -80,6 +80,7 @@
     <Compile Include="TTY\DebugAngle.cs" />
     <Compile Include="TTY\DumpDistances.cs" />
     <Compile Include="TTY\ExitCommand.cs" />
+    <Compile Include="TTY\FindPath.cs" />
     <Compile Include="TTY\Forward.cs" />
     <Compile Include="TTY\LiftMove.cs" />
     <Compile Include="TTY\Render.cs" />

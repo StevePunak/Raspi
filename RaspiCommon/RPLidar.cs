@@ -45,7 +45,7 @@ namespace RaspiCommon
 
 		public Double DebugAngle { get; set; }
 
-		public Double[] Vectors { get { return _vectors; } }
+		public LidarVector[] Vectors { get; private set; }
 
 		public int _lastScanOffset;
 
@@ -53,8 +53,6 @@ namespace RaspiCommon
 
 		#region Private Member Variables
 
-		Double[] _vectors;
-		DateTime[] _lastSetTimes;
 		DateTime _lastTrimTime;
 
 		byte[] _receiveBuffer;
@@ -98,9 +96,14 @@ namespace RaspiCommon
 			RenderPixelsPerMeter = 50;
 
 			VectorSize = vectorSize;
-			_vectors = new double[(int)(360 / vectorSize)];
-			Array.Clear(_vectors, 0, _vectors.Length);
-			_lastSetTimes = new DateTime[_vectors.Length];
+			Vectors = new LidarVector[(int)(360 / vectorSize)];
+			for(Double bearing = 0;bearing < 360;bearing += VectorSize)
+			{
+				Vectors[(int)(bearing / VectorSize)] = new LidarVector()
+				{
+					Bearing = bearing
+				};
+			}
 
 			Bearing = 0;
 
@@ -120,19 +123,21 @@ namespace RaspiCommon
 			LidarResponseData += delegate { };
 			Sample += delegate { };
 
+			DebugAngle = -1;
+
 			VectorRefreshTime = TimeSpan.FromSeconds(1);
 		}
 
 		public Double GetRangeAtBearing(Double bearing)
 		{
 			Double offset = bearing / VectorSize;
-			return _vectors[(int)offset];
+			return Vectors[(int)offset].Range;
 		}
 
 		public DateTime GetLastSampleTimeAtBearing(Double bearing)
 		{
 			Double offset = bearing / VectorSize;
-			return _lastSetTimes[(int)offset];
+			return Vectors[(int)offset].RefreshTime;
 		}
 
 		public void Start()
@@ -179,10 +184,10 @@ namespace RaspiCommon
 				for(Double degrees = 0;degrees < 360;degrees += VectorSize)
 				{
 					Double offset = degrees / VectorSize;
-					Double distance = _vectors[(int)offset];
-					if(distance != 0)
+					LidarVector vector = Vectors[(int)offset];
+					if(vector.Range != 0)
 					{
-						Double lineLength = distance * RenderPixelsPerMeter;
+						Double lineLength = vector.Range * RenderPixelsPerMeter;
 
 						PointD point = FlatGeo.GetPoint(center, degrees, lineLength);
 						g.FillRectangle(new SolidBrush(Color.Red), new RectangleF(point.ToPoint(), new Size(1, 1)));
@@ -420,19 +425,18 @@ namespace RaspiCommon
 			if(response.Quality > 10 && response.CheckBit == 1 && response.StartFlag == 1 && response.Angle < 360 && response.Angle >= 0)
 			{
 				Double offset = angle / VectorSize;
-				int intOffset = (int)offset;
 
 //				Console.WriteLine("Got entry at {0}... Clear from {1} to {2}", intOffset, VectorArrayInc(_lastScanOffset), intOffset);
 				Double distance = Math.Max(response.Distance, .001);
-				_vectors[intOffset] = distance;
 				DateTime now = DateTime.UtcNow;
-				_lastSetTimes[intOffset] = now;
+				Vectors[(int)offset].Range = distance;
+				Vectors[(int)offset].RefreshTime = now;
 				_lastGoodSampleTime = now;
 
 				LidarSample sample = new LidarSample(angle, distance, now);
 				Sample(sample);
 
-				_lastScanOffset = intOffset;
+				_lastScanOffset = (int)offset;
 			}
 
 			if(DateTime.UtcNow > _lastTrimTime + VectorRefreshTime)
@@ -444,11 +448,11 @@ namespace RaspiCommon
 		private void TrimVectors()
 		{
 			DateTime now = DateTime.UtcNow;
-			for(int x = 0;x < _lastSetTimes.Length;x++)
+			for(int x = 0;x < Vectors.Length;x++)
 			{
-				if(now > _lastSetTimes[x] + VectorRefreshTime)
+				if(now > Vectors[x].RefreshTime + VectorRefreshTime)
 				{
-					_vectors[x] = 0;
+					Vectors[x].Range = 0;
 				}
 			}
 
@@ -457,7 +461,7 @@ namespace RaspiCommon
 
 		private int VectorArrayInc(int index)
 		{
-			if(++index >= _vectors.Length)
+			if(++index >= Vectors.Length)
 				index = 0;
 			return index;
 		}
@@ -469,13 +473,15 @@ namespace RaspiCommon
 				LidarSample sample1 = new LidarSample(cabin.ActualAngle1, cabin.Distance1, DateTime.UtcNow);
 				{
 					Double index = cabin.ActualAngle1 / VectorSize;
-					_vectors[(int)index] = cabin.Distance1;
+					Vectors[(int)index].Range = cabin.Distance1;
+					Vectors[(int)index].RefreshTime = DateTime.UtcNow;
 				}
 				Sample(sample1);
 				LidarSample sample2 = new LidarSample(cabin.ActualAngle2, cabin.Distance2, DateTime.UtcNow);
 				{
 					Double index = cabin.ActualAngle2 / VectorSize;
-					_vectors[(int)index] = cabin.Distance2;
+					Vectors[(int)index].Range = cabin.Distance2;
+					Vectors[(int)index].RefreshTime = DateTime.UtcNow;
 				}
 				Sample(sample2);
 
@@ -566,7 +572,7 @@ namespace RaspiCommon
 
 		public void ClearDistanceVectors()
 		{
-			Array.Clear(_vectors, 0, _vectors.Length);
+			Array.Clear(Vectors, 0, Vectors.Length);
 		}
 
 		public override string ToString()

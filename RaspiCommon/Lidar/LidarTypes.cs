@@ -7,11 +7,13 @@ using System.Threading.Tasks;
 using KanoopCommon.Extensions;
 using KanoopCommon.Geometry;
 using RaspiCommon.Lidar;
+using RaspiCommon.Lidar.Environs;
 
 namespace RaspiCommon.Lidar
 {
 	public delegate void LidarSampleHandler(LidarSample sample);
 	public delegate void LidarResponseHandler(LidarResponse response);
+	public delegate void FuzzyPathChangedHandler(FuzzyPath path);
 
 	public class LidarTypes
 	{

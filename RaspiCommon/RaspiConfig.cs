@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -148,7 +149,9 @@ namespace RaspiCommon
 
 		public static String GetDefaultConfigFileName()
 		{
-			return CONFIG_FILE;
+			return Environment.OSVersion.Platform == PlatformID.Unix
+				? CONFIG_FILE
+				: Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "robo.config");
 		}
 	}
 }

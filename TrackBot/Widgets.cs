@@ -102,8 +102,13 @@ namespace TrackBot
 			ports.TerminateAll();
 			if(ports.Contains(Program.Config.LidarComPort) == true)
 			{
+				if(Program.Config.RadarHost == null)
+				{
+					Program.Config.RadarHost = "192.168.0.50";
+					Program.Config.Save();
+				}
 				Environment = new TrackLidar(Program.Config.LidarMetersSquare, Program.Config.LidarPixelsPerMeter);
-				((TrackLidar)Environment).StartRangeServer();
+				((TrackLidar)Environment).StartRangeServer(Program.Config.RadarHost);
 			}
 			else
 			{

@@ -25,9 +25,25 @@ namespace Radar
 
 			OpenConfig();
 
+			Test();
+
 			Application.EnableVisualStyles();
 			Application.SetCompatibleTextRenderingDefault(false);
 			Application.Run(new RadarForm());
+		}
+
+		static void Test()
+		{
+			String file = @"c:\pub\tmp\blob.bin";
+			byte[] buffer = File.ReadAllBytes(file);
+			using(BinaryReader br = new BinaryReader(new MemoryStream(buffer)))
+			{
+				for(int offset = 0;offset < 360*4;offset++)
+				{
+					Double range = br.ReadDouble();
+					Log.LogText(LogLevel.DEBUG, "{0}", range);
+				}
+			}
 		}
 
 		private static void OpenConfig()

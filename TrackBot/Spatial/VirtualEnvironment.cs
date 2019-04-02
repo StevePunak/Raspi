@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Emgu.CV;
 using KanoopCommon.Geometry;
+using RaspiCommon.Lidar.Environs;
 
 namespace TrackBot.Spatial
 {
@@ -25,6 +26,9 @@ namespace TrackBot.Spatial
 		public double PixelsPerMeter { get; set; }
 		public double VectorSize { get; set; }
 
+		public double RangeFuzz { get; set; }
+
+		public FuzzyPath FuzzyPath { get; set; }
 
 		public VirtualEnvironment()
 		{
@@ -36,11 +40,6 @@ namespace TrackBot.Spatial
 			RenderPixelsPerMeter = 50;
 			Location = new PointD(250, 250);
 			RelativeLocation = new PointD(250, 250);
-		}
-
-		public Line FindGoodDestination()
-		{
-			return new Line(Location, new PointD(0,0));
 		}
 
 		public double FuzzyRangeAtBearing(double bearing, double fuzz = 2)
@@ -91,6 +90,11 @@ namespace TrackBot.Spatial
 		public double ShortestRangeAtBearing(double bearing, double fuzz = 2)
 		{
 			return 0;
+		}
+
+		public FuzzyPath FindGoodDestination()
+		{
+			return new FuzzyPath();
 		}
 	}
 }
