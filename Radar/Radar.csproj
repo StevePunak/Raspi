@@ -49,9 +49,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ChooseBotForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
+    <Compile Include="ChooseBotForm.cs" />
     <Compile Include="ChooseBotForm.Designer.cs">
       <DependentUpon>ChooseBotForm.cs</DependentUpon>
     </Compile>
