@@ -1,10 +1,13 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Text;
 using System;
 using System.ComponentModel;
 using KanoopCommon.Extensions;
+using KanoopCommon.CommonObjects;
+using KanoopCommon.Logging;
+using System.IO;
 
 namespace KanoopCommon.Geometry
 {
@@ -174,6 +177,30 @@ namespace KanoopCommon.Geometry
 
 		#region Utility
 
+		public void SortUpperLeft()
+		{
+			Sort(new PointUpperLeftComparer());
+		}
+
+		class PointUpperLeftComparer : IComparer<Line>
+		{
+			public int Compare(Line x, Line y)
+			{
+				int result = 0;
+				int r1 = x.P1.X.CompareTo(y.P1.X);
+				int r2 = x.P1.Y.CompareTo(y.P1.Y);
+				if(r1 < 0 && r2 < 0)
+					result = -1;
+				else if(r1 > 0 && r2 > 0)
+					result = 1;
+				else if(r1 < 0 && r2 > 0)
+					result = -1;
+				else if(r1 > 0 && r2 < 0)
+					result = 1;
+				return result;
+			}
+		}
+
 		public LineList Clone()
 		{
 			LineList lines = new LineList();
@@ -185,11 +212,30 @@ namespace KanoopCommon.Geometry
 			return lines;
 		}
 
+		public void DumpToLog()
+		{
+			foreach(Line line in this)
+			{
+				Log.SysLogText(LogLevel.DEBUG, "{0}", line);
+			}
+		}
+
+		public void RemoveInvalid()
+		{
+			this.RemoveAll(l => l.P1.Equals(l.P2, 2));
+		}
+
 		#endregion
 	}
 
 	public class Line : ILine
 	{
+		#region Constants
+
+		public const int ByteArraySize = PointD.ByteArraySize * 2;
+
+		#endregion
+
 		#region Public Properties
 
 		protected PointD	_p1;
@@ -351,6 +397,17 @@ namespace KanoopCommon.Geometry
 		public Line()
 			: this(new PointD(0, 0), new PointD(0, 0))	{}
 
+		public Line(byte[] serialized)
+		{
+			using(BinaryReader br = new BinaryReader(new MemoryStream(serialized)))
+			{
+				byte[] p1 = br.ReadBytes(PointD.ByteArraySize);
+				byte[] p2 = br.ReadBytes(PointD.ByteArraySize);
+				P1 = new PointD(p1);
+				P2 = new PointD(p2);
+			}
+		}
+
 		#endregion
 
 		#region Public Geometery Metods
@@ -397,10 +454,10 @@ namespace KanoopCommon.Geometry
 
 			if(extend > 0)
 			{
-				p1 = p1.GetPointAt(Bearing, extend) as PointD;
-				p2 = p2.GetPointAt(Bearing, extend) as PointD;
-				p3 = p3.GetPointAt(Bearing.AddDegrees(180), extend) as PointD;
-				p4 = p4.GetPointAt(Bearing.AddDegrees(180), extend) as PointD;
+				p1 = p1.GetPointAt(Bearing.AddDegrees(180), extend) as PointD;
+				p2 = p2.GetPointAt(Bearing.AddDegrees(180), extend) as PointD;
+				p3 = p3.GetPointAt(Bearing, extend) as PointD;
+				p4 = p4.GetPointAt(Bearing, extend) as PointD;
 			}
 
 			return new RectangleD(p1, p2, p3, p4);
@@ -473,6 +530,16 @@ namespace KanoopCommon.Geometry
 		{
 			Double distance;
 			return ClosestPointTo(pt, out distance);
+		}
+
+		public bool HasXBetween(Double x1, Double x2)
+		{
+			return P1.X.Between(x1, x2) || P2.X.Between(x1, x2);
+		}
+
+		public bool HasYBetween(Double y1, Double y2)
+		{
+			return P1.Y.Between(y1, y2) || P2.Y.Between(y1, y2);
 		}
 
 		public PointD ClosestPointTo(IPoint pt, out Double distance)
@@ -630,10 +697,25 @@ namespace KanoopCommon.Geometry
 		public String ToString(int precision)
 		{
 			String result = Tag == null
-				? String.Format("{0} - {1}  {2:0.0}°  len: {3:0.000}", _p1.ToString(precision), _p2.ToString(precision), Bearing, Length)
-				: String.Format("{0}  {1} - {2}  {3:0.0}°  len: {4:0.000}", Tag, _p1.ToString(precision), _p2.ToString(precision), Bearing, Length);
+				? String.Format("[{0}] - [{1}]  {2:0.0}°  len: {3:0.000}", _p1.ToString(precision), _p2.ToString(precision), Bearing, Length)
+				: String.Format("[{0}]  [{1}] - {2}  {3:0.0}°  len: {4:0.000}", Tag, _p1.ToString(precision), _p2.ToString(precision), Bearing, Length);
 
 			return result;
+		}
+
+		public byte[] ToByteArray()
+		{
+			if(P1 is PointD == false || P2 is PointD == false)
+			{
+				throw new InvalidCastException("Points must be POINTD");
+			}
+			byte[] output = new byte[ByteArraySize];
+			using(BinaryWriter bw = new BinaryWriter(new MemoryStream(output)))
+			{
+				bw.Write(((PointD)P1).ToByteArray());
+				bw.Write(((PointD)P2).ToByteArray());
+			}
+			return output;
 		}
 
 		public override string ToString()

@@ -1,16 +1,18 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Emgu.CV;
+using Emgu.CV.Structure;
 using KanoopCommon.Extensions;
 using KanoopCommon.Geometry;
 using KanoopCommon.Logging;
 
 namespace TrackBot.Spatial
 {
-	public class LidarEnvironment
+	public class LidarEnvironment2
 	{
 		public const Double RANGE_FUZZ = 2;
 
@@ -49,7 +51,7 @@ namespace TrackBot.Spatial
 
 		}
 
-		public void SaveBitmap()
+		public Bitmap GenerateBitmap(bool radarLines = false)
 		{
 			Bitmap bitmap = Widgets.Lidar.GenerateBitmap();
 
@@ -57,19 +59,21 @@ namespace TrackBot.Spatial
 			Pen linePen = new Pen(Color.Green);
 			using(Graphics g = Graphics.FromImage(bitmap))
 			{
-#if zero
-				// lines and circles
-				List<Double> offsets = new List<Double>() { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
-				foreach(Double offset in offsets)
+
+				if(radarLines)
 				{
-					RectangleD rect = RectangleD.SquareFromCenter(center, Widgets.Lidar.RenderPixelsPerMeter * offset);
-					g.DrawEllipse(linePen, rect.ToRectangle());
+					// lines and circles
+					List<Double> offsets = new List<Double>() { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
+					foreach(Double offset in offsets)
+					{
+						RectangleD rect = RectangleD.SquareFromCenter(center, Widgets.Lidar.RenderPixelsPerMeter * offset);
+						g.DrawEllipse(linePen, rect.ToRectangle());
+					}
+
+					g.DrawLine(linePen, (float)center.X, 0, (float)center.X, bitmap.Height);
+					g.DrawLine(linePen, 0, (float)center.Y, bitmap.Width, (float)center.Y);
 				}
 
-				g.DrawLine(linePen, (float)center.X, 0, (float)center.X, bitmap.Height);
-				g.DrawLine(linePen, 0, (float)center.Y, bitmap.Width, (float)center.Y);
-
-#endif
 				Font font = new Font("Times New Roman", 12.0f);
 
 				SizeF size;
@@ -89,9 +93,7 @@ namespace TrackBot.Spatial
 				g.DrawString(botString, font, new SolidBrush(Color.CadetBlue), drawBot.ToPoint());
 			}
 
-			bitmap.Save("/var/www/html/grid.png");
-
-			Console.WriteLine("Bitmap saved");
+			return bitmap;
 		}
 
 		public Double FuzzyRange(Double angularWidth = RANGE_FUZZ)

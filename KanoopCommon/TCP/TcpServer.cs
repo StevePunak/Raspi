@@ -194,6 +194,7 @@ namespace KanoopCommon.TCP
 				if (_clientList.TryGetValue(client.RemoteAddress.Address, out existingClient) &&
 					 existingClient.GetHashCode() == client.GetHashCode())
 				{
+					Log.LogText(LogLevel.DEBUG, "OnConnectionClosed  Found it");
 					_clientList.Remove(client.RemoteAddress.Address);
 
 					if (_connectionDebugLogging)
@@ -203,6 +204,7 @@ namespace KanoopCommon.TCP
 				}
 				else
 				{
+					Log.LogText(LogLevel.DEBUG, "OnConnectionClosed  Did not found it");
 					existingClient = null;
 				}
 			}

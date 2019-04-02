@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -613,7 +613,7 @@ namespace RaspiForm
 		{
 
 			// get distance at this angle
-			_dist = _lidar.GetDistance(_angle) * 10;
+			_dist = _lidar.GetRangeAtBearing(_angle) * 10;
 //			Log.SysLogText(LogLevel.DEBUG, "DISTANCE: {0}° {1:0.00} [{2}]={3:0.00}", _angle, _dist, _u, _lidar.Vectors[_angle]);
 
 			if(_eraseLine != null)
@@ -660,7 +660,7 @@ namespace RaspiForm
 			}
 
 			//pen
-			Double distance = _lidar.GetDistance(_u);
+			Double distance = _lidar.GetRangeAtBearing(_u);
 
 			using(Pen p = new Pen(Color.Green, 1f))
 			using(Pen rp = new Pen(Color.Red, 1f))

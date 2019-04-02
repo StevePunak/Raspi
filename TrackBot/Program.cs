@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -26,13 +26,20 @@ namespace TrackBot
 
 		static void Main(string[] args)
 		{
-			OpenConfig();
-			OpenLog();
+			Console.WriteLine("Initializing...");
 
+			OpenLog(args.Contains("-c"));
+
+			Console.WriteLine("Opening config...");
+			OpenConfig();
+
+			Console.WriteLine("Running pretests...");
 			Test();
 
+			Console.WriteLine("Starting widgets...");
 			Widgets.StartWidgets();
 
+			Console.WriteLine("Starting TTY...");
 			Terminal.Run();
 
 			Widgets.StopWidgets();
@@ -61,17 +68,26 @@ namespace TrackBot
 			else
 				Directory.CreateDirectory(Path.GetDirectoryName(configFileName));
 
+			Log.LogText(LogLevel.DEBUG, "Opening config...");
+
 			ConfigFile  configFile = new ConfigFile(configFileName);
 			Config = (RaspiConfig)configFile.GetConfiguration(typeof(RaspiConfig));
 
 			Config.Save();
 		}
 
-		private static void OpenLog()
+		private static void OpenLog(bool console)
 		{
+			Console.WriteLine("Opening log");
 			Log = new Log();
-			Log.Open(LogLevel.ALWAYS, Config.LogFileName, OpenFlags.CONTENT_TIMESTAMP | OpenFlags.OUTPUT_TO_CONSOLE | OpenFlags.OUTPUT_TO_FILE);
+			UInt32 flags = OpenFlags.CONTENT_TIMESTAMP | OpenFlags.OUTPUT_TO_FILE;
+			if(console)
+			{
+				flags |= OpenFlags.OUTPUT_TO_CONSOLE;
+			}
+			Log.Open(LogLevel.ALWAYS, "/var/log/robo/robo.log", flags);
 			Log.SystemLog = Log;
+			Console.WriteLine("Log opened");
 		}
 	}
 }

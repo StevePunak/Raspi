@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using KanoopCommon.Geometry;
 using KanoopCommon.Database;
 using System.Globalization;
@@ -460,6 +460,11 @@ namespace KanoopCommon.Extensions
 		public static Double AngularDifference(this Double value, Double other)
 		{
 			return Degrees.AngularDifference(value, other);
+		}
+
+		public static bool Between(this Double value, Double d1, Double d2)
+		{
+			return value >= d1 && value <= d2;
 		}
 
 		/// <summary>

@@ -1,4 +1,4 @@
-﻿#undef DEBUG_CONNECTION_POOL
+#undef DEBUG_CONNECTION_POOL
 using System;
 using System.Collections.Generic;
 using System.Linq;

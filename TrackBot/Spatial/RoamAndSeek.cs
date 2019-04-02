@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -13,52 +13,13 @@ namespace TrackBot.Spatial
 	{
 		const Double MAX_RANGE_FROM_DEST = .15;
 
-		public enum RSState
-		{
-			Init,
-			Idle,
-			TravelToDest,
-			Stuck
-		}
-
-		public RSState ActivityState { get; private set; }
-
 		public Line Destination { get; private set; }
-
-		private DateTime _enterStateTime;
-
-		// spin-seek
-		private Double _startBearing;
-		private bool _leftStartBearing;
-		private PointD _startLocation;
 
 		public RoamAndSeek()
 			: base(ActivityType.RoamAndSeek)
 		{
 			Interval = TimeSpan.FromMilliseconds(100);
-			ActivityState = RSState.Init;
-		}
-
-		protected override bool OnRun()
-		{
-			switch(ActivityState)
-			{
-				case RSState.Init:
-					RunInitState();
-					break;
-				case RSState.Idle:
-					RunIdleState();
-					break;
-				case RSState.TravelToDest:
-					RunTravelToDestState();
-					break;
-				case RSState.Stuck:
-					RunStuckState();
-					break;
-				default:
-					break;
-			}
-			return true;
+			ActivityState = ActivityStates.Init;
 		}
 
 		protected override bool OnStop()
@@ -67,59 +28,13 @@ namespace TrackBot.Spatial
 			return base.OnStop();
 		}
 
-		void SwitchState(RSState state)
-		{
-			MethodInfo method;
-			bool result;
-
-			Console.WriteLine("{0} Switching state from {1} to {2}", Name, ActivityState, state);
-
-			try
-			{
-				String methodName;
-
-				// deinit last state
-				method = GetStateMethod(StateTransition.Stop, ActivityState, out methodName);
-				if(method != null)
-				{
-					if((result = (bool)method.Invoke(this, null)) == false)
-					{
-						throw new TrackBotException("Method {0} return false", method);
-					}
-				}
-				else
-				{
-				}
-
-				ActivityState = state;
-				_enterStateTime = DateTime.UtcNow;
-
-				// init new state
-				method = GetStateMethod(StateTransition.Init, ActivityState, out methodName);
-				if(method != null)
-				{
-					if((result = (bool)method.Invoke(this, null)) == false)
-					{
-						throw new TrackBotException("Method {0} return false", method);
-					}
-				}
-				else
-				{
-				}
-			}
-			catch(Exception e)
-			{
-				Console.WriteLine("EXCEPTION {0}: {1}", GetType().Name, e.Message);
-				ActivityState = RSState.Idle;
-			}
-		}
-
 		#region Init State
 
-		void RunInitState()
+		protected override bool RunInitState()
 		{
 			Widgets.Tracks.Stop();
-			SwitchState(RSState.TravelToDest);
+			SwitchState(ActivityStates.TravelToDest);
+			return true;
 		}
 
 		#endregion
@@ -133,7 +48,7 @@ namespace TrackBot.Spatial
 			return true;
 		}
 
-		bool RunIdleState()
+		protected override bool RunIdleState()
 		{
 			return true;
 		}
@@ -145,7 +60,7 @@ namespace TrackBot.Spatial
 		bool InitTravelToDestState()
 		{
 			// find a place to travel to
-			Destination = Widgets.Environment.FindGoodDestination();
+			Destination = Widgets.Environment.FindGoodDestination().GetLineFrom(Widgets.Environment.Location);
 			if(Destination == null)
 			{
 				Console.WriteLine("Could not find a good destination");
@@ -157,7 +72,7 @@ namespace TrackBot.Spatial
 
 
 			/*** DEBUG ONLY */
-			Widgets.Environment.SaveBitmap();
+//			Widgets.Environment.ToImage GenerateBitmap();
 
 			Widgets.Tracks.SetStart();
 			Widgets.Tracks.Speed = Widgets.Tracks.Slow;
@@ -165,10 +80,10 @@ namespace TrackBot.Spatial
 			return true;
 		}
 
-		bool RunTravelToDestState()
+		override protected bool RunTravelToDestState()
 		{
 			bool result = false;
-			while(DateTime.UtcNow < _enterStateTime + TimeSpan.FromSeconds(10))
+			while(DateTime.UtcNow < EnterStateTime + TimeSpan.FromSeconds(10))
 			{
 				GpioSharp.Sleep(20);
 
@@ -184,7 +99,7 @@ namespace TrackBot.Spatial
 						break;
 					}
 
-					if(Widgets.Environment.FuzzyRange() < .2)
+					if(Widgets.Environment.FuzzyRangeAtBearing(Widgets.GyMag.Bearing, Widgets.Environment.RangeFuzz) < .2)
 					{
 						Console.WriteLine("Hit obstacle");
 						break;
@@ -195,11 +110,11 @@ namespace TrackBot.Spatial
 			if(!result)
 			{
 				Console.WriteLine("Abandoning attempt");
-				SwitchState(RSState.Idle);
+				SwitchState(ActivityStates.Idle);
 			}
 			else
 			{
-				SwitchState(RSState.TravelToDest);
+				SwitchState(ActivityStates.TravelToDest);
 			}
 
 
@@ -210,7 +125,7 @@ namespace TrackBot.Spatial
 
 		#region Stuck State
 
-		bool RunStuckState()
+		protected override bool RunStuckState()
 		{
 			return true;
 		}

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -15,7 +15,7 @@ namespace TrackBot.TTY
 
 		public override bool Execute(List<string> commandParts)
 		{
-			Activity.StartActivity(ActivityType.RoamAndSeek);
+			Activity.StartActivity(ActivityType.TravelLongestPath);
 
 			return true;
 		}

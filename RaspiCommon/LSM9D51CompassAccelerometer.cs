@@ -1,15 +1,20 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using KanoopCommon.Logging;
+using KanoopCommon.Threading;
 
 namespace RaspiCommon
 {
 	public class LSM9D51CompassAccelerometer
 	{
+		public delegate void NewBearingHandler(Double bearing);
+
+		public event NewBearingHandler NewBearing;
+
 		[StructLayout(LayoutKind.Sequential)]
 		public struct MAG_INFO
 		{
@@ -36,9 +41,21 @@ namespace RaspiCommon
 		{
 			get
 			{
-				MAG_INFO info = new MAG_INFO();
-				GetMagnetometer(ref info);
-				return Calculate(info.mx, info.my, info.mz);
+				Double value;
+				try
+				{
+					_lock.Lock();
+
+					MAG_INFO info = new MAG_INFO();
+					GetMagnetometer(ref info);
+					value = Calculate(info.mx, info.my, info.mz);
+					NewBearing(value);
+				}
+				finally
+				{
+					_lock.Unlock();
+				}
+				return value;
 			}
 		}
 
@@ -50,12 +67,18 @@ namespace RaspiCommon
 		public Double MaxX { get; private set; }
 		public Double MaxY { get; private set; }
 
+		MutexLock _lock;
+
 		public LSM9D51CompassAccelerometer()
 		{
 			MinX = 99;
 			MaxX = -99;
 			MinY = 99;
 			MaxY = -99;
+
+			NewBearing += delegate { };
+
+			_lock = new MutexLock();
 
 			LSM9D51_Calibrate();
 		}
@@ -87,6 +110,8 @@ namespace RaspiCommon
 
 		public Double Calculate(Double x, Double y, Double z)
 		{
+//			Log.SysLogText(LogLevel.DEBUG, "Calc bearing");
+
 			x += XAdjust;
 			y += YAdjust;
 			Double angle = Math.Atan2(y, x);
@@ -96,7 +121,7 @@ namespace RaspiCommon
 			{
 				degrees += 360;
 			}
-			// Console.WriteLine("y {0}  x{1}  Degrees: {2}", y, x, Degrees);
+// 			Console.WriteLine("y {0}  x{1}  Degrees: {2:0.00}°", y, x, degrees);
 			return degrees;
 		}
 	}

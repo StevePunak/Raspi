@@ -1,8 +1,9 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using KanoopCommon.Extensions;
 using KanoopCommon.Geometry;
 using RaspiCommon;
 
@@ -16,12 +17,7 @@ namespace TrackBot.TTY
 
 		public override bool Execute(List<string> commandParts)
 		{
-			for(Double d = 0;d < 360;d += Widgets.Lidar.VectorSize)
-			{
-				Console.WriteLine("@ {0}° range is {1:0.000}", d, Widgets.Lidar.GetDistance(d));
-			}
-
-			Console.WriteLine("Done...");
+			Console.WriteLine("Adjust X = {0:0.000}  Y = {1:0.000}", Widgets.GyMag.XAdjust, Widgets.GyMag.YAdjust);
 
 			return true;
 		}

@@ -1,12 +1,15 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
+using System.IO.Ports;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using KanoopCommon.Extensions;
 using KanoopCommon.Geometry;
 using KanoopCommon.Logging;
 using KanoopCommon.Threading;
 using RaspiCommon;
+using RaspiCommon.Lidar.Environs;
 using TrackBot.ForkLift;
 using TrackBot.Spatial;
 using TrackBot.Tracks;
@@ -18,10 +21,12 @@ namespace TrackBot
 		public static BotTracks Tracks { get; private set; }
 		public static Dictionary<RFDir, HCSR04_RangeFinder> RangeFinders { get; private set; }
 		public static Lift Lift { get; private set; }
-		public static RPLidar Lidar { get; private set; }
 
 		public static LSM9D51CompassAccelerometer GyMag { get; private set; }
-		public static LidarEnvironment Environment { get; private set; }
+		public static IEnvironment Environment { get; private set; }
+		public static SpatialPoll SpatialPollThread { get; private set; }
+
+		public static SaveImageThread SaveImageThread { get; set; }
 
 		public static void StartWidgets()
 		{
@@ -30,18 +35,20 @@ namespace TrackBot
 			StartSpatial();
 			StartActivities();
 			StartLift();
-			StartLidar();
+			StartSaveImageThread();
+			StartSpatialPolling();
 		}
 
 		public static void StopWidgets()
 		{
+			StopSpatialPolling();
 			StopLift();
 			StopActivities();
 			Tracks.Stop();
 			StopRangeFinders();
 			StopSpatial();
 			GpioSharp.DeInit();
-			StopLidar();
+			StopSaveImageThread();
 
 			foreach(ThreadBase thread in ThreadBase.GetRunningThreads())
 			{
@@ -49,28 +56,27 @@ namespace TrackBot
 			}
 		}
 
-		private static void StartLidar()
+		private static void StartSpatialPolling()
 		{
-			Lidar = new RPLidar(Program.Config.LidarComPort, .25);
-			Lidar.Offset = Program.Config.LidarOffsetDegrees;
-			Lidar.Start();
-			if(Lidar.GetDeviceInfo())
-			{
-				Log.SysLogText(LogLevel.DEBUG, "Retrieved LIDAR info");
-				Lidar.StartScan();
-				Log.SysLogText(LogLevel.DEBUG, "LIDAR scan started");
-			}
+			SpatialPollThread = new SpatialPoll();
+			SpatialPollThread.Start();
 		}
 
-		private static void StopLidar()
+		private static void StopSpatialPolling()
 		{
-			Lidar.StopScan();
-			GpioSharp.Sleep(250);
-			Lidar.Reset();
-			GpioSharp.Sleep(250);
-			Lidar.Stop();
+			SpatialPollThread.Stop();
+		}
 
-			Log.SysLogText(LogLevel.DEBUG, "LIDAR stopped");
+		private static void StartSaveImageThread()
+		{
+			Log.SysLogText(LogLevel.DEBUG, "Starting save image thread");
+			SaveImageThread = new SaveImageThread();
+			SaveImageThread.Start();
+		}
+
+		private static void StopSaveImageThread()
+		{
+			SaveImageThread.Stop();
 		}
 
 		private static void StartLift()
@@ -90,13 +96,43 @@ namespace TrackBot
 			GyMag.MagneticDeviation = Program.Config.MagneticDeviation;
 			GyMag.XAdjust = Program.Config.CompassXAdjust;
 			GyMag.YAdjust = Program.Config.CompassYAdjust;
+			GyMag.NewBearing += OnNewBearing;
 
-			Environment = new LidarEnvironment(); // new Area(5, 5, .1, new PointD(2.5, 2.5));
+			List<String> ports = new List<String>(SerialPort.GetPortNames());
+			ports.TerminateAll();
+			if(ports.Contains(Program.Config.LidarComPort) == true)
+			{
+				if(Program.Config.RadarHost == null)
+				{
+					Program.Config.RadarHost = "192.168.0.50";
+					Program.Config.Save();
+				}
+				Environment = new TrackLidar(Program.Config.LidarMetersSquare, Program.Config.LidarPixelsPerMeter);
+				((TrackLidar)Environment).StartRangeServer(Program.Config.RadarHost);
+			}
+			else
+			{
+				Console.WriteLine("Lidar com port {0} does not exist... initializing virtual environment", Program.Config.LidarComPort);
+				Environment = new VirtualEnvironment();
+			}
+			Environment.Start();
+		}
 
+		private static void OnNewBearing(double bearing)
+		{
+			if(Environment != null)
+			{
+				Environment.Bearing = bearing;
+			}
 		}
 
 		private static void StopSpatial()
 		{
+			if(Environment is TrackLidar)
+			{
+				((TrackLidar)Environment).StopRangeServer();
+			}
+			Environment.Stop();
 		}
 
 		private static void StartActivities()

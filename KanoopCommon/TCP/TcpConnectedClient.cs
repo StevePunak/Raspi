@@ -125,19 +125,21 @@ namespace KanoopCommon.TCP
 
 		private int _Send(byte[] packet, int offset, int size)
 		{
-			int nSent = 0;
+			int bytesSent = 0;
 			try
 			{
 				// Send Data if socket open
 				if(IsConnected)
 				{
 					// Send Data
-					nSent = _tcpClient.Client.Send(packet, offset, size, SocketFlags.None);
-					_bytesSent += (UInt32)nSent;
+					bytesSent = _tcpClient.Client.Send(packet, offset, size, SocketFlags.None);
+					_bytesSent += (UInt32)bytesSent;
 				}
 				// Otherwise, perform close sequence
 				else
+				{
 					Close();
+				}
 			}
 			catch(Exception ex)
 			{
@@ -149,7 +151,7 @@ namespace KanoopCommon.TCP
 				// Perform close sequence
 				Close();
 			}
-			return nSent;
+			return bytesSent;
 		}
 
 		public virtual void SendAsynch(String str)

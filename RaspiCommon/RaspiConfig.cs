@@ -1,5 +1,6 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -71,12 +72,17 @@ namespace RaspiCommon
 		public Double CompassYAdjust { get; set; }
 		public Double MagneticDeviation { get; set; }
 
+		public Double BearingFuzz { get; set; }
+
 		public Double StopDistance { get { return .15; } }
 		public TimeSpan RampUp { get { return TimeSpan.FromMilliseconds(50); } }
 		public TimeSpan RampDown { get { return TimeSpan.FromMilliseconds(50); } }
 		public Double MaxRangeDetect { get { return .5; } }
 
 		public Double LidarOffsetDegrees { get; set; }
+		public int StandardSpeed { get; set; }
+		public Double StoppingDistance { get; set; }
+
 
 		Dictionary<RFDir, GpioPin> _rangeFinderOutputPins;
 		public Dictionary<RFDir, GpioPin>  RangeFinderEchoPins
@@ -108,9 +114,44 @@ namespace RaspiCommon
 
 		public String LidarComPort { get; set; }
 
+		public Double LidarMetersSquare { get { return 10; } }
+		public Double LidarPixelsPerMeter { get { return 50; } }
+
+		String _saveImageLocation;
+		public String SaveImageLocation
+		{
+			get
+			{
+				if(_saveImageLocation == null)
+				{
+					_saveImageLocation = "/var/www/html/grid.png";
+				}
+				return _saveImageLocation;
+			}
+			set { _saveImageLocation = value; }
+		}
+
+		String _botImage;
+		public String BotImage
+		{
+			get
+			{
+				if(_botImage == null)
+				{
+					_botImage = "tank.png";
+				}
+				return _botImage;
+			}
+			set { _botImage = value; }
+		}
+
+		public String RadarHost { get; set; }
+
 		public static String GetDefaultConfigFileName()
 		{
-			return CONFIG_FILE;
+			return Environment.OSVersion.Platform == PlatformID.Unix
+				? CONFIG_FILE
+				: Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "robo.config");
 		}
 	}
 }

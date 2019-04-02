@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -24,11 +24,11 @@ namespace TrackBot.TTY
 			if(parm > 10 || parm == 0)
 			{
 				TimeSpan time = TimeSpan.FromMilliseconds(parm);
-				Widgets.Tracks.BackwardTime(time, Widgets.Tracks.Slow);
+				Widgets.Tracks.BackwardTime(time, Widgets.Tracks.StandardSpeed);
 			}
 			else
 			{
-				Widgets.Tracks.BackwardMeters(parm, Widgets.Tracks.Slow);
+				Widgets.Tracks.BackwardMeters(parm, Widgets.Tracks.StandardSpeed);
 			}
 
 			return true;

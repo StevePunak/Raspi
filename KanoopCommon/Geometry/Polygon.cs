@@ -37,6 +37,12 @@ namespace KanoopCommon.Geometry
 		protected PointDList m_Points;
 		public List<IPoint> Points { get { return new List<IPoint>(m_Points); } }
 
+		public PointDList ToPointDList()
+		{
+			PointDList points = new PointDList(m_Points);
+			return points;
+		}
+
 		public Double Area
 		{
 			get

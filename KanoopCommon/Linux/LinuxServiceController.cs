@@ -1,9 +1,9 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-// using CommonUtil.Services;
-//using CommonUtil.IPC;
+// using KanoopCommon.Services;
+//using KanoopCommon.IPC;
 using KanoopCommon.Logging;
 using System.Net;
 using System.IO;

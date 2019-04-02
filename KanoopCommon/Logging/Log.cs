@@ -195,7 +195,7 @@ namespace KanoopCommon.Logging
 
 			_outputQueue = new List<string>();
 			_queueing = false;
-			_UTCTimestamps = false;
+			_UTCTimestamps = true;
 
 			_logCreateTime = DateTime.Now;
 			MinimumLevelForHeader = Logging.LogLevel.ALWAYS;
@@ -355,8 +355,8 @@ namespace KanoopCommon.Logging
 			}
 			else
 			{
-				String strOut = String.Format(strInText, parms);
-				strOut = String.Format("SYSTEMLOG: {0} {1} {2}", DateTime.Now.ToString("HH:mm:ss.fff "), logLevel.ToString(), strOut);
+				String output = String.Format(strInText, parms);
+				output = String.Format("SYSTEMLOG: {0} {1} {2}", DateTime.UtcNow.ToString("HH:mm:ss.fff "), logLevel.ToString(), output);
 #if USE_EVENT_LOG
 				Debug.WriteLine(strOut);
 				if(logLevel != LogLevel.DEBUG && Debugger.IsAttached != true)
@@ -389,7 +389,7 @@ namespace KanoopCommon.Logging
 					EventLog.WriteEntry(EVENT_LOG_APPLICATION_NAME, strOut, entryType);
 				}
 #else
-				Console.WriteLine(strOut);
+				Console.WriteLine(output);
 #endif
 			}
 		}
@@ -792,20 +792,19 @@ namespace KanoopCommon.Logging
 					/** open the file */
 					_fileStream = new FileStream(fileName, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite);
 
-					
-
 					/** try and find a timestamp for the first entry in the log */
 					DateTime firstEntryTime = DateTime.MinValue;
 					TextReader tr = new StreamReader(_fileStream);
-					String strLine;
+					String line;
+					int linesToParse = 100;
 					do
 					{
-						strLine = tr.ReadLine();
-						if(strLine != null && strLine.Length > 15)
+						line = tr.ReadLine();
+						if(line != null && line.Length > 15)
 						{
-							DateTime.TryParseExact(strLine.Substring(0, 15), "MMM dd HH:mm:ss", DateTimeFormatInfo.InvariantInfo, DateTimeStyles.None, out firstEntryTime);
+							DateTime.TryParseExact(line.Substring(0, 15), "MMM dd HH:mm:ss", DateTimeFormatInfo.InvariantInfo, DateTimeStyles.None, out firstEntryTime);
 						}
-					}while(strLine != null && firstEntryTime == DateTime.MinValue);
+					}while(--linesToParse > 0 && line != null && firstEntryTime == DateTime.MinValue);
 										
 					if (firstEntryTime > DateTime.Now)
 					{

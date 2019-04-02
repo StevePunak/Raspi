@@ -1,4 +1,4 @@
-﻿namespace RaspiForm
+namespace RaspiForm
 {
 	partial class MainForm
 	{

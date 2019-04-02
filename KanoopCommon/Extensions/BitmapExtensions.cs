@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
@@ -7,11 +7,22 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using KanoopCommon.Geometry;
 
 namespace KanoopCommon.Extensions
 {
 	public static class BitmapExtensions
 	{
+		public static PointD Center(this Image bitmap)
+		{
+			return new PointD(bitmap.Width / 2, bitmap.Height / 2);
+		}
+
+		public static Rectangle RectangleForCircle(this Image image, Point center, int radius)
+		{
+			return new Rectangle(center.X - radius,center.Y - radius, radius * 2, radius * 2);
+		}
+
 		public static Bitmap Resize(this Bitmap bitmap, SizeF size)
 		{
 			return bitmap.Resize(size.Width, size.Height);
