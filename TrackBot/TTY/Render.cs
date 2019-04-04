@@ -28,14 +28,11 @@ namespace TrackBot.TTY
 			Console.WriteLine("Environment is {0}", Widgets.Environment);
 			Console.WriteLine("PixelSize: {0}", Widgets.Environment.PixelSize);
 
-			Mat image = Widgets.Environment.GenerateBitmap(false, false);
+			Mat image = Widgets.Environment.PointsToBitmap();
 			image.Save(SAVE_LOCATION1);
 
-			Widgets.Environment.Location = image.Center();
-			Widgets.Environment.ProcessImage(image, 0, Widgets.Environment.PixelsPerMeter);
+			Widgets.Environment.ProcessImage(image, Widgets.Environment.Bearing, Widgets.Environment.PixelsPerMeter);
 
-			image = Widgets.Environment.GetEnvironmentImage(true);
-			image.Save(SAVE_LOCATION2);
 #if zero
 			Mat mat = new Mat(Widgets.Environment.PixelSize, DepthType.Cv8U, 3);
 			CvInvoke.Rectangle(mat, new Rectangle(100, 100, 100, 100), new Bgr(Color.Green).MCvScalar);

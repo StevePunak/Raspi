@@ -8,17 +8,9 @@ namespace KanoopCommon.Geometry
 {
 	internal static class PointCommon
 	{
-		public static int ComparePoints(object p1, object p2, int precision)
+		public static int ComparePoints(PointD point1, PointD point2, int precision)
 		{
-			if(p1 is IPoint == false || p2 is IPoint == false)
-			{
-				throw new GeometryException("Both points compared must be of type IPoint");
-			}
-
 			int result;
-
-			IPoint point1 = p1 as IPoint;
-			IPoint point2 = p2 as IPoint;
 
 			if(	(result = Math.Round(point1.X, precision).CompareTo(Math.Round(point2.X, precision))) == 0 &&
 				(result = Math.Round(point1.Y, precision).CompareTo(Math.Round(point2.Y, precision))) == 0 )
@@ -33,19 +25,14 @@ namespace KanoopCommon.Geometry
 			return result;
 		}
 
-		public static int GetHashCode(IPoint point)
+		public static int GetHashCode(PointD point)
 		{
 			return (int)MD5.HashStringAsUInt32(point.ToString());
 		}
 
-		public static bool Equals(IPoint thisPoint, object other)
+		public static bool Equals(PointD thisPoint, object other)
 		{
-			if(other is IPoint == false)
-			{
-				throw new GeometryException("Other type to Equals must be IPoint");
-			}
-
-			return ((IPoint)other).X == thisPoint.X && ((IPoint)other).Y == thisPoint.Y;
+			return ((PointD)other).X == thisPoint.X && ((PointD)other).Y == thisPoint.Y;
 		}
 	}
 }

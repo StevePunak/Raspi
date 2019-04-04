@@ -21,14 +21,6 @@ namespace KanoopCommon.Geometry
 		public LineList(IEnumerable<Line> lines)
 			: base(lines) {}
 
-		public LineList(IEnumerable<ILine> lines)
-		{
-			foreach(ILine line in lines)
-			{
-				Add(new Line(line));
-			}
-		}
-
 		public LineList(PointDList points)
 			: this(points.ToLineList()) {}
 
@@ -36,7 +28,23 @@ namespace KanoopCommon.Geometry
 
 		#region Public Geometry Methods
 
-		public PointD ClosestPointTo(IPoint other, out Line closestLine, out Double closestDistance)
+		public void RemoveShorterThan(Double length)
+		{
+			LineList delete = new LineList();
+			foreach(Line line in this)
+			{
+				if(line.Length < length)
+				{
+					delete.Add(line);
+				}
+			}
+			foreach(Line line in delete)
+			{
+				Remove(line);
+			}
+		}
+
+		public PointD ClosestPointTo(PointD other, out Line closestLine, out Double closestDistance)
 		{
 			closestDistance = Double.MaxValue;
 			PointD closestPoint = null;
@@ -228,7 +236,7 @@ namespace KanoopCommon.Geometry
 		#endregion
 	}
 
-	public class Line : ILine
+	public class Line
 	{
 		#region Constants
 
@@ -239,14 +247,14 @@ namespace KanoopCommon.Geometry
 		#region Public Properties
 
 		protected PointD	_p1;
-		public IPoint P1
+		public PointD P1
 		{
 			get { return _p1; }
-			set { _p1 = value as PointD; }
+			set { _p1 = value; }
 		}
 
 		protected PointD	_p2;
-		public IPoint P2
+		public PointD P2
 		{
 			get { return _p2; }
 			set { _p2 = value as PointD; }
@@ -254,7 +262,7 @@ namespace KanoopCommon.Geometry
 
 		public List<PointD> Points { get { return new List<PointD>(){ _p1, _p2 }; } }
 
-		public IPoint MidPoint
+		public PointD MidPoint
 		{
 			get
 			{
@@ -379,11 +387,15 @@ namespace KanoopCommon.Geometry
 			Tag = null;
 		}
 
-		public Line(ILine line)
-			: this(line.P1, line.P2) {}
+		public Line(GeoPoint p1, GeoPoint p2)
+		{
+			_p1 = p1.ToPointD();
+			_p2 = p2.ToPointD();
+			Tag = null;
+		}
 
-		public Line(IPoint p1, IPoint p2)
-			: this(p1.X, p1.Y, p2.X, p2.Y) {}
+		public Line(Line line)
+			: this(line.P1, line.P2) {}
 
 		public Line(Double x1, Double y1, Double x2, Double y2)
 			: this(new PointD(x1, y1), new PointD(x2, y2)) {}
@@ -447,10 +459,10 @@ namespace KanoopCommon.Geometry
 		/// <returns></returns>
 		public RectangleD GetPathRectangle(Double pathWidth, Double extend)
 		{
-			PointD p1 = P1.GetPointAt(Bearing.AddDegrees(90), pathWidth / 2) as PointD;
-			PointD p2 = P1.GetPointAt(Bearing.SubtractDegrees(90), pathWidth / 2) as PointD;
-			PointD p3 = P2.GetPointAt(Bearing.SubtractDegrees(90), pathWidth / 2) as PointD;
-			PointD p4 = P2.GetPointAt(Bearing.AddDegrees(90), pathWidth / 2) as PointD;
+			PointD p1 = ((PointD)P1).GetPointAt(Bearing.AddDegrees(90), pathWidth / 2) as PointD;
+			PointD p2 = ((PointD)P1).GetPointAt(Bearing.SubtractDegrees(90), pathWidth / 2) as PointD;
+			PointD p3 = ((PointD)P2).GetPointAt(Bearing.SubtractDegrees(90), pathWidth / 2) as PointD;
+			PointD p4 = ((PointD)P2).GetPointAt(Bearing.AddDegrees(90), pathWidth / 2) as PointD;
 
 			if(extend > 0)
 			{
@@ -518,15 +530,15 @@ namespace KanoopCommon.Geometry
 			return line;
 		}
 
-		public IPoint FurthestPointFrom(IPoint pt)
+		public PointD FurthestPointFrom(PointD pt)
 		{
 			Double distance;
 			PointD closest = ClosestPointTo(pt, out distance);
-			IPoint furthest = closest.Equals(P1) ? P2 : P1;
+			PointD furthest = closest.Equals(P1) ? P2 : P1;
 			return furthest;
 		}
 
-		public PointD ClosestPointTo(IPoint pt)
+		public PointD ClosestPointTo(PointD pt)
 		{
 			Double distance;
 			return ClosestPointTo(pt, out distance);
@@ -542,7 +554,7 @@ namespace KanoopCommon.Geometry
 			return P1.Y.Between(y1, y2) || P2.Y.Between(y1, y2);
 		}
 
-		public PointD ClosestPointTo(IPoint pt, out Double distance)
+		public PointD ClosestPointTo(PointD pt, out Double distance)
 		{
 			PointD	closest;
 			Double	dx = P2.X - P1.X;
@@ -606,7 +618,7 @@ namespace KanoopCommon.Geometry
 			return circle.Intersects(this);
 		}
 
-		public bool SharesEndPointWith(ILine other, int precision = 0)
+		public bool SharesEndPointWith(Line other, int precision = 0)
 		{
 			return
 			    other.P1.Equals(P1, precision) ||
@@ -615,7 +627,7 @@ namespace KanoopCommon.Geometry
 			    other.P2.Equals(P2, precision);
 		}
 
-		public bool IsEndPoint(IPoint point, int precision = 0)
+		public bool IsEndPoint(PointD point, int precision = 0)
 		{
 			return _p1.Equals(point, precision) || _p2.Equals(point, precision);
 		}
@@ -684,12 +696,12 @@ namespace KanoopCommon.Geometry
 
 		#region Utility
 
-		public ILine Clone()
+		public Line Clone()
 		{
 			return new Line(_p1.Clone(), _p2.Clone());
 		}
 
-		public bool Equals(ILine l)
+		public bool Equals(Line l)
 		{
 			return (l.P1.X == P1.X && l.P1.Y == P1.Y && l.P2.X == P2.X && l.P2.Y == P2.Y);
 		}
@@ -703,7 +715,7 @@ namespace KanoopCommon.Geometry
 			return result;
 		}
 
-		public byte[] ToByteArray()
+		public byte[] Serialize()
 		{
 			if(P1 is PointD == false || P2 is PointD == false)
 			{
@@ -712,8 +724,8 @@ namespace KanoopCommon.Geometry
 			byte[] output = new byte[ByteArraySize];
 			using(BinaryWriter bw = new BinaryWriter(new MemoryStream(output)))
 			{
-				bw.Write(((PointD)P1).ToByteArray());
-				bw.Write(((PointD)P2).ToByteArray());
+				bw.Write(((PointD)P1).Serialize());
+				bw.Write(((PointD)P2).Serialize());
 			}
 			return output;
 		}

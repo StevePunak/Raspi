@@ -26,7 +26,7 @@ namespace TrackBot.Spatial
 		Double VectorSize { get; }
 		PointD Location { get; set; }
 		PointD RelativeLocation { get; set; }
-		Double RangeFuzz { get; }
+		Double RangeFuzz { get; set; }
 		FuzzyPath FuzzyPath { get; set; }
 
 		void ProcessImage(Mat image, Double imageOrientation, Double imagePixelsPerMeter);
@@ -36,8 +36,9 @@ namespace TrackBot.Spatial
 		Double FuzzyRangeAtBearing(Double bearing, Double fuzz);
 		Double ShortestRangeAtBearing(Double bearing, Double fuzz);
 		DateTime GetLastSampleTimeAtBearing(Double bearing);
-		Mat GenerateBitmap(bool radarLines, bool drawVehicle);
+		Mat PointsToBitmap();
 		FuzzyPath FindGoodDestination();
+		LandmarkList Landmarks { get; }
 
 		void Reset();
 	}

@@ -9,7 +9,7 @@ using KanoopCommon.Database;
 
 namespace KanoopCommon.Geometry
 {
-	public class GridD : RectangleD, IGrid
+	public class GridD : RectangleD
 	{
 		#region Public Properties
 
@@ -38,10 +38,10 @@ namespace KanoopCommon.Geometry
 
 		public GridD(PointD p1, PointD p2, PointD p3, PointD p4, Int32 numberOfRows, Int32 numberOfColumns) : this()
 		{
-			m_Points[0] = p1;
-			m_Points[1] = p2;
-			m_Points[2] = p3;
-			m_Points[3] = p4;
+			_points[0] = p1;
+			_points[1] = p2;
+			_points[2] = p3;
+			_points[3] = p4;
 
             NumberOfRows = numberOfRows;
             NumberOfColumns = numberOfColumns;
@@ -49,7 +49,7 @@ namespace KanoopCommon.Geometry
 
 		public GridD ()
 		{
-			m_Points = new PointDList { PointD.Empty, PointD.Empty, PointD.Empty, PointD.Empty };
+			_points = new PointDList { PointD.Empty, PointD.Empty, PointD.Empty, PointD.Empty };
 		}
 
 		#endregion

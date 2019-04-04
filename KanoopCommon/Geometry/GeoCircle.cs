@@ -7,7 +7,7 @@ using System;
 
 namespace KanoopCommon.Geometry
 {
-	public class GeoCircle : GeoEllipse, ICircle
+	public class GeoCircle : GeoEllipse
 	{
 		#region Public Properties
 
@@ -24,20 +24,20 @@ namespace KanoopCommon.Geometry
 
 		public Double Latitude
 		{
-			get { return m_Center.Latitude; }
-			set { m_Center.Latitude = value; }
+			get { return _center.Latitude; }
+			set { _center.Latitude = value; }
 		}
 
 		public Double Longitude
 		{
-			get { return m_Center.Longitude; }
-			set { m_Center.Longitude = value; }
+			get { return _center.Longitude; }
+			set { _center.Longitude = value; }
 		}
 
 		public GeoPoint EarthPoint
 		{
-			get { return m_Center; }
-			set { m_Center = value; }
+			get { return _center; }
+			set { _center = value; }
 		}
 
 		#endregion
@@ -53,7 +53,7 @@ namespace KanoopCommon.Geometry
 		public GeoCircle(GeoCircle other)
 			: this(other.Latitude, other.Longitude, other.Radius) {}
 
-		public GeoCircle(IPoint center, Double radius)
+		public GeoCircle(PointD center, Double radius)
 			: this(new GeoPoint(center), radius) {}
 
 		public GeoCircle(GeoSquare square)
@@ -62,7 +62,7 @@ namespace KanoopCommon.Geometry
 		public GeoCircle(GeoPoint center, Double radius)
 			: base(center, radius)
 		{
-			m_Center = center;
+			_center = center;
 			m_Radius = radius;
 		}
 
@@ -77,7 +77,7 @@ namespace KanoopCommon.Geometry
 
 			for (Double degrees = 0; degrees < 360; degrees += angleSize)
 			{
-				points.Add(EarthGeo.GetPoint(m_Center, Radius, degrees));
+				points.Add(EarthGeo.GetPoint(_center, Radius, degrees));
 			}
 
 			GeoPolygon		polygon = new GeoPolygon(points);
@@ -90,20 +90,20 @@ namespace KanoopCommon.Geometry
 
 		public override bool Contains(GeoPoint point)
 		{
-			Double distance = EarthGeo.GetDistance(m_Center, point);
+			Double distance = EarthGeo.GetDistance(_center, point);
 			return distance <= Radius;
 		}
 
-		public override void Move(IPoint center)
+		public override void Move(GeoPoint center)
 		{
-			m_Center = new GeoPoint(center);
+			_center = new GeoPoint(center);
 		}
 
 		public override void Move(Double bearing, Double distance)
 		{
 			GeoPoint center = new GeoPoint(Center);
 			center.Move(bearing, distance);
-			m_Center = center;
+			_center = center;
 		}
 
 		public override bool Intersects(GeoPolygon polygon)
@@ -154,8 +154,8 @@ namespace KanoopCommon.Geometry
 			intersections = 0;
 			if(intersects)
 			{
-				Double	degy = EarthGeo.DegreesPerMeterAtLatitude(m_Center.Latitude);
-				Double	degx = EarthGeo.DegreesPerMeterAtLongitude(m_Center.Longitude);
+				Double	degy = EarthGeo.DegreesPerMeterAtLatitude(_center.Latitude);
+				Double	degx = EarthGeo.DegreesPerMeterAtLongitude(_center.Longitude);
 				Double	radius = Radius * Math.Max(degx, degy);
 
 				Double	dx, dy, A, B, C, det, t;
@@ -198,14 +198,14 @@ namespace KanoopCommon.Geometry
 
 		public override void SetPrecision(int precision)
 		{
-			m_Center.Latitude = Math.Round(m_Center.Latitude, precision);
-			m_Center.Longitude = Math.Round(m_Center.Longitude, precision);
+			_center.Latitude = Math.Round(_center.Latitude, precision);
+			_center.Longitude = Math.Round(_center.Longitude, precision);
 		}
 
-		public override IRectangle GetMinimumBoundingRectangle()
+		public override GeoRectangle GetMinimumBoundingRectangle()
 		{
-			GeoPoint north = m_Center.GetPointAt(EarthGeo.North, Radius) as GeoPoint;
-			GeoPoint south = m_Center.GetPointAt(EarthGeo.South, Radius) as GeoPoint;
+			GeoPoint north = _center.GetPointAt(EarthGeo.North, Radius) as GeoPoint;
+			GeoPoint south = _center.GetPointAt(EarthGeo.South, Radius) as GeoPoint;
 			return new GeoRectangle(new GeoPointList()
 			{
 				north.GetPointAt(EarthGeo.West, Radius) as GeoPoint,

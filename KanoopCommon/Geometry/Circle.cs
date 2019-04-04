@@ -10,34 +10,34 @@ using KanoopCommon.Types;
 
 namespace KanoopCommon.Geometry
 {
-	public class Circle : ICircle
+	public class Circle
 	{
 		#region Public Properties
 
-		IPoint	m_Center;
-		public IPoint Center
+		PointD	_center;
+		public PointD Center
 		{
-			get { return m_Center; }
+			get { return _center; }
 // SPSPREMOVE			set { m_Center = value; }
 		}
 
 		public Double Circumference
 		{
-			get { return 2 * Math.PI * m_Radius; }
+			get { return 2 * Math.PI * _radius; }
 		}
 
-		Double	m_Radius;
+		Double	_radius;
 		public Double Radius
 		{
-			get { return m_Radius; }
-			set { m_Radius = value; }
+			get { return _radius; }
+			set { _radius = value; }
 		}
 
 		public Double Diameter { get { return Radius * 2; } }
 
 		public Double Area
 		{
-			get { return Math.PI * (m_Radius * m_Radius); }
+			get { return Math.PI * (_radius * _radius); }
 		}
 
 		#endregion
@@ -49,10 +49,10 @@ namespace KanoopCommon.Geometry
 		public Circle(Point center, Double radius)
 			: this(new PointD(center), radius) {}
 
-		public Circle(IPoint center, Double radius)
+		public Circle(PointD center, Double radius)
 		{
-			m_Center = center;
-			m_Radius = radius;
+			_center = center;
+			_radius = radius;
 		}
 
 		#endregion
@@ -63,7 +63,7 @@ namespace KanoopCommon.Geometry
 		{
 			Relationship	ret = Relationship.NoRelation;
 
-			Line			centers = new Line(m_Center, otherCircle.m_Center);
+			Line			centers = new Line(_center, otherCircle._center);
 
 			if(centers.Length > this.Radius + otherCircle.Radius)
 			{
@@ -89,16 +89,16 @@ namespace KanoopCommon.Geometry
 			return ret;
 		}
 
-		public void Move(IPoint where)
+		public void Move(PointD where)
 		{
-			m_Center = new PointD(where);
+			_center = new PointD(where);
 		}
 
 		public bool Intersects(Circle otherCircle)
 		{
 			bool	bRet = false;
 
-			Line	centers = new Line(m_Center, otherCircle.m_Center);
+			Line	centers = new Line(_center, otherCircle._center);
 
 			if(centers.Length > this.Radius + otherCircle.Radius)
 			{
@@ -233,12 +233,12 @@ namespace KanoopCommon.Geometry
 			return intersections;
 		}
 
-		public IRectangle GetBoundingRectangle()
+		public RectangleD GetBoundingRectangle()
 		{
-			return new RectangleD(m_Center.GetPointAt(EarthGeo.NorthWest, m_Radius) as PointD,
-			                      m_Center.GetPointAt(EarthGeo.NorthEast, m_Radius) as PointD,
-			                      m_Center.GetPointAt(EarthGeo.SouthEast, m_Radius) as PointD,
-			                      m_Center.GetPointAt(EarthGeo.SouthWest, m_Radius) as PointD);
+			return new RectangleD(((PointD)_center).GetPointAt(EarthGeo.NorthWest, _radius),
+								  ((PointD)_center).GetPointAt(EarthGeo.NorthEast, _radius),
+								  ((PointD)_center).GetPointAt(EarthGeo.SouthEast, _radius),
+								  ((PointD)_center).GetPointAt(EarthGeo.SouthWest, _radius));
 		}
 
 		#endregion
@@ -262,7 +262,7 @@ namespace KanoopCommon.Geometry
 
 		public Circle Clone()
 		{
-			return new Circle(Center.Clone(), m_Radius);
+			return new Circle(Center.Clone(), _radius);
 		}
 
 		public override int GetHashCode()
@@ -281,7 +281,7 @@ namespace KanoopCommon.Geometry
 
 		public override string ToString()
 		{
-			return String.Format("{0} - {1:0.00}", m_Center, m_Radius);
+			return String.Format("{0} - {1:0.00}", _center, _radius);
 		}
 
 		#endregion

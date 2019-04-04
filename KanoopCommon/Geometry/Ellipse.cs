@@ -5,7 +5,7 @@ using System.Text;
 
 namespace KanoopCommon.Geometry
 {
-	public class Ellipse : IEllipse
+	public class Ellipse
 	{
 		#region Public Properties
 
@@ -13,22 +13,22 @@ namespace KanoopCommon.Geometry
 
 		public Double Eccentricity { get; private set; }
 
-		public IPoint[] Foci { get; private set; }
+		public PointD[] Foci { get; private set; }
 
-		public ILine MajorAxis { get; private set; }
+		public Line MajorAxis { get; private set; }
 
 		public Double MajorRadius { get; private set; }
 
-		public ILine MinorAxis { get; private set; }
+		public Line MinorAxis { get; private set; }
 
 		public Double MinorRadius { get; private set; }
 
-		public IPoint Center 
+		public PointD Center 
 		{ 
-			get { return m_Center; } 
+			get { return _center; } 
 			private set
 			{
-				m_Center = value;
+				_center = value;
 			}
 		}
 
@@ -37,50 +37,46 @@ namespace KanoopCommon.Geometry
 		#region Private Members
 
 		/** These member variables actually define the ellipse */
-		IPoint m_Center;
-		Double m_MajorAxisLength;
-		Double m_MinorAxisLength;
-		Double m_MajorAxisBearing;
+		PointD _center;
+		Double _majorAxisLength;
+		Double _minorAxisLength;
+		Double _majorAxisBearing;
 
 		#endregion
 
 		#region Constructors
 
-		private Ellipse(IPoint center, Double length1, Double length2, Double majorAxisBearing)
+		private Ellipse(PointD center, Double length1, Double length2, Double majorAxisBearing)
 		{
-			m_Center = center;
+			_center = center;
 
 			if(MajorAxis == null && MinorAxis == null)
 			{
-				m_MajorAxisLength = length1 > length2 ? length1 : length2;
-				m_MinorAxisLength = length1 < length2 ? length1 : length2;
-				m_MajorAxisBearing = majorAxisBearing;
+				_majorAxisLength = length1 > length2 ? length1 : length2;
+				_minorAxisLength = length1 < length2 ? length1 : length2;
+				_majorAxisBearing = majorAxisBearing;
 
 				RecalculateAxes();
 			}
 			else
 			{
-				m_MajorAxisLength = MajorAxis.Length;
-				m_MinorAxisLength = MinorAxis.Length;
+				_majorAxisLength = MajorAxis.Length;
+				_minorAxisLength = MinorAxis.Length;
 				
-				m_MajorAxisBearing = majorAxisBearing;
+				_majorAxisBearing = majorAxisBearing;
 			}
 
 			RecalculateFociAndArea();
 		}
 
-		public Ellipse(PointD center, Double majorAxisLength, Double minorAxisLength, Double majorAxisBearing)
-			: this(	LineFromCenterAndBearing(center, majorAxisBearing, majorAxisLength), 
-					LineFromCenterAndBearing(center, Angle.Add(majorAxisBearing, 90), minorAxisLength)) {}
-
-		public Ellipse(ILine majorAxis, ILine minorAxis)
+		public Ellipse(Line majorAxis, Line minorAxis)
 			: this(majorAxis.MidPoint, majorAxis.Length, minorAxis.Length, majorAxis.Bearing) 
 		{
 			MajorAxis = majorAxis;
 			MinorAxis = minorAxis;
 		}
 
-		public Ellipse(IRectangle rectangle)
+		public Ellipse(RectangleD rectangle)
 			: this(	rectangle.Lines[0].Length > rectangle.Lines[1].Length						// major
 						? new Line(rectangle.Lines[1].MidPoint, rectangle.Lines[3].MidPoint)
 						: new Line(rectangle.Lines[0].MidPoint, rectangle.Lines[2].MidPoint),
@@ -92,9 +88,9 @@ namespace KanoopCommon.Geometry
 
 		#region Public Geometry Methods
 
-		public void Move(IPoint where)
+		public void Move(PointD where)
 		{
-			m_Center = new PointD(where);
+			_center = new PointD(where);
 
 			RecalculateAll();
 		}
@@ -112,13 +108,13 @@ namespace KanoopCommon.Geometry
 		void RecalculateAxes()
 		{
 			MajorAxis = new Line(	
-				FlatGeo.GetPoint(m_Center, Angle.Reverse(m_MajorAxisBearing), m_MajorAxisLength / 2),
-				FlatGeo.GetPoint(m_Center, m_MajorAxisBearing, m_MajorAxisLength / 2));
+				FlatGeo.GetPoint(_center, Angle.Reverse(_majorAxisBearing), _majorAxisLength / 2),
+				FlatGeo.GetPoint(_center, _majorAxisBearing, _majorAxisLength / 2));
 
-			Double minorAxisBearing = Angle.Add(m_MajorAxisBearing, 90);
+			Double minorAxisBearing = Angle.Add(_majorAxisBearing, 90);
 			MinorAxis = new Line(
-				FlatGeo.GetPoint(m_Center, Angle.Reverse(minorAxisBearing), m_MinorAxisLength / 2),
-				FlatGeo.GetPoint(m_Center, minorAxisBearing, m_MinorAxisLength / 2));
+				FlatGeo.GetPoint(_center, Angle.Reverse(minorAxisBearing), _minorAxisLength / 2),
+				FlatGeo.GetPoint(_center, minorAxisBearing, _minorAxisLength / 2));
 		}
 
 		void RecalculateFociAndArea()

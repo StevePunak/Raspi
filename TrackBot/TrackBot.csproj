@@ -82,10 +82,12 @@
     <Compile Include="TTY\ExitCommand.cs" />
     <Compile Include="TTY\FindPath.cs" />
     <Compile Include="TTY\Forward.cs" />
+    <Compile Include="TTY\LandmarkCommand.cs" />
     <Compile Include="TTY\LiftMove.cs" />
     <Compile Include="TTY\Render.cs" />
     <Compile Include="TTY\Roam.cs" />
     <Compile Include="TTY\SaveConfig.cs" />
+    <Compile Include="TTY\SetCommand.cs" />
     <Compile Include="TTY\SetLidarOffset.cs" />
     <Compile Include="TTY\SetMagneticDeviation.cs" />
     <Compile Include="TTY\SpinClockwise.cs" />

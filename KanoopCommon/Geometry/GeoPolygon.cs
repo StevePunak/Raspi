@@ -12,7 +12,7 @@ namespace KanoopCommon.Geometry
 {
 	public class GeoPolygonList : List<GeoPolygon> {}
 
-	public class GeoPolygon : GeoShape, IPolygon
+	public class GeoPolygon : GeoShape
 	{
 		#region Constants
 
@@ -22,12 +22,12 @@ namespace KanoopCommon.Geometry
 
 		#region Public Properties
 
-		protected GeoPointList m_Points;
-		public GeoPointList GeoPoints { get { return m_Points; } }
+		protected GeoPointList _points;
+		public GeoPointList GeoPoints { get { return _points; } }
 
-		public List<IPoint> Points { get { return new List<IPoint>(m_Points); } }
+		public List<GeoPoint> Points { get { return new List<GeoPoint>(_points); } }
 	
-		public List<ILine> Lines { get { return new List<ILine>(GeoLines); } }
+		public List<GeoLine> Lines { get { return new List<GeoLine>(GeoLines); } }
 
 		public GeoLineList GeoLines
 		{ 
@@ -183,7 +183,7 @@ namespace KanoopCommon.Geometry
 
 		public GeoPolygon(GeoPointList points)
 		{
-			m_Points = points;
+			_points = points;
 		}
 
 		#endregion
@@ -274,7 +274,7 @@ namespace KanoopCommon.Geometry
 
 		public override void Move(double bearing, double distance)
 		{
-			foreach(GeoPoint point in m_Points)
+			foreach(GeoPoint point in _points)
 			{
 				point.Move(bearing, distance);
 			}
@@ -328,7 +328,7 @@ namespace KanoopCommon.Geometry
 			return closest;
 		}
 
-		public IRectangle GetBoundingRectangle()
+		public GeoRectangle GetBoundingRectangle()
 		{
 			return new GeoRectangle(	new GeoPointList()
 										{
@@ -429,7 +429,7 @@ namespace KanoopCommon.Geometry
 			return distance;
 		}
 
-		public override IRectangle GetMinimumBoundingRectangle()
+		public GeoRectangle GetMinimumBoundingRectangle()
 		{
 			GeoPoint p1 = new GeoPoint(NorthMost.Latitude, WestMost.Longitude);
 			GeoPoint p2 = new GeoPoint(NorthMost.Latitude, EastMost.Longitude);

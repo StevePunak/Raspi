@@ -50,7 +50,7 @@ namespace KanoopCommon.Geometry
 		 * 
 		 * p1 -> vertext -> p2
 		 */
-		public static Angle Angle(IPoint p1, IPoint vertex, IPoint p2)
+		public static Angle Angle(PointD p1, PointD vertex, PointD p2)
 		{
 			return AngleV2(new Line(vertex, p1), new Line(vertex, p2));
 		}
@@ -70,7 +70,7 @@ namespace KanoopCommon.Geometry
 
 		public static Double Distance(Point p1, Point p2) { return Distance(new PointD(p1), new PointD(p2)); }
 		
-		public static Double Distance(IPoint p1, IPoint p2)
+		public static Double Distance(PointD p1, PointD p2)
 		{
 			Line l = new Line(p1, p2);
 			return l.Length;
@@ -92,13 +92,13 @@ namespace KanoopCommon.Geometry
 		}
 
 		[Obsolete("Use GetPoint - BEWARE Parameter Order Is Changed")]
-		public static PointD GetPointFromLocation(IPoint from, Double degBearing, Double distance)
+		public static PointD GetPointFromLocation(PointD from, Double degBearing, Double distance)
 		{
 			Double radBearing = Radians(degBearing);
 			return new PointD(from.X + Math.Sin(radBearing) * distance, from.Y - Math.Cos(radBearing) * distance);
 		}
 
-		public static PointD GetPoint(IPoint from, Double bearing, Double distance)
+		public static PointD GetPoint(PointD from, Double bearing, Double distance)
 		{
 			Double radBearing = Radians(bearing);
 			return new PointD(from.X + Math.Sin(radBearing) * distance, from.Y - Math.Cos(radBearing) * distance);
@@ -180,7 +180,7 @@ namespace KanoopCommon.Geometry
 			return (l.Length <= circle.Radius);
 		}
 
-		public static void GetLineABC(ILine line, out Double A, out Double B, out Double C)
+		public static void GetLineABC(Line line, out Double A, out Double B, out Double C)
 		{
 			A = line.P2.Y - line.P1.Y;
 			B = line.P1.X - line.P2.X;

@@ -28,13 +28,15 @@ namespace RaspiCommon.Lidar.Environs
 		const Double BEARING_SLACK = 2;                     // degrees slack when computing similar angles
 		const Double LINE_PATH_WIDTH = .1;                  // lines must be within this many meters to be consolidated into a single line
 
-		public Double RangeFuzz { get { return 2; } }
+		public Double RangeFuzz { get; set; }
 
 		#endregion
 
 		#region Events
 
 		public event FuzzyPathChangedHandler FuzzyPathChanged;
+		public event LandmarksChangedHandler LandmarksChanged;
+		public event BarriersChangedHandler BarriersChanged;
 
 		#endregion
 
@@ -86,7 +88,7 @@ namespace RaspiCommon.Lidar.Environs
 		};
 		int _colorIndex;
 
-		LidarServer _server;
+		TelemetryServer _server;
 
 		List<String> _debugTags = new List<string>() { "006", "009", "014" };
 
@@ -105,6 +107,8 @@ namespace RaspiCommon.Lidar.Environs
 			Paths = new List<RectangleD>();
 
 			FuzzyPathChanged += delegate {};
+			LandmarksChanged += delegate {};
+			BarriersChanged += delegate { };
 
 			Log.SysLogText(LogLevel.DEBUG, "Init 3");
 			_colorIndex = 0;
@@ -112,10 +116,13 @@ namespace RaspiCommon.Lidar.Environs
 
 		public void ProcessImage(Mat image, Double imageOrientation, Double imagePixelsPerMeter)
 		{
+			Log.SysLogText(LogLevel.DEBUG, "Lidar Processing image of {0}", image.Size);
+
 			Image = image;
 
 			Double cannyThreshold = 120;				// 180
 			Double cannyThresholdLinking = 120;         // 120
+			PointD center = image.Center();
 
 			Double rhoRes = 2;
 			Double thetaRes = Math.PI / 45;
@@ -133,7 +140,6 @@ namespace RaspiCommon.Lidar.Environs
 			Log.SysLogText(LogLevel.DEBUG, "---------------Sort ----------------");
 
 			lines.SortUpperLeft();
-			lines.DumpToLog();
 
 			Log.SysLogText(LogLevel.DEBUG, "Have {0} segments", lines.Count);
 
@@ -146,36 +152,28 @@ namespace RaspiCommon.Lidar.Environs
 
 			LandmarkList landmarks;
 			BarrierList barriers;
-			FindLandmarks(lines, out landmarks, out barriers);
+			FindLandmarksAndBarriers(lines, center, out landmarks, out barriers);
 
-			PointD imageCenter = new PointD(Image.Width / 2, Image.Height / 2);
-			foreach(Landmark landmark in landmarks)
-			{
-				PointD p = ImagePointToInternalPoint(landmark.Location, imageCenter, imageOrientation, imagePixelsPerMeter);
-				if(Landmarks.Contains(p, MINIMUM_LANDMARK_SEPARATION, PixelsPerMeter) == false)
-				{
-					Landmarks.Add(new Landmark(p));
-				}
-			}
-
-			Mat output = Image.Clone();
-			output.Save(@"\\raspi\pi\tmp\junk3.png");
-			Log.SysLogText(LogLevel.DEBUG, "Have {0} segments", lines.Count);
-
+			Barriers = barriers;
+			Landmarks = landmarks;
 
 			Log.SysLogText(LogLevel.DEBUG, "******** {0} landmarks found", landmarks.Count);
 
-			foreach(Barrier barrier in barriers)
+			LandmarksChanged(landmarks);
+			BarriersChanged(barriers);
+		}
+
+		public Mat GetImageWithLandmarks()
+		{
+			Mat output = Image.Clone();
+
+			PointD imageCenter = output.Center();
+			foreach(Landmark landmark in Landmarks)
 			{
-				PointD p1 = ImagePointToInternalPoint(barrier.Line.P1 as PointD, imageCenter, imageOrientation, imagePixelsPerMeter);
-				PointD p2 = ImagePointToInternalPoint(barrier.Line.P2 as PointD, imageCenter, imageOrientation, imagePixelsPerMeter);
-				Barrier b = new Barrier(p1, p2);
-				b.Line.Tag = barrier.Line.Tag;
-				if(Barriers.Contains(b, MINIMUM_LANDMARK_SEPARATION, PixelsPerMeter, BEARING_SLACK) == false)
-				{
-					Barriers.Add(b);
-				}
+				CvInvoke.Circle(output, landmark.GetPoint().ToPoint(), 4, new Bgr(Color.Blue).MCvScalar);
 			}
+
+			return output;
 		}
 
 		PointD ImagePointToInternalPoint(PointD imagePoint, PointD imageOrigin, Double imageOrientation, Double imagePixelsPerMeter)
@@ -190,43 +188,133 @@ namespace RaspiCommon.Lidar.Environs
 			return internalLine.P2 as PointD;
 		}
 
-		private LandmarkList FindLandmarks(	LineList segments, 
-											out LandmarkList landmarks, 
-											out BarrierList barriers)
+		private void FindLandmarksAndBarriers(	LineList segments, 
+												PointD origin,
+												out LandmarkList landmarks, 
+												out BarrierList barriers)
 		{
 			landmarks = new LandmarkList();
 			barriers = new BarrierList();
 
 			Paths = new List<RectangleD>();
 
-			LineList lines = new LineList();
+			// get rid of short lines
+			LineList lines = new LineList(segments);
+			Double minimumSizePixels = MINIMUM_LANDMARK_SEGMENT * PixelsPerMeter;
+			lines.RemoveShorterThan(minimumSizePixels);
+			Log.SysLogText(LogLevel.DEBUG, "Keeping {0} out of {1} after applying size filter", lines.Count, segments.Count);
 
-			// get rid of any short segments, and aggregate into Line objects
+			// tag remaining objects for debugging
 			int lineNumber = 0;
-			foreach(Line segment in segments)
+			foreach(Line line in lines)
 			{
-				Line line = new Line(segment.P1, segment.P2);
-				Double actualLength = line.Length / PixelsPerMeter;
-
-				Log.SysLogText(LogLevel.DEBUG, "Segment {0} is {1:0.00}m long", line, actualLength);
-
-				if(actualLength < MINIMUM_LANDMARK_SEGMENT)
-				{
-					Log.SysLogText(LogLevel.DEBUG, "Abandoning segment");
-					//continue;
-				}
-
 				line.Tag = String.Format("Line_{0:000}", lineNumber++);
-//				if(_debugTags.Find(c => line.ToString().Contains(c)) != null)
-				{
-					lines.Add(line);
-
-					Barrier barrier = new Barrier(line);
-					barriers.Add(barrier);
-					Log.SysLogText(LogLevel.DEBUG, "Keeping Barrier @{0} ", barrier);
-				}
 			}
 
+			// group similar lines into groups
+			List<LineList> groups = GroupSimilarLines(lines);
+
+			// now consolidate each group into a single line
+			lines = ConsolidateLines(groups);
+
+			// set these as barriers
+			barriers = new BarrierList(origin, lines);
+
+			// create the landmarks by finding 90° intersections
+			landmarks = ComputeLandmarks(origin, lines);
+
+			// consolidate the landmarks
+			landmarks = ConsolidateLandmarks(origin, landmarks);
+		}
+
+		private LandmarkList ConsolidateLandmarks(PointD origin, LandmarkList from)
+		{
+			Double minimumPixelDistance = MINIMUM_LANDMARK_SEPARATION * PixelsPerMeter;
+
+			// group them into bunches by range
+			LandmarkGroupList groups = new LandmarkGroupList();
+			while(from.Count > 0)
+			{
+				Landmark landmark = from[0];
+				LandmarkList group = groups.FindGroupWithinRangeOfPoint(landmark.GetPoint(), minimumPixelDistance);
+				if(group == null)
+				{
+					group = new LandmarkList();
+					groups.Add(group);
+				}
+				group.Add(landmark);
+				from.RemoveAt(0);
+			}
+
+			LandmarkList landmarks = new LandmarkList();
+			foreach(LandmarkList group in groups)
+			{
+				Log.SysLogText(LogLevel.DEBUG, "Dumping Group");
+				group.DumpToLog();
+
+				Landmark centroid = group.GetCentroid(origin);
+				landmarks.Add(centroid);
+				Log.SysLogText(LogLevel.DEBUG, "Centroid is {0}", centroid);
+			}
+
+			return landmarks;
+		}
+
+		private LandmarkList ComputeLandmarks(PointD origin, LineList lines)
+		{
+			LandmarkList landmarks = new LandmarkList();
+			foreach(Line l1 in lines)
+			{
+				foreach(Line l2 in lines)
+				{
+					if(l1 == l2)
+						continue;
+
+					LinePair pair = new LinePair(l1, l2);
+					Line join = pair.ClosestPoints;
+
+					Double actualDistance = ConvertToEnviroment(join.Length);
+					if(actualDistance >= MINIMUM_CONNECT_LENGTH && actualDistance <= MAXIMUM_CONNECT_LENGTH)
+					{
+						Double angularDifference = Degrees.AngularDifference(l1.Bearing, l2.Bearing);
+						if(angularDifference.IsWithinDegressOf(90, RIGHT_ANGLE_SLACK_DEGREES))
+						{
+							PointD intersection;
+							FlatGeo.GetIntersection(l1, l2, out intersection);
+
+							if(landmarks.Contains(intersection, MINIMUM_LANDMARK_SEPARATION, PixelsPerMeter) == false)
+							{
+								Landmark landmark = new Landmark(origin, new BearingAndRange(origin, intersection));
+								landmarks.Add(landmark);
+
+								Log.SysLogText(LogLevel.DEBUG, "Added landmark {0}", landmark);
+							}
+						}
+					}
+				}
+			}
+			return landmarks;
+		}
+
+		private LineList ConsolidateLines(List<LineList> groups)
+		{
+			LineList consolidatedLines = new LineList();
+			foreach(LineList group in groups)
+			{
+				Line consolidated = group[0];
+				for(int x = 1;x < group.Count;x++)
+				{
+					Line line = group[x];
+					consolidated = Line.ConsolidateLongest(consolidated, line);
+				}
+				consolidated.Tag = String.Format("CONS_{0:000}", consolidatedLines.Count);
+				consolidatedLines.Add(consolidated);
+			}
+			return consolidatedLines;
+		}
+
+		private List<LineList> GroupSimilarLines(LineList lines)
+		{
 			// find the segments that are alike
 			List<LineList> groups = new List<LineList>();
 			Double pathWidthPixels = LINE_PATH_WIDTH * PixelsPerMeter;
@@ -265,7 +353,7 @@ namespace RaspiCommon.Lidar.Environs
 					for(int x = 0;x < groups.Count;x++)
 					{
 						LineList group = groups[x];
-						if( group.AverageBearing.AngularDifference(similarLines.AverageBearing) <= BEARING_SLACK && 
+						if(group.AverageBearing.AngularDifference(similarLines.AverageBearing) <= BEARING_SLACK &&
 							group.ContainsLinesAlongThePathOf(similarLines, pathWidthPixels))
 						{
 							group.AddRange(similarLines);
@@ -288,67 +376,7 @@ namespace RaspiCommon.Lidar.Environs
 					lines.Remove(similarLine);
 				}
 			}
-
-			// now consolidate each group into a single line
-			LineList consolidatedLines = new LineList();
-			foreach(LineList group in groups)
-			{
-				Line consolidated = group[0];
-				for(int x = 1;x < group.Count;x++)
-				{
-					Line line = group[x];
-					consolidated = Line.ConsolidateLongest(consolidated, line);
-				}
-				consolidated.Tag = String.Format("CONS_{0:000}", consolidatedLines.Count);
-				consolidatedLines.Add(consolidated);
-			}
-
-			lines = consolidatedLines;
-
-			bool remakeBarriers = true;
-			if(remakeBarriers)
-			{
-				barriers = new BarrierList();
-				foreach(Line line in lines)
-				{
-					Barrier barrier = new Barrier(line);
-					barrier.Line.Tag = line.Tag;
-					barriers.Add(barrier);
-				}
-			}
-
-			foreach(Line l1 in lines)
-			{
-				foreach(Line l2 in lines)
-				{
-					if(l1 == l2)
-						continue;
-
-					LinePair pair = new LinePair(l1, l2);
-					Line join = pair.ClosestPoints;
-
-					Double actualDistance = ConvertToEnviroment(join.Length);
-					if(actualDistance >= MINIMUM_CONNECT_LENGTH && actualDistance <= MAXIMUM_CONNECT_LENGTH)
-					{
-						Double angularDifference = Degrees.AngularDifference(l1.Bearing, l2.Bearing);
-						if(angularDifference.IsWithinDegressOf(90, RIGHT_ANGLE_SLACK_DEGREES))
-						{
-							PointD intersection;
-							FlatGeo.GetIntersection(l1, l2, out intersection);
-
-							if(landmarks.Contains(intersection, MINIMUM_LANDMARK_SEPARATION, PixelsPerMeter) == false)
-							{
-								Landmark landmark = new Landmark(intersection);
-								landmarks.Add(landmark);
-
-								Log.SysLogText(LogLevel.DEBUG, "Added landmark {0}", landmark);
-							}
-						}
-					}
-				}
-			}
-
-			return landmarks;
+			return groups;
 		}
 
 		public Double ConvertToEnviroment(Double length)
@@ -365,7 +393,6 @@ namespace RaspiCommon.Lidar.Environs
 		{
 			Mat image = Image.Clone();
 
-
 			Cross2DF cross = new Cross2DF(BitmapCenter.ToPoint(), 4, 4);
 			CvInvoke.Line(image, cross.Vertical.P1.ToPoint(), cross.Vertical.P2.ToPoint(), new Bgr(Color.GreenYellow).MCvScalar);
 			CvInvoke.Line(image, cross.Horizontal.P1.ToPoint(), cross.Horizontal.P2.ToPoint(), new Bgr(Color.GreenYellow).MCvScalar);
@@ -373,12 +400,13 @@ namespace RaspiCommon.Lidar.Environs
 			foreach(Barrier barrier in Barriers)
 			{
 				Color color = NextColor;
-				CvInvoke.Line(image, barrier.Line.P1.ToPoint(), barrier.Line.P2.ToPoint(), new Bgr(color).MCvScalar, 2);
+				Line line = barrier.GetLine();
+				CvInvoke.Line(image, line.P1.ToPoint(), line.P2.ToPoint(), new Bgr(color).MCvScalar, 2);
 			}
 
 			foreach(Landmark landmark in Landmarks)
 			{
-				CircleF circle1 = new CircleF(landmark.Location.ToPoint(), 3);
+				CircleF circle1 = new CircleF(landmark.Origin.ToPoint(), 3);
 				CvInvoke.Circle(image, circle1.Center.ToPoint(), (int)circle1.Radius, new Bgr(Color.Red).MCvScalar, 1);
 			}
 
@@ -434,20 +462,10 @@ namespace RaspiCommon.Lidar.Environs
 			Lidar.ClearDistanceVectors();
 		}
 
-		public void StartRangeServer(String mqqtBroker)
-		{
-			_server = new LidarServer(this, mqqtBroker, "trackbot-lidar");
-			_server.Start();
-		}
-
-		public void StopRangeServer()
-		{
-			_server.Stop();
-			_server = null;
-		}
-
 		public FuzzyPath MakeFuzzyPath(Double bearing, Double rangeFuzz)
 		{
+			Log.SysLogText(LogLevel.DEBUG, "Finding fuzzy path at bearing {0:0.00}°  fuzz {1:0.00}°", bearing, rangeFuzz);
+
 			Double start = bearing.SubtractDegrees(rangeFuzz / 2);
 			Double end = bearing.AddDegrees((rangeFuzz / 2) + 1);
 

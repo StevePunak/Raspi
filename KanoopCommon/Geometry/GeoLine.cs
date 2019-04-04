@@ -49,9 +49,9 @@ namespace KanoopCommon.Geometry
 		public GeoLineList()
 			: base() {}
 
-		public GeoLineList(IEnumerable<ILine> other)
+		public GeoLineList(IEnumerable<GeoLine> other)
 		{
-			foreach(ILine line in other)
+			foreach(GeoLine line in other)
 			{
 				Add(new GeoLine(line.P1, line.P2));
 			}
@@ -431,37 +431,37 @@ namespace KanoopCommon.Geometry
 		#endregion
 	}
 
-	public class GeoLine : ILine
+	public class GeoLine
 	{
 		#region Public Properties
 
-		protected GeoPoint	m_P1;
-		public IPoint P1
+		protected GeoPoint	_P1;
+		public GeoPoint P1
 		{
-			get { return m_P1; }
-			set { m_P1 = value as GeoPoint; }
+			get { return _P1; }
+			set { _P1 = value as GeoPoint; }
 		}
 
-		protected GeoPoint	m_P2;
-		public IPoint P2
+		protected GeoPoint	_P2;
+		public GeoPoint P2
 		{
-			get { return m_P2; }
-			set { m_P2 = value as GeoPoint; }		/** SP Remove setter if possible */
+			get { return _P2; }
+			set { _P2 = value as GeoPoint; }		/** SP Remove setter if possible */
 		}
 
-		public GeoPoint NorthMost { get { return m_P1.IsNorthOf(m_P2) ? m_P1 : m_P2 ; } }
+		public GeoPoint NorthMost { get { return _P1.IsNorthOf(_P2) ? _P1 : _P2 ; } }
 
-		public GeoPoint SouthMost { get { return m_P1.IsSouthOf(m_P2) ? m_P1 : m_P2 ; } }
+		public GeoPoint SouthMost { get { return _P1.IsSouthOf(_P2) ? _P1 : _P2 ; } }
 
-		public GeoPoint WestMost { get { return m_P1.IsWestOf(m_P2) ? m_P1 : m_P2 ; } }
+		public GeoPoint WestMost { get { return _P1.IsWestOf(_P2) ? _P1 : _P2 ; } }
 
-		public GeoPoint EastMost { get { return m_P1.IsEastOf(m_P2) ? m_P1 : m_P2 ; } }
+		public GeoPoint EastMost { get { return _P1.IsEastOf(_P2) ? _P1 : _P2 ; } }
 
-		public Double Bearing { get { return EarthGeo.GetBearing(m_P1, m_P2); } }
+		public Double Bearing { get { return EarthGeo.GetBearing(_P1, _P2); } }
 
-		public Double Length { get { return EarthGeo.GetDistance(m_P1, m_P2); } }
+		public Double Length { get { return EarthGeo.GetDistance(_P1, _P2); } }
 
-		public IPoint MidPoint { get { return EarthGeo.GetPoint(m_P1, Bearing, Length / 2); } }
+		public GeoPoint MidPoint { get { return EarthGeo.GetPoint(_P1, Bearing, Length / 2); } }
 
 		public String Name { get; set; }
 
@@ -475,13 +475,10 @@ namespace KanoopCommon.Geometry
 		public GeoLine(Line line, CoordinateMap map)
 			: this(map.GetGeoPoint(line.P1 as PointD), map.GetGeoPoint(line.P2 as PointD)) {}
 
-		public GeoLine(IPoint p1, IPoint p2)
-			: this(new GeoPoint(p1), new GeoPoint(p2)) {}
-
 		public GeoLine(GeoPoint p1, GeoPoint p2)
 		{
-			m_P1 = p1;
-			m_P2 = p2;
+			_P1 = p1;
+			_P2 = p2;
 			Name = String.Empty;
 		}
 
@@ -489,12 +486,12 @@ namespace KanoopCommon.Geometry
 
 		#region Public Geometry Methods
 
-		public bool IsEndPoint(IPoint point, int precision = 0)
+		public bool IsEndPoint(GeoPoint point, int precision = 0)
 		{
-			return m_P1.Equals(point, precision) || m_P2.Equals(point, precision);
+			return _P1.Equals(point, precision) || _P2.Equals(point, precision);
 		}
 
-		public bool SharesEndPointWith(ILine other, int precision = 0)
+		public bool SharesEndPointWith(GeoLine other, int precision = 0)
 		{
 			return
 				other.P1.Equals(P1, precision) ||
@@ -546,14 +543,14 @@ namespace KanoopCommon.Geometry
 
 		public void Move(Double bearing, Double distance)
 		{
-			m_P1.Move(bearing, distance);
-			m_P2.Move(bearing, distance);
+			_P1.Move(bearing, distance);
+			_P2.Move(bearing, distance);
 		}
 
 		public void SetPrecision(int precision)
 		{
-			m_P1.SetPrecision(precision);
-			m_P2.SetPrecision(precision);
+			_P1.SetPrecision(precision);
+			_P2.SetPrecision(precision);
 		}
 
 		public Double ClosestDistanceFrom(GeoPoint from)
@@ -608,24 +605,24 @@ namespace KanoopCommon.Geometry
 
 		public GeoPoint ClosestEndPointTo(GeoPoint point, out Double distance)
 		{
-			Double d1 = EarthGeo.GetDistance(m_P1, point);
-			Double d2 = EarthGeo.GetDistance(m_P2, point);
+			Double d1 = EarthGeo.GetDistance(_P1, point);
+			Double d2 = EarthGeo.GetDistance(_P2, point);
 			distance = Math.Min(d1, d2);
-			return d1 < d2 ? m_P1 : m_P2;
+			return d1 < d2 ? _P1 : _P2;
 		}
 
 		public void ExtendTo(GeoPoint point)
 		{
-			Double d1 = EarthGeo.GetDistance(m_P1, point);
-			Double d2 = EarthGeo.GetDistance(m_P2, point);
+			Double d1 = EarthGeo.GetDistance(_P1, point);
+			Double d2 = EarthGeo.GetDistance(_P2, point);
 
 			if(d1 < d2)
 			{
-				m_P1 = point;
+				_P1 = point;
 			}
 			else
 			{
-				m_P2 = point;
+				_P2 = point;
 			}
 		}
 
@@ -646,7 +643,7 @@ namespace KanoopCommon.Geometry
 
 		#region Utility
 
-		public ILine Clone()
+		public GeoLine Clone()
 		{
 			return new GeoLine(P1 as GeoPoint, P2 as GeoPoint);
 		}
@@ -689,7 +686,12 @@ namespace KanoopCommon.Geometry
 			return line != null;
 		}
 
-		public bool Equals(ILine l)
+		public Line ToLine()
+		{
+			return new Line(P1.ToPointD(), P2.ToPointD());
+		}
+
+		public bool Equals(GeoLine l)
 		{
 			return (l.P1.X == P1.X && l.P1.Y == P1.Y && l.P2.X == P2.X && l.P2.Y == P2.Y);
 		}
@@ -701,7 +703,7 @@ namespace KanoopCommon.Geometry
 			{
 				name = String.Format("{0} - ", Name);
 			}
-			return String.Format("{0}{1} - {2}", name, m_P1.ToString(precision), m_P2.ToString(precision));
+			return String.Format("{0}{1} - {2}", name, _P1.ToString(precision), _P2.ToString(precision));
 		}
 
 		public override string ToString()

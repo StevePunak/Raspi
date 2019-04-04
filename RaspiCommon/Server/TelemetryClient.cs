@@ -17,15 +17,18 @@ using RaspiCommon.Lidar.Environs;
 
 namespace RaspiCommon.Server
 {
-	public class LidarClient : SubscribeThread
+	public class TelemetryClient : SubscribeThread
 	{
 		public const Double VectorSize = .25;
 
 		public LidarVector[] Vectors;
 
 		public FuzzyPath FuzzyPath { get; private set; }
+		public BarrierList Barriers { get; private set; }
+		public LandmarkList Landmarks { get; private set; }
+		public Double Bearing { get; private set; }
 
-		public LidarClient(String host, String clientID, List<String> topics)
+		public TelemetryClient(String host, String clientID, List<String> topics)
 			: base(host, clientID, topics)
 		{
 			Vectors = new LidarVector[(int)(360 / VectorSize)];
@@ -43,7 +46,7 @@ namespace RaspiCommon.Server
 
 		private void OnLidarClientInboundSubscribedMessage(MqttClient client, PublishMessage packet)
 		{
-			if(packet.Topic == LidarServer.RangeBlobTopic)
+			if(packet.Topic == TelemetryServer.RangeBlobTopic)
 			{
 				using(BinaryReader br = new BinaryReader(new MemoryStream(packet.Message)))
 				{
@@ -56,12 +59,28 @@ namespace RaspiCommon.Server
 
 				}
 			}
-			else if(packet.Topic == LidarServer.CurrentPathTopic)
+			else
 			{
-				FuzzyPath path = new FuzzyPath(packet.Message);
-				FuzzyPath = path;
+				if(packet.Topic == TelemetryServer.CurrentPathTopic)
+				{
+					FuzzyPath path = new FuzzyPath(packet.Message);
+					FuzzyPath = path;
+				}
+				else if(packet.Topic == TelemetryServer.BarriersTopic)
+				{
+					BarrierList barriers = new BarrierList(packet.Message);
+					Barriers = barriers;
+				}
+				else if(packet.Topic == TelemetryServer.LandmarksTopic)
+				{
+					LandmarkList landmarks = new LandmarkList(packet.Message);
+					Landmarks = landmarks;
+				}
+				else if(packet.Topic == TelemetryServer.BearingTopic)
+				{
+					Bearing = BitConverter.ToDouble(packet.Message, 0);
+				}
 			}
-
 		}
 
 	}

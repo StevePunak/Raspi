@@ -22,12 +22,18 @@ namespace KanoopCommon.Geometry
 		public GeoPointList()
 			: base() {}
 
-		public GeoPointList(IEnumerable<GeoPoint> points)
-			: base(points) {}
-
-		public GeoPointList(IEnumerable<IPoint> list)
+		public GeoPointList(IEnumerable<GeoPoint> list)
 		{
-			foreach (IPoint pt in list)
+			foreach (GeoPoint pt in list)
+			{
+				GeoPoint point = new GeoPoint(pt);
+				this.Add(new GeoPoint(pt));
+			}
+		}
+
+		public GeoPointList(IEnumerable<PointD> list)
+		{
+			foreach(PointD pt in list)
 			{
 				GeoPoint point = new GeoPoint(pt);
 				this.Add(new GeoPoint(pt));
@@ -181,7 +187,7 @@ namespace KanoopCommon.Geometry
 	}
 
 	[Serializable]	// Needed for Web Client
-	public class GeoPoint : IPoint, IEquatable<IPoint>, IPoint2DReadOnly
+	public class GeoPoint
 	{
 		#region Constants
 
@@ -265,7 +271,7 @@ namespace KanoopCommon.Geometry
 		public GeoPoint(Double latitude, Double longitude, int precision)
 			: this(new GeoPoint(latitude, longitude), precision) {}
 
-		public GeoPoint(IPoint point)
+		public GeoPoint(PointD point)
 			: this(point.Y, point.X) {}
 
 		public GeoPoint(GeoPoint point)
@@ -352,18 +358,18 @@ namespace KanoopCommon.Geometry
 			Longitude = np.Longitude;
 		}
 
-		public void Move(IPoint where)
+		public void Move(GeoPoint where)
 		{
 			m_Latitude = where.Y;
 			m_Longitude = where.X;
 		}
 
-		public IPoint Round(Int32 places)
+		public GeoPoint Round(Int32 places)
 		{
 			return new GeoPoint(Math.Round(m_Latitude, places), Math.Round(m_Longitude, places));
 		}
 
-		public IPoint GetPointAt(Double bearing, Double distance)
+		public GeoPoint GetPointAt(Double bearing, Double distance)
 		{
 			return EarthGeo.GetPoint(this, bearing, distance);
 		}
@@ -372,7 +378,7 @@ namespace KanoopCommon.Geometry
 
 		#region Utility
 
-		public IPoint Clone()
+		public GeoPoint Clone()
 		{
 			return new GeoPoint(Latitude, Longitude);
 		}
@@ -461,22 +467,17 @@ namespace KanoopCommon.Geometry
 			return new PointD(this);
 		}
 
-		public int CompareTo(object other)
-		{
-			return PointCommon.ComparePoints(this, other, Precision);
-		}
+		//public int CompareTo(object other)
+		//{
+		//	return PointCommon.ComparePoints(this, other, Precision);
+		//}
 
-		bool IEquatable<IPoint>.Equals(IPoint other)
-		{
-			return PointCommon.ComparePoints(this, other, Precision) == 0;
-		}
-
-		public bool Equals(IPoint other)
+		public bool Equals(GeoPoint other)
 		{
 			return Equals(other, 0);
 		}
 
-		public bool Equals(IPoint other, int precision)
+		public bool Equals(GeoPoint other, int precision)
 		{
 			bool result = false;
 			if(precision == 0)
@@ -488,7 +489,7 @@ namespace KanoopCommon.Geometry
 
 		public override int GetHashCode()
 		{
-			return PointCommon.GetHashCode(this);
+			return base.GetHashCode();
 		}
 
 		public override bool Equals(object other)

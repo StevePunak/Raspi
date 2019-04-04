@@ -45,18 +45,10 @@ namespace TrackBot
 			if(Drawing)
 			{
 				Log.SysLogText(LogLevel.DEBUG, "Creating image with bearing {0:0.00}°  Lidar: {1:0.00}°", Widgets.GyMag.Bearing, Widgets.Environment.Bearing);
-				Mat mat = Widgets.Environment.GenerateBitmap(false, false);
+				Mat mat = Widgets.Environment.PointsToBitmap();
 
 				mat.Save(STANDARD_SAVE_LOCATION);
 
-				if(false)
-				{
-					String rotatingFile = String.Format("{0}/grid{1:000}.png", ROTATING_SAVE_LOCATION, _imageNumber);
-					mat = Widgets.Environment.GenerateBitmap(true, true);
-					Log.SysLogText(LogLevel.DEBUG, "Creating image with bearing {0:0.00}", Widgets.GyMag.Bearing);
-
-					mat.Save(rotatingFile);
-				}
 				_imageNumber++;
 			}
 			return true;

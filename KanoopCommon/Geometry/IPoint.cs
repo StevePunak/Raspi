@@ -32,8 +32,6 @@ namespace KanoopCommon.Geometry
 
 		bool Equals(IPoint other, int precision);
 	
-		IPoint GetPointAt(double bearing, double distance);
-
 		void Move(Double bearing, Double distance);
 
 		void Move(IPoint where);

@@ -9,7 +9,7 @@ using KanoopCommon.Database;
 
 namespace KanoopCommon.Geometry
 {
-	public class RectangleD : Polygon, IPolygon, IRectangle
+	public class RectangleD : Polygon
 	{
 		#region Public Properties
 
@@ -71,7 +71,7 @@ namespace KanoopCommon.Geometry
 		{
 			get
 			{
-				PointDList ordered = new PointDList(m_Points.OrderBy(p => p.X));
+				PointDList ordered = new PointDList(_points.OrderBy(p => p.X));
 				PointDList list = new PointDList();
 				list.Add(ordered[0]);
 				if(ordered[1].X == ordered[0].X)
@@ -86,7 +86,7 @@ namespace KanoopCommon.Geometry
 		{
 			get
 			{
-				PointDList ordered = new PointDList(m_Points.OrderByDescending(p => p.X));
+				PointDList ordered = new PointDList(_points.OrderByDescending(p => p.X));
 				PointDList list = new PointDList();
 				list.Add(ordered[0]);
 				if(ordered[1].X == ordered[0].X)
@@ -101,7 +101,7 @@ namespace KanoopCommon.Geometry
 		{
 			get
 			{
-				PointDList ordered = new PointDList(m_Points.OrderBy(p => p.Y));
+				PointDList ordered = new PointDList(_points.OrderBy(p => p.Y));
 				PointDList list = new PointDList();
 				list.Add(ordered[0]);
 				if(ordered[1].Y == ordered[0].Y)
@@ -116,7 +116,7 @@ namespace KanoopCommon.Geometry
 		{
 			get
 			{
-				PointDList ordered = new PointDList(m_Points.OrderByDescending(p => p.Y));
+				PointDList ordered = new PointDList(_points.OrderByDescending(p => p.Y));
 				PointDList list = new PointDList();
 				list.Add(ordered[0]);
 				if(ordered[1].Y == ordered[0].Y)
@@ -127,22 +127,22 @@ namespace KanoopCommon.Geometry
 			}
 		}
 
-		public ILine ShortestLeg
+		public Line ShortestLeg
 		{
 			get
 			{
-				Line l1 = new Line(m_Points[0], m_Points[1]);
-				Line l2 = new Line(m_Points[1], m_Points[2]);
+				Line l1 = new Line(_points[0], _points[1]);
+				Line l2 = new Line(_points[1], _points[2]);
 				return l1.Length > l2.Length ? l2 : l1;
 			}
 		}
 
-		public ILine LongestLeg
+		public Line LongestLeg
 		{
 			get
 			{
-				Line l1 = new Line(m_Points[0], m_Points[1]);
-				Line l2 = new Line(m_Points[1], m_Points[2]);
+				Line l1 = new Line(_points[0], _points[1]);
+				Line l2 = new Line(_points[1], _points[2]);
 				return l1.Length > l2.Length ? l1 : l2;
 			}
 		}
@@ -167,15 +167,15 @@ namespace KanoopCommon.Geometry
 		public RectangleD(PointD p1, PointD p2, PointD p3, PointD p4)
 			: this()
 		{
-			m_Points[0] = p1;
-			m_Points[1] = p2;
-			m_Points[2] = p3;
-			m_Points[3] = p4;
+			_points[0] = p1;
+			_points[1] = p2;
+			_points[2] = p3;
+			_points[3] = p4;
 		}
 
 		public RectangleD()
 		{
-			m_Points = new PointDList { PointD.Empty, PointD.Empty, PointD.Empty, PointD.Empty };
+			_points = new PointDList { PointD.Empty, PointD.Empty, PointD.Empty, PointD.Empty };
 		}
 
 		public static RectangleD SquareFromCenter(PointD center, Double offset)
@@ -186,6 +186,11 @@ namespace KanoopCommon.Geometry
 		#endregion
 
 		#region Public Access Methods
+
+		public static RectangleD InflatedFromPoint(PointD center, Double size)
+		{
+			return new RectangleD(center.X - (size / 2), center.Y - (size / 2), size, size);
+		}
 
 		public static RectangleD Inflate(RectangleD original, Double xAmount, Double yAmount)
 		{
@@ -205,12 +210,12 @@ namespace KanoopCommon.Geometry
 		protected virtual void Recalculate()
 		{
 			/** build lines */
-			m_Lines = new LineList()
+			_lines = new LineList()
 			{ 
-				new Line(m_Points[0], m_Points[1]),
-				new Line(m_Points[1], m_Points[2]),
-				new Line(m_Points[2], m_Points[3]),
-				new Line(m_Points[3], m_Points[4])
+				new Line(_points[0], _points[1]),
+				new Line(_points[1], _points[2]),
+				new Line(_points[2], _points[3]),
+				new Line(_points[3], _points[4])
 			};
 
 		}

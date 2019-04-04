@@ -15,7 +15,9 @@ using KanoopCommon.Geometry;
 using KanoopCommon.Logging;
 using KanoopCommon.TCP.Clients;
 using KanoopCommon.Threading;
+using Radar.Properties;
 using RaspiCommon.Lidar;
+using RaspiCommon.Lidar.Environs;
 using RaspiCommon.Server;
 
 namespace Radar
@@ -25,7 +27,7 @@ namespace Radar
 		const Double METERS_SQUARE = 10;
 		const Double PIXELS_PER_METER = 50;
 
-		LidarClient _client;
+		TelemetryClient _client;
 		String Host { get; set; }
 
 		Timer _drawTimer;
@@ -33,6 +35,8 @@ namespace Radar
 		Bitmap _bitmap;
 
 		Double _lastAngle;
+
+		Image _tank;
 
 		public RadarForm()
 		{
@@ -55,6 +59,8 @@ namespace Radar
 				_drawTimer.Enabled = true;
 				_drawTimer.Tick += OnDrawTimer;
 				_drawTimer.Start();
+
+				_tank = Resources.tank.Resize(6, 10);
 				Log.SysLogText(LogLevel.DEBUG, "Started draw timer");
 			}
 			catch(Exception e)
@@ -83,6 +89,82 @@ namespace Radar
 			}
 		}
 
+		private void OnDrawTimer(object sender, EventArgs e)
+		{
+			if(_client == null || _client.Connected == false)
+				return;
+
+			Image bitmap = new Bitmap(_bitmap);
+			using(Graphics g = Graphics.FromImage(bitmap))
+			{
+				Pen redPen = new Pen(Color.Red);
+				Pen barrierPen = new Pen(Color.Firebrick);
+				Pen landmarkPen = new Pen(Color.Blue);
+				PointD center = bitmap.Center();
+
+				// draw all the dots
+				for(Double angle = _lastAngle.AddDegrees(TelemetryClient.VectorSize);angle != _lastAngle;angle = angle.AddDegrees(TelemetryClient.VectorSize))
+				{
+					int offset = (int)(angle / TelemetryClient.VectorSize);
+					LidarVector vector = _client.Vectors[offset];
+					if(vector != null && vector.Range != 0)
+					{
+						PointD where = center.GetPointAt(vector.Bearing, vector.Range * PIXELS_PER_METER) as PointD;
+						Rectangle rect = new Rectangle(where.ToPoint(), new Size(1, 1));
+						g.DrawRectangle(redPen, rect);
+						//Log.SysLogText(LogLevel.DEBUG, "Drawing {0} at {1:0.00}°  {2}", vector, angle, where);
+					}
+				}
+
+				// draw fuzzy path
+				if(_client.FuzzyPath != null)
+				{
+					FuzzyPath path = _client.FuzzyPath.Clone();
+					Pen brownPen = new Pen(Color.RosyBrown);
+					if(path.Elements.Count > 1)
+					{
+						PointD p1 = center.GetPointAt(path.Elements.First().Bearing, path.Elements.First().Range * PIXELS_PER_METER);
+						g.DrawLine(brownPen, center.ToPoint(), p1.ToPoint());
+						PointD p2 = center.GetPointAt(path.Elements.Last().Bearing, path.Elements.Last().Range * PIXELS_PER_METER);
+						g.DrawLine(brownPen, center.ToPoint(), p2.ToPoint());
+					}
+				}
+
+				if(_client.Barriers != null)
+				{
+					BarrierList barriers = _client.Barriers.Clone();
+					Pen orangePen = new Pen(Color.Orange);
+					foreach(Barrier barrier in barriers)
+					{
+						Line line = barrier.GetLine();
+						g.DrawLine(orangePen, line.P1.ToPoint(), line.P2.ToPoint());
+					}
+				}
+
+				if(_client.Landmarks != null)
+				{
+					LandmarkList landmarks = _client.Landmarks.Clone();
+					Pen bluePen = new Pen(Color.Blue, 2);
+					foreach(Landmark landmark in landmarks)
+					{
+						RectangleD rectangle = RectangleD.InflatedFromPoint(landmark.GetPoint(), 6);
+						g.DrawEllipse(bluePen, rectangle.ToRectangle());
+					}
+				}
+
+				Image tank = new Bitmap(Resources.tank).Rotate(_client.Bearing);
+//				tank.Save(@"c:\tmp\output.png");
+
+				PointD tankPoint = PointD.UpperLeftFromCenter(center, tank.Size);
+				g.DrawImage(tank, tankPoint.ToPoint());
+			}
+
+			//_bitmap.Save(@"c:\tmp\output.png");
+			picBox.BackgroundImage = bitmap;
+
+
+		}
+
 		void GetConnected()
 		{
 			ChooseBotForm dlg = new ChooseBotForm()
@@ -96,45 +178,18 @@ namespace Radar
 			Program.Config.RadarHost = dlg.Host;
 			Program.Config.Save();
 
-			_client = new LidarClient(Program.Config.RadarHost, "radarform",
+			_client = new TelemetryClient(Program.Config.RadarHost, "radarform",
 				new List<string>()
 				{
-					LidarServer.CurrentPathTopic,
-					LidarServer.RangeBlobTopic
+					TelemetryServer.CurrentPathTopic,
+					TelemetryServer.RangeBlobTopic,
+					TelemetryServer.BarriersTopic,
+					TelemetryServer.LandmarksTopic,
+					TelemetryServer.BearingTopic
 				});
 			_client.Start();
 
 			_lastAngle = 0;
-		}
-
-		private void OnDrawTimer(object sender, EventArgs e)
-		{
-			if(_client == null || _client.Connected == false)
-				return;
-
-			Image bitmap = new Bitmap(_bitmap);
-			using(Graphics g = Graphics.FromImage(bitmap))
-			{
-				Pen redPen = new Pen(Color.Red);
-				PointD center = bitmap.Center();
-				for(Double angle = _lastAngle.AddDegrees(LidarClient.VectorSize);angle != _lastAngle;angle = angle.AddDegrees(LidarClient.VectorSize))
-				{
-					int offset = (int)(angle / LidarClient.VectorSize);
-					LidarVector vector = _client.Vectors[offset];
-					if(vector != null && vector.Range != 0)
-					{
-						PointD where = center.GetPointAt(vector.Bearing, vector.Range * PIXELS_PER_METER) as PointD;
-						Rectangle rect = new Rectangle(where.ToPoint(), new Size(1, 1));
-						g.DrawRectangle(redPen, rect);
-						//Log.SysLogText(LogLevel.DEBUG, "Drawing {0} at {1:0.00}°  {2}", vector, angle, where);
-					}
-				}
-			}
-
-			//_bitmap.Save(@"c:\tmp\output.png");
-			picBox.BackgroundImage = bitmap;
-
-
 		}
 
 		private void OnFormClosing(object sender, FormClosingEventArgs e)

@@ -79,6 +79,7 @@
     <Compile Include="Extensions\GraphicsExtensions.cs" />
     <Compile Include="GpioSharp.cs" />
     <Compile Include="HCSR04_RangeFinder.cs" />
+    <Compile Include="ICompass.cs" />
     <Compile Include="L298N_DC_TankTracks.cs" />
     <Compile Include="L298N_DC_MotorControl.cs" />
     <Compile Include="Lidar\Environs\Barrier.cs" />
@@ -109,8 +110,8 @@
     <Compile Include="PWMDevice.cs" />
     <Compile Include="RaspiConfig.cs" />
     <Compile Include="RaspiException.cs" />
-    <Compile Include="Server\LidarClient.cs" />
-    <Compile Include="Server\LidarServer.cs" />
+    <Compile Include="Server\TelemetryClient.cs" />
+    <Compile Include="Server\TelemetryServer.cs" />
     <Compile Include="Servo.cs" />
     <Compile Include="Types.cs" />
   </ItemGroup>

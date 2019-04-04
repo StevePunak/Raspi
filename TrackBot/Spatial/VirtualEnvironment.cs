@@ -30,6 +30,8 @@ namespace TrackBot.Spatial
 
 		public FuzzyPath FuzzyPath { get; set; }
 
+		public LandmarkList Landmarks { get { return new LandmarkList(); } }
+
 		public VirtualEnvironment()
 		{
 			Range = .2;
@@ -47,7 +49,7 @@ namespace TrackBot.Spatial
 			return Range;
 		}
 
-		public Mat GenerateBitmap(bool radarLines, bool drawVehicle)
+		public Mat PointsToBitmap()
 		{
 			return new Mat();
 		}

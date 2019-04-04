@@ -16,7 +16,7 @@ namespace TrackBot.Spatial
 			: base(typeof(SpatialPoll).Name)
 		{
 			Interval = TimeSpan.FromMilliseconds(500);
-			Paused = true;
+			Paused = false;
 		}
 
 		protected override bool OnStart()
@@ -36,8 +36,7 @@ namespace TrackBot.Spatial
 		{
 			if(Paused == false)
 			{
-				Widgets.Environment.Bearing = Widgets.GyMag.Bearing;
-				Log.LogText(LogLevel.DEBUG, "Set bearing to {0:0.00}°", Widgets.Environment.Bearing);
+				//Log.LogText(LogLevel.DEBUG, "There are {0} landmarks", Widgets.Environment.Landmarks.Count);
 			}
 			return true;
 		}

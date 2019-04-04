@@ -29,7 +29,7 @@ namespace TrackBot.TTY
 				Program.Config.LidarOffsetDegrees = value;
 				Program.Config.Save();
 
-				Widgets.Environment.GenerateBitmap(true, false).Save(Program.Config.SaveImageLocation);
+				Widgets.Environment.PointsToBitmap().Save(Program.Config.SaveImageLocation);
 			}
 			return true;
 		}

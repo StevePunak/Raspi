@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using KanoopCommon.CommonObjects;
 using KanoopCommon.PersistentConfiguration;
+using RaspiCommon.Lidar.Environs;
 
 namespace RaspiCommon
 {
@@ -116,6 +117,21 @@ namespace RaspiCommon
 
 		public Double LidarMetersSquare { get { return 10; } }
 		public Double LidarPixelsPerMeter { get { return 50; } }
+		public Double RangeFuzz { get; set; }
+
+		LandmarkList _landmarks;
+		public LandmarkList Landmarks
+		{
+			get
+			{
+				if(_landmarks == null)
+				{
+					_landmarks = new LandmarkList();
+				}
+				return _landmarks;
+			}
+			set { _landmarks = value; }
+		}
 
 		String _saveImageLocation;
 		public String SaveImageLocation

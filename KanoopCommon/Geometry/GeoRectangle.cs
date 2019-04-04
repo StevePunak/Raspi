@@ -5,7 +5,7 @@ using System.Text;
 
 namespace KanoopCommon.Geometry
 {
-	public class GeoRectangle : GeoPolygon, IRectangle
+	public class GeoRectangle : GeoPolygon
 	{
 		public Double Height { get { return GeoLines[0].Length; } }
 
@@ -21,22 +21,22 @@ namespace KanoopCommon.Geometry
 
 		public GeoPoint Center { get { return Diagonals[0].MidPoint as GeoPoint; } }
 
-		public ILine ShortestLeg
+		public GeoLine ShortestLeg
 		{
 			get
 			{
-				GeoLine l1 = new GeoLine(m_Points[0], m_Points[1]);
-				GeoLine l2 = new GeoLine(m_Points[1], m_Points[2]);
+				GeoLine l1 = new GeoLine(_points[0], _points[1]);
+				GeoLine l2 = new GeoLine(_points[1], _points[2]);
 				return l1.Length > l2.Length ? l2 : l1;
 			}
 		}
 
-		public ILine LongestLeg
+		public GeoLine LongestLeg
 		{
 			get
 			{
-				GeoLine l1 = new GeoLine(m_Points[0], m_Points[1]);
-				GeoLine l2 = new GeoLine(m_Points[1], m_Points[2]);
+				GeoLine l1 = new GeoLine(_points[0], _points[1]);
+				GeoLine l2 = new GeoLine(_points[1], _points[2]);
 				return l1.Length > l2.Length ? l1 : l2;
 			}
 		}

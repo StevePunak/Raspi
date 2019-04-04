@@ -5,20 +5,20 @@ using System.Text;
 
 namespace KanoopCommon.Geometry
 {
-	public class Triangle : Polygon, ITriangle
+	public class Triangle : Polygon
 	{
-		public IPoint A	{ get { return Lines[0].P1 as PointD; } }
-		public IPoint B	{ get { return Lines[1].P1 as PointD; } }
-		public IPoint C	{ get { return Lines[2].P1 as PointD; } }
+		public PointD A	{ get { return Lines[0].P1 as PointD; } }
+		public PointD B	{ get { return Lines[1].P1 as PointD; } }
+		public PointD C	{ get { return Lines[2].P1 as PointD; } }
 
-		public ILine AtoB { get { return new Line(A, B); } }
-		public ILine AtoC { get { return new Line(A, C); } }
-		public ILine BtoC { get { return new Line(B, C); } }
-		public ILine BtoA { get { return new Line(B, A); } }
-		public ILine CtoA { get { return new Line(C, A); } }
-		public ILine CtoB { get { return new Line(C, B); } }
+		public Line AtoB { get { return new Line(A, B); } }
+		public Line AtoC { get { return new Line(A, C); } }
+		public Line BtoC { get { return new Line(B, C); } }
+		public Line BtoA { get { return new Line(B, A); } }
+		public Line CtoA { get { return new Line(C, A); } }
+		public Line CtoB { get { return new Line(C, B); } }
 
-		public Triangle(IPoint pA, IPoint pB, IPoint pC)
+		public Triangle(PointD pA, PointD pB, PointD pC)
 			: base(new LineList()
 			{ 
 				new Line(pA, pB),
@@ -28,9 +28,9 @@ namespace KanoopCommon.Geometry
 		{
 		}
 
-		public Angle InteriorAngle(IPoint point)
+		public Angle InteriorAngle(PointD point)
 		{
-			LineList lines = GetLinesAdjacentTo(point as PointD);
+			LineList lines = GetLinesAdjacentTo(point);
 			Angle ret = FlatGeo.Angle(lines[0], lines[1]);
 			if(ret.Degrees > 180)
 			{

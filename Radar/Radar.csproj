@@ -72,6 +72,7 @@
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DependentUpon>Resources.resx</DependentUpon>
+      <DesignTime>True</DesignTime>
     </Compile>
     <EmbeddedResource Include="RadarForm.resx">
       <DependentUpon>RadarForm.cs</DependentUpon>
@@ -105,6 +106,7 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="radar.ico" />
+    <None Include="Resources\tank.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

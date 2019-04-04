@@ -10,36 +10,36 @@ namespace KanoopCommon.Geometry
 	{
 		#region Public Properties
 
-		protected LineList m_Lines;
-		public List<ILine> Lines
+		protected LineList _lines;
+		public List<Line> Lines
 		{
 			get
 			{
-				m_Lines = new LineList();
-				if(m_Points.Count > 0)
+				_lines = new LineList();
+				if(_points.Count > 0)
 				{
 					PointD previous = null;
 
-					foreach(PointD point in m_Points)
+					foreach(PointD point in _points)
 					{
 						if(previous != null)
 						{
-							m_Lines.Add(new Line(previous, point));
+							_lines.Add(new Line(previous, point));
 						}
 						previous = point;
 					}
-					m_Lines.Add(new Line(previous, m_Points[0]));
+					_lines.Add(new Line(previous, _points[0]));
 				}
-				return new List<ILine>(m_Lines);
+				return new List<Line>(_lines);
 			}
 		}
 
-		protected PointDList m_Points;
-		public List<IPoint> Points { get { return new List<IPoint>(m_Points); } }
+		protected PointDList _points;
+		public List<PointD> Points { get { return new List<PointD>(_points); } }
 
 		public PointDList ToPointDList()
 		{
-			PointDList points = new PointDList(m_Points);
+			PointDList points = new PointDList(_points);
 			return points;
 		}
 
@@ -48,13 +48,13 @@ namespace KanoopCommon.Geometry
 			get
 			{
 				int		i = 0;
-				int		j = m_Points.Count - 1;
+				int		j = _points.Count - 1;
 				double	area = 0;
 
-				for (i = 0; i < m_Points.Count; j=i++)
+				for (i = 0; i < _points.Count; j=i++)
 				{
-					area += m_Points[i].X * m_Points[j].Y;
-					area -= m_Points[i].Y * m_Points[j].X;
+					area += _points[i].X * _points[j].Y;
+					area -= _points[i].Y * _points[j].X;
 				}
 				area /= 2.0;
 
@@ -73,21 +73,13 @@ namespace KanoopCommon.Geometry
 		{
 			CreateFromLines(lines);
 		}
-		public Polygon(IPoint2DReadOnly[] points)
-		{ 
-			m_Points = new PointDList();
-			foreach (PointD pt in points)
-			{
-				m_Points.Add(new PointD(pt));
-			}
-		}
 
 		public Polygon(List<PointD> points)
 			: this(new PointDList(points)) {}
 
 		public Polygon(PointDList points)
 		{
-			m_Points = points;
+			_points = points;
 		}
 
 		#endregion
@@ -96,12 +88,12 @@ namespace KanoopCommon.Geometry
 
 		public void AddVertice(PointD point)
 		{
-			m_Points.Add(point);
+			_points.Add(point);
 		}
 
 		public void Move(double bearing, double distance)
 		{
-			foreach(PointD point in m_Points)
+			foreach(PointD point in _points)
 			{
 				point.Move(bearing, distance);
 			}
@@ -109,7 +101,7 @@ namespace KanoopCommon.Geometry
 
 		public void Rotate(PointD centroid, double angle)
 		{
-			LineList lines = m_Lines.Clone();
+			LineList lines = _lines.Clone();
 
 			foreach(Line line in lines)
 			{
@@ -129,16 +121,16 @@ namespace KanoopCommon.Geometry
 					Line	l1, l2;
 					Line	line;
 
-					line = m_Lines[0];
+					line = _lines[0];
 					l1 = new Line(line.P1, new PointD());
 
-					line = m_Lines[1];
+					line = _lines[1];
 					l2 = new Line(line.P1, new PointD());
 
-					line = m_Lines[2];
+					line = _lines[2];
 					l1 = new Line(l1.P1, line.P1);
 
-					line = m_Lines[3];
+					line = _lines[3];
 					l2 = new Line(l2.P1, line.P1);
 
 					FlatGeo.GetIntersection(l1, l2, out retPoint);
@@ -240,7 +232,7 @@ namespace KanoopCommon.Geometry
 
 			bool		inside = false;
 
-			PointDList	poly = m_Points;
+			PointDList	poly = _points;
 
 			PointD		oldPoint = poly[Points.Count - 1];
 
@@ -275,7 +267,7 @@ namespace KanoopCommon.Geometry
 			return inside;
 		}
 
-		public IRectangle GetBoundingRectangle()
+		public RectangleD GetBoundingRectangle()
 		{
 			float	leftMost = float.MaxValue;
 			float	rightMost = float.MinValue;
@@ -301,11 +293,11 @@ namespace KanoopCommon.Geometry
 
 		void CreateFromLines(LineList lines)
 		{
-			m_Points = new PointDList();
+			_points = new PointDList();
 
 			foreach(Line line in lines)
 			{
-				m_Points.Add(line.P1 as PointD);
+				_points.Add(line.P1 as PointD);
 			}
 		}
 
@@ -345,19 +337,19 @@ namespace KanoopCommon.Geometry
 
         public void Offset(Offset offset)
         {
-            for (int pointNumber = 0; pointNumber < m_Points.Count; pointNumber++)
+            for (int pointNumber = 0; pointNumber < _points.Count; pointNumber++)
             {
-                m_Points[pointNumber].X += offset.DeltaX;
-                m_Points[pointNumber].Y += offset.DeltaY;
+                _points[pointNumber].X += offset.DeltaX;
+                _points[pointNumber].Y += offset.DeltaY;
             }
         }
 
-        public void Offset(IPoint offset)
+        public void Offset(PointD offset)
         {
-            for (int pointNumber = 0; pointNumber < m_Points.Count; pointNumber++)
+            for (int pointNumber = 0; pointNumber < _points.Count; pointNumber++)
             {
-                m_Points[pointNumber].X += offset.X;
-                m_Points[pointNumber].Y += offset.Y;
+                _points[pointNumber].X += offset.X;
+                _points[pointNumber].Y += offset.Y;
             }
         }
 		#endregion

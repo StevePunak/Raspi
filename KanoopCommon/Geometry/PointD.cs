@@ -29,14 +29,6 @@ namespace KanoopCommon.Geometry
 			AddRange(points);
 		}
 
-		public PointDList(IEnumerable<IPoint> points)
-		{
-			foreach(IPoint point in points)
-			{
-				Add(new PointD(point));
-			}
-		}
-
 		#endregion
 
 		#region Conversions
@@ -139,42 +131,27 @@ namespace KanoopCommon.Geometry
 			}
 		}
 
-		[Obsolete("Replaced by Polygon")]
 		public PointD Centroid
 		{
 			get
 			{
-				int		i, j = this.Count-1;
-				Double	factor = 0;
-				Double	cx = 0, cy = 0;
-
-				for (i = 0; i < this.Count; j=i++)
+				PointD ret = null;
+				if(Count > 0)
 				{
-					factor = (this[i].X * this[j].Y - this[j].X * this[i].Y);
-					cx += (this[i].X + this[j].X) * factor;
-					cy += (this[i].Y + this[j].Y) * factor;
+					List<Double> xvalues = new List<Double>();
+					List<Double> yvalues = new List<Double>();
+					foreach(PointD point in this)
+					{
+						xvalues.Add(point.X);
+						yvalues.Add(point.Y);
+					}
+					ret = new PointD(xvalues.Average(), yvalues.Average());
 				}
-
-				factor = Area * 6.0;
-				return new PointD(cx / factor, cy / factor);
-			}
-		}
-
-		[Obsolete("Replaced by Polygon")]
-		public void MoveGeo(Double bearing, Double distance)
-		{
-			GeoPointList list = new GeoPointList();
-
-			foreach(PointD point in this)
-			{
-				list.Add(new GeoPoint(point));
-			}
-			Clear();
-
-			foreach(GeoPoint point in list)
-			{
-				Add(new PointD(point));
-				point.Move(bearing, distance);
+				else
+				{
+					ret = new PointD();
+				}
+				return ret;
 			}
 		}
 
@@ -193,7 +170,7 @@ namespace KanoopCommon.Geometry
 	}
 
 	[Serializable]	// Needed for Web Client
-	public class PointD : IPoint, IPoint2DReadOnly
+	public class PointD
 	{
 		#region Constants
 
@@ -248,8 +225,11 @@ namespace KanoopCommon.Geometry
 		public PointD(int x, int y)
 			: this((Double)x, (Double)y) {}
 
-		public PointD(IPoint2DReadOnly p)
+		public PointD(PointD p)
 			: this(p.X, p.Y) {}
+
+		public PointD(GeoPoint p)
+			: this(p.X, p.Y) { }
 
 		public PointD(Double x, Double y)
 		{
@@ -265,6 +245,12 @@ namespace KanoopCommon.Geometry
 				_X = br.ReadDouble();
 				_Y = br.ReadDouble();
 			}
+		}
+
+		public static PointD UpperLeftFromCenter(PointD center, Size size)
+		{
+			PointD point = new PointD(center.X - size.Width / 2, center.Y - size.Height / 2);
+			return point;
 		}
 
 		/// <summary>
@@ -293,7 +279,7 @@ namespace KanoopCommon.Geometry
 			return ret;
 		}
 
-		public IPoint Round(Int32 places)
+		public PointD Round(Int32 places)
 		{
 			return new PointD(Math.Round(X, places), Math.Round(Y, places));
 		}
@@ -305,7 +291,7 @@ namespace KanoopCommon.Geometry
 			_Y = np.Y;
 		}
 
-		public void Move(IPoint where)
+		public void Move(PointD where)
 		{
 			_Y = where.Y;
 			_X = where.X;
@@ -330,7 +316,7 @@ namespace KanoopCommon.Geometry
 			_Y *= scale;
 		}
 
-		public IPoint GetPointAt(Double bearing, Double distance)
+		public PointD GetPointAt(Double bearing, Double distance)
 		{
 			return FlatGeo.GetPoint(this, bearing, distance);
 		}
@@ -436,12 +422,12 @@ namespace KanoopCommon.Geometry
 			return point != null;
 		}
 
-		public bool Equals(IPoint other)
+		public bool Equals(PointD other)
 		{
 			return Equals(other, 0);
 		}
 
-		public bool Equals(IPoint other, int precision = 0)
+		public bool Equals(PointD other, int precision = 0)
 		{
 			bool result = false;
 			if(precision == 0)
@@ -461,17 +447,17 @@ namespace KanoopCommon.Geometry
 			return PointCommon.Equals(this, other);
 		}
 
-		public int CompareTo(object other)
+		public int CompareTo(PointD other)
 		{
 			return PointCommon.ComparePoints(this, other, Precision);
 		}
 
-		public IPoint Clone()
+		public PointD Clone()
 		{
 			return new PointD(_X, _Y);
 		}
 
-		public byte[] ToByteArray()
+		public byte[] Serialize()
 		{
 			byte[] output = new byte[ByteArraySize];
 			using(BinaryWriter bw = new BinaryWriter(new MemoryStream(output)))

@@ -199,17 +199,6 @@
     <Compile Include="Geometry\GeoXml.cs" />
     <Compile Include="Geometry\GridD.cs" />
     <Compile Include="Geometry\GridLocation.cs" />
-    <Compile Include="Geometry\ICircle.cs" />
-    <Compile Include="Geometry\IClosedShape.cs" />
-    <Compile Include="Geometry\IEllipse.cs" />
-    <Compile Include="Geometry\IGrid.cs" />
-    <Compile Include="Geometry\ILine.cs" />
-    <Compile Include="Geometry\IPath.cs" />
-    <Compile Include="Geometry\IPoint.cs" />
-    <Compile Include="Geometry\IPolygon.cs" />
-    <Compile Include="Geometry\IRectangle.cs" />
-    <Compile Include="Geometry\IShape.cs" />
-    <Compile Include="Geometry\ITriangle.cs" />
     <Compile Include="Geometry\LevelRectangle.cs" />
     <Compile Include="Geometry\Line.cs" />
     <Compile Include="Geometry\MappingGrid.cs" />
@@ -232,7 +221,6 @@
     <Compile Include="Linux\SSHCredentials.cs" />
     <Compile Include="Linux\SSHTunnels.cs" />
     <Compile Include="Linux\SystemctlController.cs" />
-    <Compile Include="Location\GeoSpanningTree.cs" />
     <Compile Include="Location\SpanningTree.cs" />
     <Compile Include="Location\TreePathVertice.cs" />
     <Compile Include="Logging\AsynchLogThread.cs" />

@@ -55,6 +55,32 @@ namespace KanoopCommon.Extensions
 			return ret;
 		}
 
+		public static Bitmap Rotate(this Bitmap bitmap, Double angle)
+		{
+//			int longestSide = (int)(Math.Sqrt(bitmap.Width * bitmap.Width + bitmap.Height * bitmap.Height));
+
+			//create a new empty bitmap to hold rotated image
+			Bitmap returnBitmap = new Bitmap(bitmap.Width, bitmap.Height);
+
+			//make a graphics object from the empty bitmap
+			using(Graphics g = Graphics.FromImage(returnBitmap))
+			{
+				//move rotation point to center of image
+				g.TranslateTransform((float)bitmap.Width / 2, (float)bitmap.Height / 2);
+
+				//rotate
+				g.RotateTransform((float)angle);
+
+				//move image back
+				g.TranslateTransform(-(float)bitmap.Width / 2, -(float)bitmap.Height / 2);
+
+				//draw passed in image onto graphics object
+				g.DrawImage(bitmap, new Point(0, 0));
+			}
+
+			return returnBitmap;
+		}
+
 		public static Icon GetIcon(Assembly assembly, String resourceName)
 		{
 			List<String> names = new List<string>(assembly.GetManifestResourceNames());

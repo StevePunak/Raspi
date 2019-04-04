@@ -105,10 +105,10 @@ namespace KanoopCommon.Geometry
 			bool result = false;
 
 			double A1, B1, C1;
-			FlatGeo.GetLineABC(l1, out A1, out B1, out C1);
+			FlatGeo.GetLineABC(l1.ToLine(), out A1, out B1, out C1);
 
 			double A2, B2, C2;
-			FlatGeo.GetLineABC(l2, out A2, out B2, out C2);
+			FlatGeo.GetLineABC(l2.ToLine(), out A2, out B2, out C2);
 
 			double det = A1*B2 - A2*B1;
 			if(det != 0)

@@ -5,20 +5,20 @@ using System.Text;
 
 namespace KanoopCommon.Geometry
 {
-	public class GeoTriangle : GeoPolygon, ITriangle
+	public class GeoTriangle : GeoPolygon
 	{
 		#region Public Properties
 
-		public IPoint A	{ get { return Lines[0].P1 as GeoPoint; } }
-		public IPoint B	{ get { return Lines[1].P1 as GeoPoint; } }
-		public IPoint C	{ get { return Lines[2].P1 as GeoPoint; } }
+		public GeoPoint A	{ get { return Lines[0].P1 as GeoPoint; } }
+		public GeoPoint B	{ get { return Lines[1].P1 as GeoPoint; } }
+		public GeoPoint C	{ get { return Lines[2].P1 as GeoPoint; } }
 
-		public ILine AtoB { get { return new GeoLine(A, B); } }
-		public ILine AtoC { get { return new GeoLine(A, C); } }
-		public ILine BtoC { get { return new GeoLine(B, C); } }
-		public ILine BtoA { get { return new GeoLine(B, A); } }
-		public ILine CtoA { get { return new GeoLine(C, A); } }
-		public ILine CtoB { get { return new GeoLine(C, B); } }
+		public GeoLine AtoB { get { return new GeoLine(A, B); } }
+		public GeoLine AtoC { get { return new GeoLine(A, C); } }
+		public GeoLine BtoC { get { return new GeoLine(B, C); } }
+		public GeoLine BtoA { get { return new GeoLine(B, A); } }
+		public GeoLine CtoA { get { return new GeoLine(C, A); } }
+		public GeoLine CtoB { get { return new GeoLine(C, B); } }
 
 		public Angle ABC { get { return new Angle(Math.Abs(BtoA.Bearing - BtoC.Bearing)); } }
 		public Angle BAC { get { return new Angle(Math.Abs(AtoB.Bearing - AtoC.Bearing)); } }

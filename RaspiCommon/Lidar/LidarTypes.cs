@@ -14,6 +14,8 @@ namespace RaspiCommon.Lidar
 	public delegate void LidarSampleHandler(LidarSample sample);
 	public delegate void LidarResponseHandler(LidarResponse response);
 	public delegate void FuzzyPathChangedHandler(FuzzyPath path);
+	public delegate void LandmarksChangedHandler(LandmarkList landmarks);
+	public delegate void BarriersChangedHandler(BarrierList barriers);
 
 	public class LidarTypes
 	{

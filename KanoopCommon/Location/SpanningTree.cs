@@ -11,7 +11,7 @@ namespace KanoopCommon.LocationAlgorithms
 	{
 		#region Protected Member Variables
 
-		protected Dictionary<String, TreePathVertice>		m_Vertices;
+		protected Dictionary<String, TreePathVertice>		_vertices;
 
 		protected List<TreePathVertice>						m_VisitedVertices;
 		protected List<TreePathVertice>						m_UnvisitedVertices;
@@ -26,21 +26,21 @@ namespace KanoopCommon.LocationAlgorithms
 
 		public List<TreePathVertice> Vertices
 		{
-			get { return new List<TreePathVertice>(m_Vertices.Values); }
+			get { return new List<TreePathVertice>(_vertices.Values); }
 		}
 
-		protected TreePathVertice							m_Origin;
-		public IPoint Origin
+		protected TreePathVertice							_origin;
+		public PointD Origin
 		{
-			get { return m_Origin.Position; }
-			set { m_Origin = AddAdHocVertice(ConvertPointToPointD(value), TreePathVertice.VerticeType.AdHocOrigin); }
+			get { return _origin.Position; }
+			set { _origin = AddAdHocVertice(value, TreePathVertice.VerticeType.AdHocOrigin); }
 		}
 
-		protected TreePathVertice							m_Destination;
-		public IPoint Destination
+		protected TreePathVertice							_destination;
+		public PointD Destination
 		{
-			get { return m_Destination.Position; }
-			set { m_Destination = AddAdHocVertice(ConvertPointToPointD(value), TreePathVertice.VerticeType.AdHocDestination); }
+			get { return _destination.Position; }
+			set { _destination = AddAdHocVertice(value, TreePathVertice.VerticeType.AdHocDestination); }
 		}
 
 		static bool _DebugLogging;
@@ -96,7 +96,7 @@ namespace KanoopCommon.LocationAlgorithms
 
 			DumpLines("To constructor", m_LinesToConstructor);
 
-			m_Vertices = new Dictionary<String, TreePathVertice>();
+			_vertices = new Dictionary<String, TreePathVertice>();
 			m_Lines = new LineList();
 			m_OriginalLines = new LineList();
 
@@ -107,18 +107,18 @@ namespace KanoopCommon.LocationAlgorithms
 
 				/** create objects for each end if they do not already exist */
 				TreePathVertice v1, v2;
-				if(m_Vertices.TryGetValue(line.P1.HashName, out v1) == false)
+				if(_vertices.TryGetValue(line.P1.HashName, out v1) == false)
 				{
 					v1 = new TreePathVertice(line.P1 as PointD, TreePathVertice.VerticeType.Standard);
 					v1.Name = String.Format("{0} pt1", line.Name);
-					m_Vertices.Add(v1.HashName, v1);
+					_vertices.Add(v1.HashName, v1);
 				}
 
-				if(m_Vertices.TryGetValue(line.P2.HashName, out v2) == false)
+				if(_vertices.TryGetValue(line.P2.HashName, out v2) == false)
 				{
 					v2 = new TreePathVertice(line.P2 as PointD, TreePathVertice.VerticeType.Standard);
 					v2.Name = String.Format("{0} pt2", line.Name);
-					m_Vertices.Add(v2.HashName, v2);
+					_vertices.Add(v2.HashName, v2);
 				}
 
 				/** add them as neighbors to each other */
@@ -140,7 +140,7 @@ namespace KanoopCommon.LocationAlgorithms
 			 * Compute the shortest path using spanning tree 
 			 * based on Dijkstras Algorithm
 			 */
-			if(m_Origin == null || m_Destination == null)
+			if(_origin == null || _destination == null)
 			{
 				throw new Exception("Spanning Tree must have origin and destination");
 			}
@@ -159,25 +159,25 @@ namespace KanoopCommon.LocationAlgorithms
 			m_VisitedVertices = new List<TreePathVertice>();
 			
 			/** create list of all vertices which we will remove from as we visit */
-			m_UnvisitedVertices = new List<TreePathVertice>(m_Vertices.Values);
+			m_UnvisitedVertices = new List<TreePathVertice>(_vertices.Values);
 
 			/** 
 			 * set all initial values for each vertice...
 			 * origin distance to zero, and all others to infinity 
 			 * state and source
 			 */
-			foreach(KeyValuePair<String, TreePathVertice> kvp in m_Vertices)
+			foreach(KeyValuePair<String, TreePathVertice> kvp in _vertices)
 			{
 				TreePathVertice vertice = kvp.Value;
 
-				if(vertice == m_Origin)
+				if(vertice == _origin)
 				{
-DebugLogText(LogLevel.DEBUG, "Set origin vertice to {0} ({1})", m_Origin, ConvertPointToNative(m_Origin.Position));
+DebugLogText(LogLevel.DEBUG, "Set origin vertice to {0} ({1})", _origin, _origin.Position);
 					vertice.Distance = 0;
 				}
 				else
 				{
-DebugLogText(LogLevel.DEBUG, "Set other vertice at {0}, ({1})", vertice, ConvertPointToNative(vertice.Position));
+DebugLogText(LogLevel.DEBUG, "Set other vertice at {0}, ({1})", vertice, vertice.Position);
 					vertice.Distance = Double.PositiveInfinity;
 				}
 				vertice.State = TreePathVertice.VerticeState.Unvisited;
@@ -236,14 +236,14 @@ DebugLogText(LogLevel.ERROR, "VERTICE {0} has no solution!", current);
 		{
 			/** now work backwards along source paths */
 			PointDList path = new PointDList();
-			TreePathVertice vertice = m_Destination;
+			TreePathVertice vertice = _destination;
 			TreePathVertice lastInserted;
 			do
 			{
 				path.Insert(0, vertice.Position);
 				lastInserted = vertice;
 				vertice = vertice.Source;
-			}while(lastInserted != m_Origin);
+			}while(lastInserted != _origin);
 
 			return path;
 		}
@@ -251,7 +251,7 @@ DebugLogText(LogLevel.ERROR, "VERTICE {0} has no solution!", current);
 		protected TreePathVertice AddAdHocVertice(PointD point, TreePathVertice.VerticeType type)
 		{
 			TreePathVertice V1, V2;
-			if(m_Vertices.TryGetValue(point.HashName, out V1) == false)
+			if(_vertices.TryGetValue(point.HashName, out V1) == false)
 			{
 				/** 
 				 * Having ensured that our vertice does not already exist,
@@ -269,7 +269,7 @@ DebugLogText(LogLevel.ERROR, "VERTICE {0} has no solution!", current);
 
 				/** create our new vertice */
 				V1 = new TreePathVertice(point, type);
-				m_Vertices.Add(V1.HashName, V1);
+				_vertices.Add(V1.HashName, V1);
 
 				/** find closest point on the closest line for a second vertice */
 				Double closestDistance;
@@ -279,19 +279,19 @@ DebugLogText(LogLevel.DEBUG, "Added ad-hoc vertice of type {0} at point {1} clos
 				if(closestPoint != null)
 				{
 					/** if the closest vertice doesn't exist yet, we will create it, and split the line L */
-					if(m_Vertices.TryGetValue(closestPoint.HashName, out V2) == false)
+					if(_vertices.TryGetValue(closestPoint.HashName, out V2) == false)
 					{
 						/** get the vertices on the line we are about to split */
 						TreePathVertice LV1, LV2;
-						if(	m_Vertices.TryGetValue(L.P1.HashName, out LV1) == false ||
-							m_Vertices.TryGetValue(L.P2.HashName, out LV2) == false)
+						if(	_vertices.TryGetValue(L.P1.HashName, out LV1) == false ||
+							_vertices.TryGetValue(L.P2.HashName, out LV2) == false)
 						{
 							throw new Exception("Vertices on original lines should exist");
 						}
 
 						/** create our new vertice on the split line */
 						V2 = new TreePathVertice(closestPoint, type);
-						m_Vertices.Add(V2.HashName, V2);
+						_vertices.Add(V2.HashName, V2);
 
 						/** fix up neighbors */
 						LV1.TryReplaceNeighbor(LV2, V2);
@@ -347,7 +347,7 @@ DebugLogText(LogLevel.DEBUG, "Added ad-hoc vertice of type {0} at point {1} clos
 		{
 			SortedList<Double, TreePathVertice> list = new SortedList<Double, TreePathVertice>();
 
-			foreach(TreePathVertice vertice in m_Vertices.Values)
+			foreach(TreePathVertice vertice in _vertices.Values)
 			{
 				Double distance = FlatGeo.GetDistance(vertice.Position, to);
 				while(list.ContainsKey(distance))
@@ -361,7 +361,7 @@ DebugLogText(LogLevel.DEBUG, "Added ad-hoc vertice of type {0} at point {1} clos
 		void ClearAdHocVertices(TreePathVertice.VerticeType type)
 		{
 			List<String> deleteList = new List<String>();
-			foreach(KeyValuePair<String, TreePathVertice> kvp in m_Vertices)
+			foreach(KeyValuePair<String, TreePathVertice> kvp in _vertices)
 			{
 				if(kvp.Value.Type == type)
 				{
@@ -370,7 +370,7 @@ DebugLogText(LogLevel.DEBUG, "Added ad-hoc vertice of type {0} at point {1} clos
 			}
 			foreach(String key in deleteList)
 			{
-				m_Vertices.Remove(key);
+				_vertices.Remove(key);
 			}
 		}
 
@@ -378,22 +378,12 @@ DebugLogText(LogLevel.DEBUG, "Added ad-hoc vertice of type {0} at point {1} clos
 
 		#region Abstract Implementation
 
-		public virtual PointD ConvertPointToPointD(IPoint original)
-		{
-			return original as PointD;
-		}
-
-		public virtual IPoint ConvertPointToNative(IPoint point)
-		{
-			return point as PointD;
-		}
-
 		protected virtual Double GetNativeDistance(Double distance)
 		{
 			return distance;
 		}
 
-		protected virtual Double GetNativeDistance(IPoint p1, IPoint p2)
+		protected virtual Double GetNativeDistance(PointD p1, PointD p2)
 		{
 			return FlatGeo.GetDistance(p1 as PointD, p2 as PointD);
 		}
@@ -417,7 +407,7 @@ DebugLogText(LogLevel.DEBUG, "Added ad-hoc vertice of type {0} at point {1} clos
 		PointD PossiblyCombinePoint(PointD point, Double distance)
 		{
 			PointD ret = point;
-			foreach(KeyValuePair<String, TreePathVertice> kvp in m_Vertices)
+			foreach(KeyValuePair<String, TreePathVertice> kvp in _vertices)
 			{
 				TreePathVertice vertice = kvp.Value;
 				if(point.Equals(vertice.Position) == false && FlatGeo.Distance(point, vertice.Position) < distance)
@@ -435,7 +425,7 @@ DebugLogText(LogLevel.DEBUG, "Added ad-hoc vertice of type {0} at point {1} clos
 			StringBuilder sb = new StringBuilder();
 			foreach(Line line in lines)
 			{
-				sb.AppendFormat("{0} {1} ({2}) - {3} ({4})\n", line.Name, ConvertPointToNative(line.P1), line.P1.HashName, ConvertPointToNative(line.P2), line.P2.HashName);
+				sb.AppendFormat("{0} {1} ({2}) - {3} ({4})\n", line.Name, line.P1, line.P1.HashName, line.P2, line.P2.HashName);
 			}
 
 			DebugLogText(LogLevel.DEBUG, "Line Dump [{0}]\n{1}", name, sb);
@@ -444,14 +434,14 @@ DebugLogText(LogLevel.DEBUG, "Added ad-hoc vertice of type {0} at point {1} clos
 		public void DumpVertices()
 		{
 			StringBuilder sb = new StringBuilder();
-			foreach(TreePathVertice vertice in m_Vertices.Values)
+			foreach(TreePathVertice vertice in _vertices.Values)
 			{
 				sb.AppendFormat("{0} Pos: {1} Dist: {2} State: {3}  Type: {4}  Source: {5}\n",
-					vertice, ConvertPointToNative(vertice.Position), vertice.Distance > 1000000000 ? "infinite" : GetNativeDistance(vertice.Distance).ToString("0.00"), vertice.State, vertice.Type, vertice.Source == null ? "null" : vertice.Source.ToString());
+					vertice, vertice.Position, vertice.Distance > 1000000000 ? "infinite" : GetNativeDistance(vertice.Distance).ToString("0.00"), vertice.State, vertice.Type, vertice.Source == null ? "null" : vertice.Source.ToString());
 				foreach(TreePathVertice neighbor in vertice.Neighbors.Values)
 				{
 					sb.AppendFormat("   Neighbor: {0} Pos: {1} Dist: {2:0.00} State: {3}  Type: {4}  Source: {5}\n",
-						neighbor, ConvertPointToNative(neighbor.Position), neighbor.Distance  > 1000000000 ? "infinite" : GetNativeDistance(neighbor.Distance).ToString("0.00"), neighbor.State, neighbor.Type, neighbor.Source == null ? "null" : neighbor.Source.ToString());
+						neighbor, neighbor.Position, neighbor.Distance  > 1000000000 ? "infinite" : GetNativeDistance(neighbor.Distance).ToString("0.00"), neighbor.State, neighbor.Type, neighbor.Source == null ? "null" : neighbor.Source.ToString());
 				}
 				sb.AppendLine();
 			}
@@ -460,7 +450,7 @@ DebugLogText(LogLevel.DEBUG, "Added ad-hoc vertice of type {0} at point {1} clos
 
 		public override string ToString()
 		{
-			return String.Format("SpanningTree: {0} vertices", m_Vertices.Count);
+			return String.Format("SpanningTree: {0} vertices", _vertices.Count);
 		}
 
 		#endregion

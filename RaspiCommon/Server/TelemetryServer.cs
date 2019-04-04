@@ -18,10 +18,12 @@ using RaspiCommon.Lidar.Environs;
 
 namespace RaspiCommon.Server
 {
-	public class LidarServer : ThreadBase
+	public class TelemetryServer : ThreadBase
 	{
+		public const String BearingTopic = "trackbot/compass/bearing";
 		public const String RangeBlobTopic = "trackbot/lidar/rangeblob";
-		public const String BarrierTopic = "trackbot/lidar/barriers";
+		public const String LandmarksTopic = "trackbot/lidar/landmarks";
+		public const String BarriersTopic = "trackbot/lidar/barriers";
 		public const String CurrentPathTopic = "trackbot/lidar/currentpath";
 
 		public const int RangeBlobPacketSize = sizeof(Double);
@@ -33,14 +35,20 @@ namespace RaspiCommon.Server
 		public MqttClient Client { get; private set; }
 
 		public String MqqtClientID { get; private set; }
+		public ICompass Compass { get; private set; }
 
 		public IPAddress Address { get; private set; }
 
 		private FuzzyPath _fuzzyPath;
 		private bool _fuzzyPathChanged;
 
-		public LidarServer(LidarEnvironment environment, String mqqtBrokerAddress, String mqqtClientID)
-			: base(typeof(LidarServer).Name)
+		private LandmarkList _landmarks;
+		private bool _landmarksChanged;
+		private BarrierList _barriers;
+		private bool _barriersChanged;
+
+		public TelemetryServer(LidarEnvironment environment, ICompass compass, String mqqtBrokerAddress, String mqqtClientID)
+			: base(typeof(TelemetryServer).Name)
 		{
 			IPAddress address;
 
@@ -52,9 +60,14 @@ namespace RaspiCommon.Server
 			Address = address;
 			MqqtClientID = mqqtClientID;
 			Environment = environment;
+			Compass = compass;
 
 			Environment.FuzzyPathChanged += OnEnvironment_FuzzyPathChanged;
+			Environment.BarriersChanged += OnEnvironment_BarriersChanged;
+			Environment.LandmarksChanged += OnEnvironment_LandmarksChanged;
 			_fuzzyPathChanged = false;
+			_barriersChanged = false;
+			_landmarksChanged = false;
 
 			Interval = TimeSpan.FromMilliseconds(250);
 		}
@@ -77,9 +90,18 @@ namespace RaspiCommon.Server
 				{
 					SendRangeData();
 
+					SendBearing();
 					if(_fuzzyPathChanged)
 					{
 						SendFuzzyPath();
+					}
+					if(_barriersChanged)
+					{
+						SendBarriers();
+					}
+					if(_landmarksChanged)
+					{
+						SendLandmarks();
 					}
 				}
 
@@ -92,13 +114,35 @@ namespace RaspiCommon.Server
 			return true;
 		}
 
+		private void SendBearing()
+		{
+			byte[] output = BitConverter.GetBytes(Compass.Bearing);
+			Client.Publish(BearingTopic, output, true);
+		}
+
 		private void SendFuzzyPath()
 		{
 			Log.LogText(LogLevel.DEBUG, "Sending fuzzy path");
 
 			byte[] output = _fuzzyPath.Serizalize();
-			Client.Publish(CurrentPathTopic, output);
+			Client.Publish(CurrentPathTopic, output, true);
 			_fuzzyPathChanged = false;
+		}
+
+		private void SendLandmarks()
+		{
+			byte[] output = _landmarks.Serialize();
+			Log.LogText(LogLevel.DEBUG, "Sending {0} bytes of {1} landmarks", output.Length, _landmarks.Count);
+			Client.Publish(LandmarksTopic, output, true);
+			_landmarksChanged = false;
+		}
+
+		private void SendBarriers()
+		{
+			byte[] output = _barriers.Serialize();
+			Log.LogText(LogLevel.DEBUG, "Sending {0} bytes of {1} barriers", output.Length, _barriers.Count);
+			Client.Publish(BarriersTopic, output, true);
+			_barriersChanged = false;
 		}
 
 		void SendRangeData()
@@ -114,7 +158,6 @@ namespace RaspiCommon.Server
 				}
 			}
 
-			File.WriteAllBytes(@"/home/pi/tmp/blob.bin", output);
 			Client.Publish(RangeBlobTopic, output);
 		}
 
@@ -123,6 +166,22 @@ namespace RaspiCommon.Server
 			Log.LogText(LogLevel.DEBUG, "FuzzyPath path changed");
 			_fuzzyPath = path.Clone();
 			_fuzzyPathChanged = true;
+		}
+
+		private void OnEnvironment_LandmarksChanged(LandmarkList landmarks)
+		{
+			Log.LogText(LogLevel.DEBUG, "Landmarks changed");
+
+			_landmarks = landmarks.Clone();
+			_landmarksChanged = true;
+		}
+
+		private void OnEnvironment_BarriersChanged(BarrierList barriers)
+		{
+			Log.LogText(LogLevel.DEBUG, "{0} Barriers changed", barriers.Count);
+
+			_barriers = barriers.Clone();
+			_barriersChanged = true;
 		}
 
 		void GetConnected()

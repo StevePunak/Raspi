@@ -6,7 +6,7 @@ using System;
 
 namespace KanoopCommon.Geometry
 {
-	public class GeoEllipse : GeoShape, IEllipse
+	public class GeoEllipse : GeoShape
 	{
 		#region Public Properties
 
@@ -14,26 +14,26 @@ namespace KanoopCommon.Geometry
 
 		public Double Eccentricity { get; private set; }
 
-		public IPoint[] Foci { get; private set; }
+		public GeoPoint[] Foci { get; private set; }
 
-		public ILine MajorAxis { get; private set; }
+		public GeoLine MajorAxis { get; private set; }
 
 		public Double MajorRadius { get; private set; }
 
-		public ILine MinorAxis { get; private set; }
+		public GeoLine MinorAxis { get; private set; }
 
 		public Double MinorRadius { get; private set; }
 
-		public IPoint Center
+		public GeoPoint Center
 		{
-			get { return m_Center; }
+			get { return _center; }
 			private set
 			{
-				m_Center = new GeoPoint(value);
+				_center = new GeoPoint(value);
 			}
 		}
 
-		public GeoPoint GeoCenter { get { return m_Center as GeoPoint; } }
+		public GeoPoint GeoCenter { get { return _center as GeoPoint; } }
 
 		public Double SemiMajorAxisLength { get { return MajorAxis.Length / 2; } }
 
@@ -46,7 +46,7 @@ namespace KanoopCommon.Geometry
 		#region Private Member Variables
 
 		/** These member variables actually define the ellipse */
-		protected GeoPoint		m_Center;
+		protected GeoPoint		_center;
 		Double					m_MajorAxisLength;
 		Double					m_MinorAxisLength;
 		Double					m_MajorAxisBearing;
@@ -55,9 +55,9 @@ namespace KanoopCommon.Geometry
 
 		#region Constructors
 
-		private GeoEllipse(IPoint center, Double axis1Length, Double axis2Length, Double majorAxisBearing)
+		private GeoEllipse(GeoPoint center, Double axis1Length, Double axis2Length, Double majorAxisBearing)
 		{
-			m_Center = center.ToGeoPoint();
+			_center = center.ToGeoPoint();
 
 			/** may be set if called from chaining constructor */
 			if(MajorAxis == null && MinorAxis == null)
@@ -82,24 +82,20 @@ namespace KanoopCommon.Geometry
 		public GeoEllipse()
 			: this(new GeoPoint(), 0, 0, 0) { }
 
-		public GeoEllipse(GeoPoint center, Double majorAxisLength, Double minorAxisLength, Double majorAxisBearing = 0)
-			: this(	LineFromCenterAndBearing(center, majorAxisBearing, majorAxisLength),
-			        LineFromCenterAndBearing(center, Angle.Add(majorAxisBearing, 90), minorAxisLength)) {}
-
-		public GeoEllipse(ILine majorAxis, ILine minorAxis)
+		public GeoEllipse(GeoLine majorAxis, GeoLine minorAxis)
 			: this(majorAxis.MidPoint, majorAxis.Length, minorAxis.Length, majorAxis.Bearing)
 		{
 			MajorAxis = majorAxis;
 			MinorAxis = minorAxis;
 		}
 
-		public GeoEllipse(IRectangle rectangle)
+		public GeoEllipse(GeoRectangle rectangle)
 			: this(	rectangle.Lines[0].Length > rectangle.Lines[1].Length						// major
-			        ? new Line(rectangle.Lines[1].MidPoint, rectangle.Lines[3].MidPoint)
-					: new Line(rectangle.Lines[0].MidPoint, rectangle.Lines[2].MidPoint),
+			        ? new GeoLine(rectangle.Lines[1].MidPoint, rectangle.Lines[3].MidPoint)
+					: new GeoLine(rectangle.Lines[0].MidPoint, rectangle.Lines[2].MidPoint),
 			        rectangle.Lines[0].Length < rectangle.Lines[1].Length						// minor
-			        ? new Line(rectangle.Lines[1].MidPoint, rectangle.Lines[3].MidPoint)
-					: new Line(rectangle.Lines[0].MidPoint, rectangle.Lines[2].MidPoint) ) {}
+			        ? new GeoLine(rectangle.Lines[1].MidPoint, rectangle.Lines[3].MidPoint)
+					: new GeoLine(rectangle.Lines[0].MidPoint, rectangle.Lines[2].MidPoint) ) {}
 
 
 		public GeoEllipse(GeoCircle circle)
@@ -129,13 +125,13 @@ namespace KanoopCommon.Geometry
 		void RecalculateAxes()
 		{
 			MajorAxis = new GeoLine(
-			    EarthGeo.GetPoint(m_Center, Angle.Reverse(m_MajorAxisBearing), m_MajorAxisLength / 2),
-			    EarthGeo.GetPoint(m_Center, m_MajorAxisBearing, m_MajorAxisLength / 2));
+			    EarthGeo.GetPoint(_center, Angle.Reverse(m_MajorAxisBearing), m_MajorAxisLength / 2),
+			    EarthGeo.GetPoint(_center, m_MajorAxisBearing, m_MajorAxisLength / 2));
 
 			Double minorAxisBearing = Angle.Add(m_MajorAxisBearing, 90);
 			MinorAxis = new GeoLine(
-			    EarthGeo.GetPoint(m_Center, Angle.Reverse(minorAxisBearing), m_MinorAxisLength / 2),
-			    EarthGeo.GetPoint(m_Center, minorAxisBearing, m_MinorAxisLength / 2));
+			    EarthGeo.GetPoint(_center, Angle.Reverse(minorAxisBearing), m_MinorAxisLength / 2),
+			    EarthGeo.GetPoint(_center, minorAxisBearing, m_MinorAxisLength / 2));
 		}
 
 		void RecalculateFociAndArea()
@@ -143,7 +139,7 @@ namespace KanoopCommon.Geometry
 			//      __________
 			//    \/ r1² * r2²
 			Double fociDistance = Math.Sqrt(MajorRadius * MajorRadius - MinorRadius * MinorRadius);
-			Foci = new IPoint[]
+			Foci = new GeoPoint[]
 			{
 				EarthGeo.GetPoint(Center as GeoPoint, Angle.Reverse(MajorAxis.Bearing), fociDistance),
 				EarthGeo.GetPoint(Center as GeoPoint, MajorAxis.Bearing, fociDistance)
@@ -163,7 +159,7 @@ namespace KanoopCommon.Geometry
 
 		#endregion
 
-		public override IRectangle GetMinimumBoundingRectangle()
+		public virtual GeoRectangle GetMinimumBoundingRectangle()
 		{
 			/** offset minor axis to half the major axis distance in either direction */
 			Double		offset = MajorAxis.Length / 2;
@@ -197,10 +193,10 @@ namespace KanoopCommon.Geometry
 			Move(newCenter);
 		}
 
-		public virtual void Move(IPoint to)
+		public virtual void Move(GeoPoint to)
 		{
 			GeoPoint center = new GeoPoint(to);
-			m_Center = center;
+			_center = center;
 
 			RecalculateAll();
 		}

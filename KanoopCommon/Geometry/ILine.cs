@@ -27,8 +27,6 @@ namespace KanoopCommon.Geometry
 
 		bool SharesEndPointWith(ILine other, int precision);
 
-		ILine Clone();
-
 		String ToString(int precision);
 
 		bool Equals(ILine other);

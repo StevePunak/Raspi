@@ -301,7 +301,7 @@ namespace KanoopCommon.Geometry
 			}
 			return line != null;
 		}
-
+#if zero
 		public Double GetDistanceBetweenTwoPoints(GeoPoint p1, GeoPoint p2)
 		{
 			GeoSpanningTree spanningTree = new GeoSpanningTree(this);
@@ -310,16 +310,16 @@ namespace KanoopCommon.Geometry
 			GeoPath			path = spanningTree.ComputePath();
 			return path.Length;
 		}
+#endif
+#endregion
 
-		#endregion
-
-		#region Utility
+#region Utility
 
 		public Unescaped ToUnescapedSqlString()
 		{
 			return Unescaped.String(string.Format("GeomFromText('LINESTRING({0})')", String.Join(",", Array.ConvertAll<GeoPoint, String>(this.GeoPoints.ToArray(), p => p.X + " " + p.Y))));
 		}
 
-		#endregion
+#endregion
 	}
 }

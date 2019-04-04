@@ -217,7 +217,7 @@ namespace MQTT
 			ClientState = ClientStates.Idle;
 		}
 
-		public void Publish(String topic, byte[] message = null)
+		public void Publish(String topic, byte[] message = null, bool retain = false)
 		{
 			if(!Connected)
 			{
@@ -229,6 +229,7 @@ namespace MQTT
 				Topic = topic,
 				Message = message == null ? new byte[0] : message,
 				QOS = QOS,
+				Retain = retain
 			};
 
 			if(packet.QOS != QOSTypes.Qos0)

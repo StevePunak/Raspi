@@ -101,7 +101,7 @@ namespace TrackBot.Spatial
 
 		public void SaveBitmap()
 		{
-			Mat bitmap = Widgets.Environment.GenerateBitmap(false, false);  // Widgets.Environment.Grid.ConvertToBitmap(10);
+			Mat bitmap = Widgets.Environment.PointsToBitmap();
 			bitmap.Save("/var/www/html/grid.png");
 
 			Console.WriteLine("Bitmap saved");

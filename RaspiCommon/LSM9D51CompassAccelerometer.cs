@@ -9,7 +9,7 @@ using KanoopCommon.Threading;
 
 namespace RaspiCommon
 {
-	public class LSM9D51CompassAccelerometer
+	public class LSM9D51CompassAccelerometer : ICompass
 	{
 		public delegate void NewBearingHandler(Double bearing);
 

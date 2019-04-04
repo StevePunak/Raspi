@@ -22,11 +22,6 @@ namespace RaspiCommon.Extensions
 			return lines;
 		}
 
-		public static PointD CenterPoint(this Mat matrix)
-		{
-			return new PointD(matrix.Width / 2, matrix.Height / 2);
-		}
-
 		public static Point ToPoint(this PointF from)
 		{
 			return new Point((int)from.X, (int)from.Y);

@@ -7,7 +7,7 @@ namespace KanoopCommon.Geometry
 {
 	public abstract class GeoShape :  ICloneable
 	{
-		public abstract IRectangle GetMinimumBoundingRectangle();
+		//public abstract GeoRectangle GetMinimumBoundingRectangle();
 
 		public abstract object Clone();
 

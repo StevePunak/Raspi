@@ -6,10 +6,10 @@ using System.Text;
 namespace KanoopCommon.Conversions
 {
 	// Added to Support JSON serialization for Web Client
-	public interface IPoint2DReadOnly
-	{
-		double X { get; }
-		double Y { get; }
-	}
+	//public interface IPoint2DReadOnly
+	//{
+	//	double X { get; }
+	//	double Y { get; }
+	//}
 
 }

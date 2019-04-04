@@ -10,6 +10,7 @@ using KanoopCommon.Logging;
 using KanoopCommon.Threading;
 using RaspiCommon;
 using RaspiCommon.Lidar.Environs;
+using RaspiCommon.Server;
 using TrackBot.ForkLift;
 using TrackBot.Spatial;
 using TrackBot.Tracks;
@@ -27,6 +28,7 @@ namespace TrackBot
 		public static SpatialPoll SpatialPollThread { get; private set; }
 
 		public static SaveImageThread SaveImageThread { get; set; }
+		public static TelemetryServer Server { get; private set; }
 
 		public static void StartWidgets()
 		{
@@ -54,6 +56,18 @@ namespace TrackBot
 			{
 				Log.SysLogText(LogLevel.DEBUG, "Remaining: {0}", thread);
 			}
+		}
+
+		private static void StartTelemetryServer()
+		{
+			Server = new TelemetryServer((TrackLidar)Environment, GyMag, Program.Config.RadarHost, "trackbot-lidar");
+			Server.Start();
+		}
+
+		private static void StopTelemetryServer()
+		{
+			Server.Stop();
+			Server = null;
 		}
 
 		private static void StartSpatialPolling()
@@ -108,7 +122,7 @@ namespace TrackBot
 					Program.Config.Save();
 				}
 				Environment = new TrackLidar(Program.Config.LidarMetersSquare, Program.Config.LidarPixelsPerMeter);
-				((TrackLidar)Environment).StartRangeServer(Program.Config.RadarHost);
+				StartTelemetryServer();
 			}
 			else
 			{
@@ -118,21 +132,21 @@ namespace TrackBot
 			Environment.Start();
 		}
 
+		private static void StopSpatial()
+		{
+			if(Environment is TrackLidar)
+			{
+				StopTelemetryServer();
+			}
+			Environment.Stop();
+		}
+
 		private static void OnNewBearing(double bearing)
 		{
 			if(Environment != null)
 			{
 				Environment.Bearing = bearing;
 			}
-		}
-
-		private static void StopSpatial()
-		{
-			if(Environment is TrackLidar)
-			{
-				((TrackLidar)Environment).StopRangeServer();
-			}
-			Environment.Stop();
 		}
 
 		private static void StartActivities()

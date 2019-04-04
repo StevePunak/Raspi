@@ -5,7 +5,7 @@ using System.Text;
 
 namespace KanoopCommon.Geometry
 {
-	public class GeoGrid : GeoRectangle, IGrid
+	public class GeoGrid : GeoRectangle
 	{
         public Int32 NumberOfRows { get; private set;}
 

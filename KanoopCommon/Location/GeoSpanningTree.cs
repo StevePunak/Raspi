@@ -11,8 +11,8 @@ namespace KanoopCommon.LocationAlgorithms
 	{
 		#region Public Properties
 
-		CoordinateMap							m_CoordinateMap;
-		public CoordinateMap CoordinateMap { get { return m_CoordinateMap; }  }
+		CoordinateMap							_coordinateMap;
+		public CoordinateMap CoordinateMap { get { return _coordinateMap; }  }
 
 		#endregion
 
@@ -23,7 +23,7 @@ namespace KanoopCommon.LocationAlgorithms
 
 		public GeoSpanningTree(GeoLineList geoLines, CoordinateMap coordinateMap)
 		{
-			m_CoordinateMap = coordinateMap;
+			_coordinateMap = coordinateMap;
 
 			m_LinesToConstructor = GeoSpanningTree.ConvertedGeoLines(geoLines, coordinateMap);
 
@@ -60,7 +60,7 @@ namespace KanoopCommon.LocationAlgorithms
 				{
 					throw new Exception("Can't compute path");
 				}
-				path.Insert(0, m_CoordinateMap.GetGeoPoint(vertice.Position));
+				path.Insert(0, _coordinateMap.GetGeoPoint(vertice.Position));
 				lastInserted = vertice;
 				vertice = vertice.Source;
 			}while(lastInserted != m_Origin);
@@ -72,14 +72,14 @@ namespace KanoopCommon.LocationAlgorithms
 
 		#region Parent Class Overrides
 
-		public override PointD ConvertPointToPointD(IPoint original)
+		public override PointD ConvertPointToPointD(GeoPoint original)
 		{
-			return (original is GeoPoint) ? m_CoordinateMap.GetPixelPoint(original as GeoPoint).Round(3) as PointD : original.Round(3) as PointD;
+			return (original is GeoPoint) ? _coordinateMap.GetPixelPoint(original as GeoPoint).Round(3) as PointD : original.Round(3) as PointD;
 		}
 
 		public override IPoint ConvertPointToNative(IPoint point)
 		{
-			return (point is PointD) ? m_CoordinateMap.GetGeoPoint(point as PointD) : point;
+			return (point is PointD) ? _coordinateMap.GetGeoPoint(point as PointD) : point;
 		}
 
 		protected override double GetNativeDistance(IPoint p1, IPoint p2)
@@ -89,7 +89,7 @@ namespace KanoopCommon.LocationAlgorithms
 
 		protected override double GetNativeDistance(double distance)
 		{
-			return m_CoordinateMap.GetGeoDistance(distance);
+			return _coordinateMap.GetGeoDistance(distance);
 		}
 
 		#endregion
