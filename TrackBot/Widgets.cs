@@ -4,16 +4,22 @@ using System.IO.Ports;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using KanoopCommon.Database;
 using KanoopCommon.Extensions;
 using KanoopCommon.Geometry;
 using KanoopCommon.Logging;
 using KanoopCommon.Threading;
 using RaspiCommon;
+using RaspiCommon.Data.DataSource;
+using RaspiCommon.Data.Entities;
 using RaspiCommon.Lidar.Environs;
 using RaspiCommon.Server;
+using RaspiCommon.Spatial;
+using RaspiCommon.Spatial.Imaging;
 using TrackBot.ForkLift;
 using TrackBot.Spatial;
 using TrackBot.Tracks;
+using TrackBotCommon.Environs;
 
 namespace TrackBot
 {
@@ -24,14 +30,18 @@ namespace TrackBot
 		public static Lift Lift { get; private set; }
 
 		public static LSM9D51CompassAccelerometer GyMag { get; private set; }
-		public static IEnvironment Environment { get; private set; }
+		public static IImageEnvironment ImageEnvironment { get; private set; }
+		public static ILandscape Landscape { get; private set; }
 		public static SpatialPoll SpatialPollThread { get; private set; }
 
 		public static SaveImageThread SaveImageThread { get; set; }
 		public static TelemetryServer Server { get; private set; }
 
+		public static TrackDataSource DataSource { get; private set; }
+
 		public static void StartWidgets()
 		{
+			StartDatabase();
 			StartRangeFinders();
 			StartTracks();
 			StartSpatial();
@@ -51,6 +61,7 @@ namespace TrackBot
 			StopSpatial();
 			GpioSharp.DeInit();
 			StopSaveImageThread();
+			StopDatabase();
 
 			foreach(ThreadBase thread in ThreadBase.GetRunningThreads())
 			{
@@ -58,9 +69,31 @@ namespace TrackBot
 			}
 		}
 
+		private static void StartDatabase()
+		{
+			try
+			{
+				TrackBotLandscape landscape;
+				DataSource = DataSourceFactory.Create<TrackDataSource>(Program.Config.DBCredentials);
+				if(DataSource.LandscapeGet<TrackBotLandscape>("Man Cave", out landscape).ResultCode != DBResult.Result.Success)
+				{
+					throw new TrackBotException("Failed to get landscape");
+				}
+				Landscape = landscape;
+			}
+			catch(Exception e)
+			{
+				Console.WriteLine("Widgets Start Exception: {0}", e.Message);
+			}
+		}
+
+		private static void StopDatabase()
+		{
+		}
+
 		private static void StartTelemetryServer()
 		{
-			Server = new TelemetryServer((TrackLidar)Environment, GyMag, Program.Config.RadarHost, "trackbot-lidar");
+			Server = new TelemetryServer((TrackLidar)ImageEnvironment, Landscape, GyMag, Program.Config.RadarHost, "trackbot-lidar");
 			Server.Start();
 		}
 
@@ -121,31 +154,34 @@ namespace TrackBot
 					Program.Config.RadarHost = "192.168.0.50";
 					Program.Config.Save();
 				}
-				Environment = new TrackLidar(Program.Config.LidarMetersSquare, Program.Config.LidarPixelsPerMeter);
+				ImageEnvironment = new TrackLidar(Program.Config.LidarMetersSquare, Program.Config.LidarPixelsPerMeter);
 				StartTelemetryServer();
 			}
 			else
 			{
 				Console.WriteLine("Lidar com port {0} does not exist... initializing virtual environment", Program.Config.LidarComPort);
-				Environment = new VirtualEnvironment();
+				ImageEnvironment = new VirtualEnvironment();
 			}
-			Environment.Start();
+
+
+
+			ImageEnvironment.Start();
 		}
 
 		private static void StopSpatial()
 		{
-			if(Environment is TrackLidar)
+			if(ImageEnvironment is TrackLidar)
 			{
 				StopTelemetryServer();
 			}
-			Environment.Stop();
+			ImageEnvironment.Stop();
 		}
 
 		private static void OnNewBearing(double bearing)
 		{
-			if(Environment != null)
+			if(ImageEnvironment != null)
 			{
-				Environment.Bearing = bearing;
+				ImageEnvironment.Bearing = bearing;
 			}
 		}
 

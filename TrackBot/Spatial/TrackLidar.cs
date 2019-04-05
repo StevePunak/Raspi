@@ -13,11 +13,13 @@ using KanoopCommon.Geometry;
 using KanoopCommon.Logging;
 using RaspiCommon;
 using RaspiCommon.Extensions;
+using RaspiCommon.Lidar;
 using RaspiCommon.Lidar.Environs;
+using RaspiCommon.Spatial.Imaging;
 
 namespace TrackBot.Spatial
 {
-	class TrackLidar : LidarEnvironment, IEnvironment
+	class TrackLidar : LidarEnvironment, IImageEnvironment
 	{
 		public Double Range { get { return FuzzyRangeAtBearing(Widgets.GyMag.Bearing, RangeFuzz); } }
 		public Double CompassOffset { get { return Lidar.Offset; } set { Lidar.Offset = value; } }
@@ -28,6 +30,7 @@ namespace TrackBot.Spatial
 		public double DebugAngle { get { return Lidar.DebugAngle; } set { Lidar.DebugAngle = value; } }
 
 		public Double VectorSize { get { return Lidar.VectorSize; } }
+		public IVector[] Vectors { get { return Lidar.Vectors; } }
 
 		public TrackLidar(Double metersSquare, Double pixelsPerMeter)
 			: base(metersSquare, pixelsPerMeter)
@@ -74,7 +77,7 @@ namespace TrackBot.Spatial
 				{
 					Double bearing = startBearing.AddDegrees(x);
 					//				Console.WriteLine("From {0:0}° to {1:0}°", startBearing, bearing);
-					Line line = new Line(currentLocation, FlatGeo.GetPoint(currentLocation, bearing, Widgets.Environment.GetRangeAtBearing(x)));
+					Line line = new Line(currentLocation, FlatGeo.GetPoint(currentLocation, bearing, Widgets.ImageEnvironment.GetRangeAtBearing(x)));
 					if(line != null)
 					{
 						if(longestLine == null || line.Length > longestLine.Length)

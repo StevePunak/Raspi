@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using KanoopCommon.Geometry;
 using KanoopCommon.Logging;
 
-namespace RaspiCommon.Lidar.Environs
+namespace RaspiCommon.Spatial.Imaging
 {
 	public class FuzzyPath
 	{

@@ -4,9 +4,17 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using KanoopCommon.Database;
+using KanoopCommon.Geometry;
 using KanoopCommon.Logging;
 using KanoopCommon.PersistentConfiguration;
+using KanoopCommon.Serialization;
 using RaspiCommon;
+using RaspiCommon.Data.DataSource;
+using RaspiCommon.Data.Entities;
+using RaspiCommon.Server;
+using RaspiCommon.Spatial.Imaging;
+using TrackBotCommon.Environs;
 
 namespace Radar
 {
@@ -34,15 +42,21 @@ namespace Radar
 
 		static void Test()
 		{
-			String file = @"c:\pub\tmp\blob.bin";
-			byte[] buffer = File.ReadAllBytes(file);
-			using(BinaryReader br = new BinaryReader(new MemoryStream(buffer)))
+			ImageMetrics metrics = new ImageMetrics()
 			{
-				for(int offset = 0;offset < 360*4;offset++)
-				{
-					Double range = br.ReadDouble();
-					Log.LogText(LogLevel.DEBUG, "{0}", range);
-				}
+				MetersSquare = 10,
+				PixelsPerMeter = 50
+			};
+			String serialized = KVPSerializer.Serialize(metrics);
+
+			ImageMetrics m2 = KVPSerializer.Deserialize<ImageMetrics>(serialized);
+			TrackBotLandscape landscape;
+			TrackDataSource ds = DataSourceFactory.Create<TrackDataSource>(Program.Config.DBCredentials);
+			if(ds.LandscapeGet<TrackBotLandscape>("Man Cave", out landscape).ResultCode == DBResult.Result.Success)
+			{
+				LandmarkList landmarks;
+				ds.LandmarksGet(landscape, out landmarks);
+//				ds.LandmarkInsert(lm);
 			}
 		}
 

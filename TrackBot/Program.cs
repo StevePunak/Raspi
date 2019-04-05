@@ -6,10 +6,13 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using KanoopCommon.Database;
 using KanoopCommon.Geometry;
 using KanoopCommon.Logging;
 using KanoopCommon.PersistentConfiguration;
 using RaspiCommon;
+using RaspiCommon.Data.DataSource;
+using RaspiCommon.Data.Entities;
 using TrackBot.Spatial;
 using TrackBot.Tracks;
 using TrackBot.TTY;
@@ -48,8 +51,13 @@ namespace TrackBot
 
 		private static void Test()
 		{
-			Program.Config.LidarComPort = "/dev/ttyUSB0";
-			Program.Config.Save();
+			try
+			{
+			}
+			catch(Exception e)
+			{
+				Console.WriteLine("TEST CODE EXCEPTION: {0}", e.Message);
+			}
 
 #if zero
 			Grid grid = new Grid("TrackGrid", 15, 15, .1);
@@ -57,9 +65,9 @@ namespace TrackBot
 			Cell cells = grid.GetCellAtLocation(new PointD(4, 7.5));
 #endif
 
-		}
+			}
 
-		private static void OpenConfig()
+			private static void OpenConfig()
 		{
 			String      configFileName = RaspiConfig.GetDefaultConfigFileName();
 

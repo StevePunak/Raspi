@@ -7,10 +7,11 @@ using System.Threading.Tasks;
 using Emgu.CV;
 using KanoopCommon.Geometry;
 using RaspiCommon.Lidar.Environs;
+using RaspiCommon.Spatial.Imaging;
 
 namespace TrackBot.Spatial
 {
-	class VirtualEnvironment : IEnvironment
+	class VirtualEnvironment : IImageEnvironment
 	{
 		public double Range { get; set; }
 
@@ -30,7 +31,11 @@ namespace TrackBot.Spatial
 
 		public FuzzyPath FuzzyPath { get; set; }
 
-		public LandmarkList Landmarks { get { return new LandmarkList(); } }
+		public ImageVectorList Landmarks { get { return new ImageVectorList(); } }
+
+		public IVector[] Vectors => throw new NotImplementedException();
+
+		public double MetersSquare { get; set; }
 
 		public VirtualEnvironment()
 		{
@@ -43,6 +48,10 @@ namespace TrackBot.Spatial
 			Location = new PointD(250, 250);
 			RelativeLocation = new PointD(250, 250);
 		}
+
+		public event FuzzyPathChangedHandler FuzzyPathChanged;
+		public event LandmarksChangedHandler LandmarksChanged;
+		public event BarriersChangedHandler BarriersChanged;
 
 		public double FuzzyRangeAtBearing(double bearing, double fuzz = 2)
 		{

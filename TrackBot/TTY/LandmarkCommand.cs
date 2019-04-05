@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using RaspiCommon.Lidar.Environs;
+using RaspiCommon.Spatial.Imaging;
 
 namespace TrackBot.TTY
 {
@@ -23,21 +24,21 @@ namespace TrackBot.TTY
 			String subCommand = commandParts[1].ToLower();
 			if(subCommand == "ls")			// list saved
 			{
-				foreach(Landmark landmark in Program.Config.Landmarks)
+				foreach(ImageVector landmark in Program.Config.Landmarks)
 				{
 					Console.WriteLine("{0}", landmark);
 				}
 			}
 			else if(subCommand == "lc")		// list found
 			{
-				foreach(Landmark landmark in Widgets.Environment.Landmarks)
+				foreach(ImageVector landmark in Widgets.ImageEnvironment.Landmarks)
 				{
 					Console.WriteLine("{0}", landmark);
 				}
 			}
 			else if(subCommand == "addall")    // add all
 			{
-				Program.Config.Landmarks.AddRange(Widgets.Environment.Landmarks);
+				Program.Config.Landmarks.AddRange(Widgets.ImageEnvironment.Landmarks);
 				Program.Config.Save();
 			}
 			else if(subCommand == "clear")    // clear

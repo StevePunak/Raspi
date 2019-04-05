@@ -18,7 +18,7 @@ namespace TrackBot.TTY
 		{
 			Console.WriteLine("Heading: {0:0.0}", Widgets.GyMag.Bearing);
 			Console.WriteLine("Magnetic Deviation: {0:0.0}°", Widgets.GyMag.MagneticDeviation);
-			Console.WriteLine("Lidar Offset {0:0.0}°", Widgets.Environment.CompassOffset);
+			Console.WriteLine("Lidar Offset {0:0.0}°", Widgets.ImageEnvironment.CompassOffset);
 			Console.WriteLine("Track1: {0}  Track2: {1}", Widgets.Tracks.LeftSpeed, Widgets.Tracks.RightSpeed);
 
 #if ULTRASONIC
@@ -32,8 +32,8 @@ namespace TrackBot.TTY
 #endif
 			Double forwardBearing = Widgets.GyMag.Bearing;
 			Double backwardBearing = Widgets.GyMag.Bearing.AddDegrees(180);
-			Double forwardRange = Widgets.Environment.FuzzyRangeAtBearing(forwardBearing, Program.Config.BearingFuzz);
-			Double backwardRange = Widgets.Environment.FuzzyRangeAtBearing(backwardBearing, Program.Config.BearingFuzz);
+			Double forwardRange = Widgets.ImageEnvironment.FuzzyRangeAtBearing(forwardBearing, Program.Config.BearingFuzz);
+			Double backwardRange = Widgets.ImageEnvironment.FuzzyRangeAtBearing(backwardBearing, Program.Config.BearingFuzz);
 			Console.WriteLine("Range at [Forward {0:0.00}° {1:0.00}m]   [Backward {2:0.00}° {3:0.00}m]", forwardBearing, forwardRange, backwardBearing, backwardRange);
 
 			return true;

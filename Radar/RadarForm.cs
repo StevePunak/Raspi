@@ -10,20 +10,30 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using KanoopCommon.Addresses;
 using KanoopCommon.CommonObjects;
+using KanoopCommon.Database;
 using KanoopCommon.Extensions;
 using KanoopCommon.Geometry;
 using KanoopCommon.Logging;
 using KanoopCommon.TCP.Clients;
 using KanoopCommon.Threading;
 using Radar.Properties;
+using RaspiCommon.Data.DataSource;
+using RaspiCommon.Data.Entities;
 using RaspiCommon.Lidar;
 using RaspiCommon.Lidar.Environs;
 using RaspiCommon.Server;
+using RaspiCommon.Spatial.Imaging;
+using TrackBotCommon.Environs;
 
 namespace Radar
 {
 	public partial class RadarForm : Form
 	{
+		const String COL_LABEL = "Label";
+		const String COL_POSITION = "Position";
+		const String COL_RANGE = "Range";
+		const String COL_BEARING = "Bearing";
+
 		const Double METERS_SQUARE = 10;
 		const Double PIXELS_PER_METER = 50;
 
@@ -37,6 +47,11 @@ namespace Radar
 		Double _lastAngle;
 
 		Image _tank;
+
+		bool _layoutComplete;
+
+		TrackDataSource _ds;
+		public TrackBotLandscape Landscape { get; private set; }
 
 		public RadarForm()
 		{
@@ -62,11 +77,57 @@ namespace Radar
 
 				_tank = Resources.tank.Resize(6, 10);
 				Log.SysLogText(LogLevel.DEBUG, "Started draw timer");
+
+				if(Program.Config.LastRadarWindowSize.Height > 200)
+				{
+					Size = Program.Config.LastRadarWindowSize;
+					splitTopToBottom.SplitterDistance = Program.Config.SplitTopToBottomPosition;
+					splitRadar.SplitterDistance = Program.Config.SplitRadarPosition;
+					Location = Program.Config.LastRadarWindowLocation;
+				}
+				LoadLandscape();
+
+				_layoutComplete = true;
 			}
 			catch(Exception e)
 			{
 				MessageBox.Show(e.Message);
 				Close();
+			}
+		}
+
+		void RepopulateLandmarks()
+		{
+			listLandmarks.Clear();
+			listLandmarks.AddColumnHeader(COL_POSITION, 80);
+			listLandmarks.AddColumnHeader(COL_LABEL, 80);
+			listLandmarks.AddColumnHeader(COL_RANGE, 80);
+			listLandmarks.AddColumnHeader(COL_BEARING, -2);
+
+			foreach(Landmark landmark in Landscape.Landmarks)
+			{
+				ListViewItem item = listLandmarks.AddRow(landmark.Location, landmark.Location, landmark);
+				listLandmarks.SetListViewColumn(item, COL_LABEL, landmark.Label);
+				//listLandmarks.SetListViewColumn(item, COL_RANGE, landmark.Label);
+				//listLandmarks.SetListViewColumn(item, COL_LABEL, landmark.Label);
+			}
+		}
+
+		void LoadLandscape()
+		{
+			try
+			{
+				_ds = DataSourceFactory.Create<TrackDataSource>(Program.Config.DBCredentials);
+				TrackBotLandscape landscape;
+				if(_ds.LandscapeGet<TrackBotLandscape>(Program.Config.LandscapeName, out landscape).ResultCode == DBResult.Result.Success)
+				{
+					Landscape = landscape;
+					Landscape.DataSource = _ds;
+				}
+			}
+			catch(Exception e)
+			{
+				MessageBox.Show(e.Message);
 			}
 		}
 
@@ -85,7 +146,7 @@ namespace Radar
 
 				g.DrawLine(new Pen(Color.Green), new Point(center.X - 5, center.Y), new Point(center.X + 5, center.Y));
 				g.DrawLine(new Pen(Color.Green), new Point(center.X, center.Y - 5), new Point(center.X, center.Y + 5));
-				picBox.BackgroundImage = _bitmap;
+				picLidar.BackgroundImage = _bitmap;
 			}
 		}
 
@@ -130,22 +191,22 @@ namespace Radar
 					}
 				}
 
-				if(_client.Barriers != null)
+				if(_client.ImageBarriers != null)
 				{
-					BarrierList barriers = _client.Barriers.Clone();
+					BarrierList barriers = _client.ImageBarriers.Clone();
 					Pen orangePen = new Pen(Color.Orange);
-					foreach(Barrier barrier in barriers)
+					foreach(ImageBarrier barrier in barriers)
 					{
 						Line line = barrier.GetLine();
 						g.DrawLine(orangePen, line.P1.ToPoint(), line.P2.ToPoint());
 					}
 				}
 
-				if(_client.Landmarks != null)
+				if(_client.ImageVectors != null)
 				{
-					LandmarkList landmarks = _client.Landmarks.Clone();
+					ImageVectorList landmarks = _client.ImageVectors.Clone();
 					Pen bluePen = new Pen(Color.Blue, 2);
-					foreach(Landmark landmark in landmarks)
+					foreach(ImageVector landmark in landmarks)
 					{
 						RectangleD rectangle = RectangleD.InflatedFromPoint(landmark.GetPoint(), 6);
 						g.DrawEllipse(bluePen, rectangle.ToRectangle());
@@ -160,7 +221,7 @@ namespace Radar
 			}
 
 			//_bitmap.Save(@"c:\tmp\output.png");
-			picBox.BackgroundImage = bitmap;
+			picLidar.BackgroundImage = bitmap;
 
 
 		}
@@ -181,11 +242,12 @@ namespace Radar
 			_client = new TelemetryClient(Program.Config.RadarHost, "radarform",
 				new List<string>()
 				{
-					TelemetryServer.CurrentPathTopic,
-					TelemetryServer.RangeBlobTopic,
-					TelemetryServer.BarriersTopic,
-					TelemetryServer.LandmarksTopic,
-					TelemetryServer.BearingTopic
+					MqttTypes.CurrentPathTopic,
+					MqttTypes.RangeBlobTopic,
+					MqttTypes.BarriersTopic,
+					MqttTypes.LandmarksTopic,
+					MqttTypes.BearingTopic,
+					MqttTypes.ImageMetricsTopic
 				});
 			_client.Start();
 
@@ -201,6 +263,44 @@ namespace Radar
 			}
 
 			ThreadBase.AbortAllRunningThreads();
+		}
+
+		private void OnFormResizeEnd(object sender, EventArgs e)
+		{
+			if(_layoutComplete)
+			{
+				Program.Config.LastRadarWindowSize = Size;
+				Program.Config.Save();
+			}
+
+		}
+
+		private void OnSplitterMoved(object sender, SplitterEventArgs e)
+		{
+			if(_layoutComplete)
+			{
+				Program.Config.SplitTopToBottomPosition = splitTopToBottom.SplitterDistance;
+				Program.Config.SplitRadarPosition = splitRadar.SplitterDistance;
+				Program.Config.Save();
+			}
+		}
+
+		private void OnWindowMoved(object sender, EventArgs e)
+		{
+			if(_layoutComplete)
+			{
+				Program.Config.LastRadarWindowLocation = Location;
+			}
+		}
+
+		private void OnGrabInitialLandmarksClicked(object sender, EventArgs e)
+		{
+			Landscape.CurrentLocation = Landscape.Center;
+			LandmarkList landmarks = Landscape.CreateLandmarksFromImageVectors(Landscape.Center, _client.ImageMetrics.Scale, _client.ImageVectors);
+
+			Landscape.Landmarks = landmarks;
+			Landscape.ReplaceAllLandmarks();
+
 		}
 	}
 }

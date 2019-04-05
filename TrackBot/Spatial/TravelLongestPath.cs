@@ -75,7 +75,7 @@ namespace TrackBot.Spatial
 			bool result = false;
 
 			// find a place to travel to
-			Destination = Widgets.Environment.FindGoodDestination().GetLineFrom(Widgets.Environment.Location);
+			Destination = Widgets.ImageEnvironment.FindGoodDestination().GetLineFrom(Widgets.ImageEnvironment.Location);
 			if(Destination != null)
 			{
 				Console.WriteLine("Found a good destination at {0} bearing {1:0.0}°", Destination, Destination.Bearing);
@@ -99,7 +99,7 @@ namespace TrackBot.Spatial
 		{
 			bool result = false;
 
-			if(Widgets.Environment.FuzzyRangeAtBearing(Widgets.GyMag.Bearing, Widgets.Environment.RangeFuzz) < FORWARD_COLLISION_WARNING)
+			if(Widgets.ImageEnvironment.FuzzyRangeAtBearing(Widgets.GyMag.Bearing, Widgets.ImageEnvironment.RangeFuzz) < FORWARD_COLLISION_WARNING)
 			{
 				Console.WriteLine("Backing it up");
 				Widgets.Tracks.BackwardTime(TimeSpan.FromSeconds(1), Widgets.Tracks.Slow);
@@ -133,7 +133,7 @@ namespace TrackBot.Spatial
 			bool result = true;
 
 			// make sure we are not hitting anything
-			if(Widgets.Environment.FuzzyRangeAtBearing(Widgets.GyMag.Bearing, Widgets.Environment.RangeFuzz) < FORWARD_COLLISION_WARNING)
+			if(Widgets.ImageEnvironment.FuzzyRangeAtBearing(Widgets.GyMag.Bearing, Widgets.ImageEnvironment.RangeFuzz) < FORWARD_COLLISION_WARNING)
 			{
 				Console.WriteLine("activating emergency stop");
 				SwitchState(ActivityStates.Idle);

@@ -21,7 +21,7 @@ namespace TrackBot.TTY
 			}
 
 			Console.WriteLine("Setting debug angle to {0}", to);
-			Widgets.Environment.DebugAngle = to;
+			Widgets.ImageEnvironment.DebugAngle = to;
 
 			return true;
 		}

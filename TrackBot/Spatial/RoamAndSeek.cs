@@ -60,7 +60,7 @@ namespace TrackBot.Spatial
 		bool InitTravelToDestState()
 		{
 			// find a place to travel to
-			Destination = Widgets.Environment.FindGoodDestination().GetLineFrom(Widgets.Environment.Location);
+			Destination = Widgets.ImageEnvironment.FindGoodDestination().GetLineFrom(Widgets.ImageEnvironment.Location);
 			if(Destination == null)
 			{
 				Console.WriteLine("Could not find a good destination");
@@ -90,7 +90,7 @@ namespace TrackBot.Spatial
 				PointD location;
 				if(Widgets.Tracks.TryCalculateCurrentLocation(out location))
 				{
-					Widgets.Environment.RelativeLocation = location;
+					Widgets.ImageEnvironment.RelativeLocation = location;
 
 					if(location.DistanceTo(Destination.P2 as PointD) < .15)
 					{
@@ -99,7 +99,7 @@ namespace TrackBot.Spatial
 						break;
 					}
 
-					if(Widgets.Environment.FuzzyRangeAtBearing(Widgets.GyMag.Bearing, Widgets.Environment.RangeFuzz) < .2)
+					if(Widgets.ImageEnvironment.FuzzyRangeAtBearing(Widgets.GyMag.Bearing, Widgets.ImageEnvironment.RangeFuzz) < .2)
 					{
 						Console.WriteLine("Hit obstacle");
 						break;

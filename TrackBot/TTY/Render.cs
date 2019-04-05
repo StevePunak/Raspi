@@ -25,13 +25,13 @@ namespace TrackBot.TTY
 		public override bool Execute(List<string> commandParts)
 		{
 			Console.WriteLine("Creating grid bitmap");
-			Console.WriteLine("Environment is {0}", Widgets.Environment);
-			Console.WriteLine("PixelSize: {0}", Widgets.Environment.PixelSize);
+			Console.WriteLine("Environment is {0}", Widgets.ImageEnvironment);
+			Console.WriteLine("PixelSize: {0}", Widgets.ImageEnvironment.PixelSize);
 
-			Mat image = Widgets.Environment.PointsToBitmap();
+			Mat image = Widgets.ImageEnvironment.PointsToBitmap();
 			image.Save(SAVE_LOCATION1);
 
-			Widgets.Environment.ProcessImage(image, Widgets.Environment.Bearing, Widgets.Environment.PixelsPerMeter);
+			Widgets.ImageEnvironment.ProcessImage(image, Widgets.ImageEnvironment.Bearing, Widgets.ImageEnvironment.PixelsPerMeter);
 
 #if zero
 			Mat mat = new Mat(Widgets.Environment.PixelSize, DepthType.Cv8U, 3);

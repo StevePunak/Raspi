@@ -13,6 +13,8 @@ using System.IO;
 using System.Web;
 using OfficeOpenXml;
 using OfficeOpenXml.Style;
+using KanoopCommon.Geometry;
+using MySql.Data.Types;
 
 namespace KanoopCommon.Conversions
 {
@@ -155,6 +157,12 @@ namespace KanoopCommon.Conversions
 									value = Convert.ToInt32(((String)value)[0]);
 								}
 								prop.SetValue(objClass, Enum.ToObject(prop.PropertyType, value), null);
+							}
+							else if(prop.PropertyType == typeof(PointD) && reader.GetFieldType(i) == typeof(byte[]))
+							{
+								Byte[] value = reader[i] as Byte[];
+								MySqlGeometry point = new MySqlGeometry(MySql.Data.MySqlClient.MySqlDbType.Geometry, (byte[])value);
+								prop.SetValue(objClass, new PointD((Double)point.XCoordinate, (Double)point.YCoordinate));
 							}
 							else if(prop.PropertyType.IsClass && 
 									prop.PropertyType.IsPrimitive == false && 

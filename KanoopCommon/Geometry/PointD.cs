@@ -373,7 +373,7 @@ namespace KanoopCommon.Geometry
 		public string ToSQLString()
 		{
 			//return String.Format("GeomFromText('POINT({0:0.000000} {1:0.000000})')", m_X, m_Y);
-			return "GeomFromText('POINT("+_X+" "+_Y+")')";
+			return String.Format("PointFromText('POINT({0} {1})')", _X, _Y);
 		}
 
 		public Double BearingTo(PointD other)

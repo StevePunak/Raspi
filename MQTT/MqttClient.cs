@@ -217,6 +217,11 @@ namespace MQTT
 			ClientState = ClientStates.Idle;
 		}
 
+		public void Publish(String topic, String message = null, bool retain = false)
+		{
+			Publish(topic, ASCIIEncoding.UTF8.GetBytes(message), retain);
+		}
+
 		public void Publish(String topic, byte[] message = null, bool retain = false)
 		{
 			if(!Connected)

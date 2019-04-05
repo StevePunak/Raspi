@@ -1,13 +1,16 @@
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using KanoopCommon.CommonObjects;
+using KanoopCommon.Database;
 using KanoopCommon.PersistentConfiguration;
 using RaspiCommon.Lidar.Environs;
+using RaspiCommon.Spatial.Imaging;
 
 namespace RaspiCommon
 {
@@ -119,14 +122,14 @@ namespace RaspiCommon
 		public Double LidarPixelsPerMeter { get { return 50; } }
 		public Double RangeFuzz { get; set; }
 
-		LandmarkList _landmarks;
-		public LandmarkList Landmarks
+		ImageVectorList _landmarks;
+		public ImageVectorList Landmarks
 		{
 			get
 			{
 				if(_landmarks == null)
 				{
-					_landmarks = new LandmarkList();
+					_landmarks = new ImageVectorList();
 				}
 				return _landmarks;
 			}
@@ -162,6 +165,39 @@ namespace RaspiCommon
 		}
 
 		public String RadarHost { get; set; }
+
+		SqlDBCredentials _DBCredentials;
+		public SqlDBCredentials DBCredentials
+		{
+			get
+			{
+				if(_DBCredentials == null)
+				{
+					_DBCredentials = new SqlDBCredentials(SqlDataSource.MYSQL_NATIVE_DRIVER, "raspi", "trackbot", "raspi", "pi");
+				}
+				return _DBCredentials;
+			}
+			set { _DBCredentials = value; }
+		}
+
+		String _landscapeName;
+		public String LandscapeName
+		{
+			get
+			{
+				if(_landscapeName == null)
+				{
+					_landscapeName = "Man Cave";
+				}
+				return _landscapeName;
+			}
+			set { _landscapeName = value; }
+		}
+
+		public Size LastRadarWindowSize { get; set; }
+		public Point LastRadarWindowLocation { get; set; }
+		public int SplitRadarPosition { get; set; }
+		public int SplitTopToBottomPosition { get; set; }
 
 		public static String GetDefaultConfigFileName()
 		{

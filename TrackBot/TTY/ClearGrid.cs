@@ -14,7 +14,7 @@ namespace TrackBot.TTY
 
 		public override bool Execute(List<string> commandParts)
 		{
-			Widgets.Environment.Reset();
+			Widgets.ImageEnvironment.Reset();
 
 			return true;
 		}

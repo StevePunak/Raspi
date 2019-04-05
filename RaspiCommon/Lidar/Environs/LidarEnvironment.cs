@@ -13,6 +13,7 @@ using KanoopCommon.Geometry;
 using KanoopCommon.Logging;
 using RaspiCommon.Extensions;
 using RaspiCommon.Server;
+using RaspiCommon.Spatial.Imaging;
 
 namespace RaspiCommon.Lidar.Environs
 {
@@ -46,7 +47,7 @@ namespace RaspiCommon.Lidar.Environs
 		public PointD Location { get; set; }
 		public Double Bearing { get { return Lidar.Bearing; }  set { Lidar.Bearing = value; } }
 
-		public LandmarkList Landmarks { get; private set; }
+		public ImageVectorList Landmarks { get; private set; }
 		public BarrierList Barriers { get; private set; }
 		public List<RectangleD> Paths { get; private set; }
 
@@ -102,7 +103,7 @@ namespace RaspiCommon.Lidar.Environs
 
 			//Location = new PointD(Image.Width / 2, Image.Height / 2);
 
-			Landmarks = new LandmarkList();
+			Landmarks = new ImageVectorList();
 			Barriers = new BarrierList();
 			Paths = new List<RectangleD>();
 
@@ -150,7 +151,7 @@ namespace RaspiCommon.Lidar.Environs
 			}
 			temp.Save(@"\\raspi\pi\tmp\junk.png");
 
-			LandmarkList landmarks;
+			ImageVectorList landmarks;
 			BarrierList barriers;
 			FindLandmarksAndBarriers(lines, center, out landmarks, out barriers);
 
@@ -168,7 +169,7 @@ namespace RaspiCommon.Lidar.Environs
 			Mat output = Image.Clone();
 
 			PointD imageCenter = output.Center();
-			foreach(Landmark landmark in Landmarks)
+			foreach(ImageVector landmark in Landmarks)
 			{
 				CvInvoke.Circle(output, landmark.GetPoint().ToPoint(), 4, new Bgr(Color.Blue).MCvScalar);
 			}
@@ -190,10 +191,10 @@ namespace RaspiCommon.Lidar.Environs
 
 		private void FindLandmarksAndBarriers(	LineList segments, 
 												PointD origin,
-												out LandmarkList landmarks, 
+												out ImageVectorList landmarks, 
 												out BarrierList barriers)
 		{
-			landmarks = new LandmarkList();
+			landmarks = new ImageVectorList();
 			barriers = new BarrierList();
 
 			Paths = new List<RectangleD>();
@@ -227,32 +228,32 @@ namespace RaspiCommon.Lidar.Environs
 			landmarks = ConsolidateLandmarks(origin, landmarks);
 		}
 
-		private LandmarkList ConsolidateLandmarks(PointD origin, LandmarkList from)
+		private ImageVectorList ConsolidateLandmarks(PointD origin, ImageVectorList from)
 		{
 			Double minimumPixelDistance = MINIMUM_LANDMARK_SEPARATION * PixelsPerMeter;
 
 			// group them into bunches by range
-			LandmarkGroupList groups = new LandmarkGroupList();
+			ImageVectorGroupList groups = new ImageVectorGroupList();
 			while(from.Count > 0)
 			{
-				Landmark landmark = from[0];
-				LandmarkList group = groups.FindGroupWithinRangeOfPoint(landmark.GetPoint(), minimumPixelDistance);
+				ImageVector landmark = from[0];
+				ImageVectorList group = groups.FindGroupWithinRangeOfPoint(landmark.GetPoint(), minimumPixelDistance);
 				if(group == null)
 				{
-					group = new LandmarkList();
+					group = new ImageVectorList();
 					groups.Add(group);
 				}
 				group.Add(landmark);
 				from.RemoveAt(0);
 			}
 
-			LandmarkList landmarks = new LandmarkList();
-			foreach(LandmarkList group in groups)
+			ImageVectorList landmarks = new ImageVectorList();
+			foreach(ImageVectorList group in groups)
 			{
 				Log.SysLogText(LogLevel.DEBUG, "Dumping Group");
 				group.DumpToLog();
 
-				Landmark centroid = group.GetCentroid(origin);
+				ImageVector centroid = group.GetCentroid(origin);
 				landmarks.Add(centroid);
 				Log.SysLogText(LogLevel.DEBUG, "Centroid is {0}", centroid);
 			}
@@ -260,9 +261,9 @@ namespace RaspiCommon.Lidar.Environs
 			return landmarks;
 		}
 
-		private LandmarkList ComputeLandmarks(PointD origin, LineList lines)
+		private ImageVectorList ComputeLandmarks(PointD origin, LineList lines)
 		{
-			LandmarkList landmarks = new LandmarkList();
+			ImageVectorList landmarks = new ImageVectorList();
 			foreach(Line l1 in lines)
 			{
 				foreach(Line l2 in lines)
@@ -284,7 +285,7 @@ namespace RaspiCommon.Lidar.Environs
 
 							if(landmarks.Contains(intersection, MINIMUM_LANDMARK_SEPARATION, PixelsPerMeter) == false)
 							{
-								Landmark landmark = new Landmark(origin, new BearingAndRange(origin, intersection));
+								ImageVector landmark = new ImageVector(origin, new BearingAndRange(origin, intersection));
 								landmarks.Add(landmark);
 
 								Log.SysLogText(LogLevel.DEBUG, "Added landmark {0}", landmark);
@@ -397,14 +398,14 @@ namespace RaspiCommon.Lidar.Environs
 			CvInvoke.Line(image, cross.Vertical.P1.ToPoint(), cross.Vertical.P2.ToPoint(), new Bgr(Color.GreenYellow).MCvScalar);
 			CvInvoke.Line(image, cross.Horizontal.P1.ToPoint(), cross.Horizontal.P2.ToPoint(), new Bgr(Color.GreenYellow).MCvScalar);
 
-			foreach(Barrier barrier in Barriers)
+			foreach(ImageBarrier barrier in Barriers)
 			{
 				Color color = NextColor;
 				Line line = barrier.GetLine();
 				CvInvoke.Line(image, line.P1.ToPoint(), line.P2.ToPoint(), new Bgr(color).MCvScalar, 2);
 			}
 
-			foreach(Landmark landmark in Landmarks)
+			foreach(ImageVector landmark in Landmarks)
 			{
 				CircleF circle1 = new CircleF(landmark.Origin.ToPoint(), 3);
 				CvInvoke.Circle(image, circle1.Center.ToPoint(), (int)circle1.Radius, new Bgr(Color.Red).MCvScalar, 1);

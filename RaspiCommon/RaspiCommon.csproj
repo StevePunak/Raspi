@@ -75,6 +75,9 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Data\DataSource\TrackDataSource.cs" />
+    <Compile Include="Data\Entities\Landscape.cs" />
+    <Compile Include="Data\Entities\Landmark.cs" />
     <Compile Include="ESC.cs" />
     <Compile Include="Extensions\GraphicsExtensions.cs" />
     <Compile Include="GpioSharp.cs" />
@@ -82,9 +85,9 @@
     <Compile Include="ICompass.cs" />
     <Compile Include="L298N_DC_TankTracks.cs" />
     <Compile Include="L298N_DC_MotorControl.cs" />
-    <Compile Include="Lidar\Environs\Barrier.cs" />
-    <Compile Include="Lidar\Environs\FuzzyPath.cs" />
-    <Compile Include="Lidar\Environs\Landmark.cs" />
+    <Compile Include="Spatial\Imaging\ImageBarrier.cs" />
+    <Compile Include="Spatial\Imaging\FuzzyPath.cs" />
+    <Compile Include="Spatial\Imaging\ImageVector.cs" />
     <Compile Include="Lidar\Environs\LidarEnvironment.cs" />
     <Compile Include="Lidar\Environs\LinePair.cs" />
     <Compile Include="Lidar\LidarSample.cs" />
@@ -110,9 +113,15 @@
     <Compile Include="PWMDevice.cs" />
     <Compile Include="RaspiConfig.cs" />
     <Compile Include="RaspiException.cs" />
+    <Compile Include="Spatial\ILandscape.cs" />
+    <Compile Include="Spatial\Imaging\ImageMetrics.cs" />
+    <Compile Include="Spatial\Imaging\Types.cs" />
+    <Compile Include="Spatial\LandscapeMetrics.cs" />
+    <Compile Include="Server\MqttTypes.cs" />
     <Compile Include="Server\TelemetryClient.cs" />
     <Compile Include="Server\TelemetryServer.cs" />
     <Compile Include="Servo.cs" />
+    <Compile Include="Spatial\Imaging\IImageEnvironment.cs" />
     <Compile Include="Types.cs" />
   </ItemGroup>
   <ItemGroup>

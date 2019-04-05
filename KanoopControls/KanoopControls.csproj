@@ -1,0 +1,146 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{9F996F82-02C2-410D-8B69-B7DCECC507E4}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>KanoopControls</RootNamespace>
+    <AssemblyName>KanoopControls</AssemblyName>
+    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <Deterministic>true</Deterministic>
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Ookii.Dialogs">
+      <HintPath>.\Ookii.Dialogs.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="CaptionProgressBar\CaptionProgressBar.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="CaptionProgressBar\CaptionProgressBar.Designer.cs">
+      <DependentUpon>CaptionProgressBar.cs</DependentUpon>
+    </Compile>
+    <Compile Include="CheckedComboBox\CCBoxItem.cs" />
+    <Compile Include="CheckedComboBox\CheckedComboBox.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="ClosableTab\CloseableTabControl.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="ClosableTab\CloseableTabControl.Designer.cs">
+      <DependentUpon>CloseableTabControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="DatabaseCredentials\DatabaseCredentialsDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="DatabaseCredentials\DatabaseCredentialsDialog.Designer.cs">
+      <DependentUpon>DatabaseCredentialsDialog.cs</DependentUpon>
+    </Compile>
+    <Compile Include="DatabaseCredentials\DatabaseCredentialsDialogEx.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="DatabaseCredentials\DatabaseCredentialsDialogEx.Designer.cs">
+      <DependentUpon>DatabaseCredentialsDialogEx.cs</DependentUpon>
+    </Compile>
+    <Compile Include="DataGridViewDB\DataGridViewDoubleBuffered.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="DataGridViewDB\DataGridViewDoubleBuffered.Designer.cs">
+      <DependentUpon>DataGridViewDoubleBuffered.cs</DependentUpon>
+    </Compile>
+    <Compile Include="ListViewEx\ListViewEx.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Prompts\TextPromptDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Prompts\TextPromptDialog.Designer.cs">
+      <DependentUpon>TextPromptDialog.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SimpleTextSelection\SimpleTextSelectionDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="SimpleTextSelection\SimpleTextSelectionDialog.Designer.cs">
+      <DependentUpon>SimpleTextSelectionDialog.cs</DependentUpon>
+    </Compile>
+    <Compile Include="StackedPanel\StackPanel.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="StackedTab\StackedTabControl.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="StackedTab\StackedTabControl.Designer.cs">
+      <DependentUpon>StackedTabControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="TreeViewMS\TreeViewMS.cs">
+      <SubType>Component</SubType>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="ClosableTab\addtotab.png" />
+    <Content Include="ClosableTab\closetab.png" />
+    <Content Include="obj\x86\Debug\TempPE\CloseableTabs.CTResources.Designer.cs.dll" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="DatabaseCredentials\DatabaseCredentialsDialog.resx">
+      <DependentUpon>DatabaseCredentialsDialog.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="DatabaseCredentials\DatabaseCredentialsDialogEx.resx">
+      <DependentUpon>DatabaseCredentialsDialogEx.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Prompts\TextPromptDialog.resx">
+      <DependentUpon>TextPromptDialog.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SimpleTextSelection\SimpleTextSelectionDialog.resx">
+      <DependentUpon>SimpleTextSelectionDialog.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="TreeViewMS\TreeViewMS.resx">
+      <DependentUpon>TreeViewMS.cs</DependentUpon>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="obj\Debug\TempPE\" />
+    <Folder Include="obj\x64\Debug\TempPE\" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\KanoopCommon\KanoopCommon.csproj">
+      <Project>{5C9D80A6-6FC0-4B59-B1CF-D2EC261B4B00}</Project>
+      <Name>KanoopCommon</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>

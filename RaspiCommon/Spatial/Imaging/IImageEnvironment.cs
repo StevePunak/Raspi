@@ -6,14 +6,19 @@ using System.Text;
 using System.Threading.Tasks;
 using Emgu.CV;
 using KanoopCommon.Geometry;
-using RaspiCommon.Lidar.Environs;
 
-namespace TrackBot.Spatial
+namespace RaspiCommon.Spatial.Imaging
 {
-	public interface IEnvironment
+	public interface IImageEnvironment
 	{
+		event FuzzyPathChangedHandler FuzzyPathChanged;
+		event LandmarksChangedHandler LandmarksChanged;
+		event BarriersChangedHandler BarriersChanged;
+
 		void Start();
 		void Stop();
+
+		IVector[] Vectors { get; }
 
 		Double Range { get; }
 		Double CompassOffset { get; set; }
@@ -21,6 +26,7 @@ namespace TrackBot.Spatial
 		Double DebugAngle { get; set; }
 
 		Size PixelSize { get; }
+		Double MetersSquare { get; }
 		Double PixelsPerMeter { get; set; }
 		Double RenderPixelsPerMeter { get; set; }
 		Double VectorSize { get; }
@@ -38,7 +44,7 @@ namespace TrackBot.Spatial
 		DateTime GetLastSampleTimeAtBearing(Double bearing);
 		Mat PointsToBitmap();
 		FuzzyPath FindGoodDestination();
-		LandmarkList Landmarks { get; }
+		ImageVectorList Landmarks { get; }
 
 		void Reset();
 	}

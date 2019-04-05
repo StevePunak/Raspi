@@ -199,6 +199,7 @@
     <Compile Include="Geometry\GeoXml.cs" />
     <Compile Include="Geometry\GridD.cs" />
     <Compile Include="Geometry\GridLocation.cs" />
+    <Compile Include="Geometry\IVector.cs" />
     <Compile Include="Geometry\LevelRectangle.cs" />
     <Compile Include="Geometry\Line.cs" />
     <Compile Include="Geometry\MappingGrid.cs" />
@@ -231,6 +232,7 @@
     <Compile Include="Logging\LogRotationThread.cs" />
     <Compile Include="Logging\MemoryLog.cs" />
     <Compile Include="Logging\OpenFlags.cs" />
+    <Compile Include="Serialization\KVPSerializer.cs" />
     <Compile Include="Serial\MonoSerialPort.cs" />
     <Compile Include="Performance\BitRateMonitor.cs" />
     <Compile Include="Performance\Cache.cs" />

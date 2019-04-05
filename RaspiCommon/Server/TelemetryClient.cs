@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using KanoopCommon.Addresses;
 using KanoopCommon.CommonObjects;
 using KanoopCommon.Logging;
+using KanoopCommon.Serialization;
 using KanoopCommon.TCP.Clients;
 using KanoopCommon.Threading;
 using MQTT;
@@ -14,6 +15,8 @@ using MQTT.Examples;
 using MQTT.Packets;
 using RaspiCommon.Lidar;
 using RaspiCommon.Lidar.Environs;
+using RaspiCommon.Spatial;
+using RaspiCommon.Spatial.Imaging;
 
 namespace RaspiCommon.Server
 {
@@ -21,12 +24,19 @@ namespace RaspiCommon.Server
 	{
 		public const Double VectorSize = .25;
 
+		public event ImageLandmarksReceivedHandler ImageLandmarksReceived;
+		public event RangeBlobReceivedHandler RangeBlobReceived;
+
 		public LidarVector[] Vectors;
 
 		public FuzzyPath FuzzyPath { get; private set; }
-		public BarrierList Barriers { get; private set; }
-		public LandmarkList Landmarks { get; private set; }
+		public BarrierList ImageBarriers { get; private set; }
+		public ImageVectorList ImageVectors { get; private set; }
+		public ImageVectorList LandscapeVectors { get; private set; }
 		public Double Bearing { get; private set; }
+
+		public ImageMetrics ImageMetrics { get; private set; }
+		public LandscapeMetrics LandscapeMetrics { get; private set; }
 
 		public TelemetryClient(String host, String clientID, List<String> topics)
 			: base(host, clientID, topics)
@@ -42,11 +52,18 @@ namespace RaspiCommon.Server
 				};
 			}
 			InboundSubscribedMessage += OnLidarClientInboundSubscribedMessage;
+
+			ImageMetrics = new ImageMetrics();
+			LandscapeMetrics = new LandscapeMetrics();
+
+			// stub our own events
+			ImageLandmarksReceived += delegate {};
+			RangeBlobReceived += delegate {};
 		}
 
 		private void OnLidarClientInboundSubscribedMessage(MqttClient client, PublishMessage packet)
 		{
-			if(packet.Topic == TelemetryServer.RangeBlobTopic)
+			if(packet.Topic == MqttTypes.RangeBlobTopic)
 			{
 				using(BinaryReader br = new BinaryReader(new MemoryStream(packet.Message)))
 				{
@@ -58,28 +75,50 @@ namespace RaspiCommon.Server
 					}
 
 				}
+				RangeBlobReceived(Vectors);
 			}
 			else
 			{
-				if(packet.Topic == TelemetryServer.CurrentPathTopic)
+				if(packet.Topic == MqttTypes.CurrentPathTopic)
 				{
 					FuzzyPath path = new FuzzyPath(packet.Message);
 					FuzzyPath = path;
 				}
-				else if(packet.Topic == TelemetryServer.BarriersTopic)
+				else if(packet.Topic == MqttTypes.BarriersTopic)
 				{
 					BarrierList barriers = new BarrierList(packet.Message);
-					Barriers = barriers;
+					ImageBarriers = barriers;
 				}
-				else if(packet.Topic == TelemetryServer.LandmarksTopic)
+				else if(packet.Topic == MqttTypes.LandmarksTopic)
 				{
-					LandmarkList landmarks = new LandmarkList(packet.Message);
-					Landmarks = landmarks;
+					ImageVectorList landmarks = new ImageVectorList(packet.Message);
+					ImageVectors = landmarks;
+					ImageLandmarksReceived(ImageVectors);
 				}
-				else if(packet.Topic == TelemetryServer.BearingTopic)
+				else if(packet.Topic == MqttTypes.BearingTopic)
 				{
 					Bearing = BitConverter.ToDouble(packet.Message, 0);
 				}
+				else if(packet.Topic == MqttTypes.ImageMetricsTopic)
+				{
+					ImageMetrics = KVPSerializer.Deserialize<ImageMetrics>(ASCIIEncoding.UTF8.GetString(packet.Message));
+					ScaleLandmarks();
+				}
+				else if(packet.Topic == MqttTypes.LandscapeMetricsTopic)
+				{
+					LandscapeMetrics = KVPSerializer.Deserialize<LandscapeMetrics>(ASCIIEncoding.UTF8.GetString(packet.Message));
+					ScaleLandmarks();
+				}
+			}
+		}
+
+		void ScaleLandmarks()
+		{
+			if(ImageMetrics.PixelsPerMeter > 0)
+			{
+				ImageVectorList scaled = ImageVectors.Clone();
+				scaled.Scale(1 / ImageMetrics.PixelsPerMeter);
+				LandscapeVectors = scaled;
 			}
 		}
 

@@ -4,10 +4,11 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using KanoopCommon.Geometry;
 
 namespace RaspiCommon.Lidar
 {
-	public class LidarVector
+	public class LidarVector : IVector
 	{
 		public Double Bearing { get; set; }
 		public Double Range { get; set; }

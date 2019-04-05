@@ -28,7 +28,7 @@ namespace TrackBot.TTY
 					throw new CommandException("Invalid parameter value 2");
 				}
 				Program.Config.RangeFuzz = parm;
-				Widgets.Environment.RangeFuzz = parm;
+				Widgets.ImageEnvironment.RangeFuzz = parm;
 				Program.Config.Save();
 				Console.WriteLine("range fuzz set to {0}", parm);
 			}

@@ -49,7 +49,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ChooseBotForm.cs" />
+    <Compile Include="ChooseBotForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="ChooseBotForm.Designer.cs">
       <DependentUpon>ChooseBotForm.cs</DependentUpon>
     </Compile>
@@ -95,6 +97,10 @@
       <Project>{5c9d80a6-6fc0-4b59-b1cf-d2ec261b4b00}</Project>
       <Name>KanoopCommon</Name>
     </ProjectReference>
+    <ProjectReference Include="..\KanoopControls\KanoopControls.csproj">
+      <Project>{9f996f82-02c2-410d-8b69-b7dcecc507e4}</Project>
+      <Name>KanoopControls</Name>
+    </ProjectReference>
     <ProjectReference Include="..\MQTT\MQTT.csproj">
       <Project>{52296cef-4bc8-423a-a1d9-9b900b3e99b9}</Project>
       <Name>MQTT</Name>
@@ -102,6 +108,10 @@
     <ProjectReference Include="..\RaspiCommon\RaspiCommon.csproj">
       <Project>{0194337c-274d-42f2-a1db-0166f0ac73eb}</Project>
       <Name>RaspiCommon</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\TrackBotCommon\TrackBotCommon.csproj">
+      <Project>{BAA12E3A-EED6-4607-BE68-C6DD3780FA36}</Project>
+      <Name>TrackBotCommon</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

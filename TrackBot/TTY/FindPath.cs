@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using KanoopCommon.Geometry;
 using RaspiCommon.Lidar.Environs;
+using RaspiCommon.Spatial.Imaging;
 
 namespace TrackBot.TTY
 {
@@ -16,10 +17,10 @@ namespace TrackBot.TTY
 
 		public override bool Execute(List<string> commandParts)
 		{
-			FuzzyPath path = Widgets.Environment.FindGoodDestination();
+			FuzzyPath path = Widgets.ImageEnvironment.FindGoodDestination();
 			if(path != null)
 			{
-				Widgets.Environment.FuzzyPath = path;
+				Widgets.ImageEnvironment.FuzzyPath = path;
 			}
 
 			return true;

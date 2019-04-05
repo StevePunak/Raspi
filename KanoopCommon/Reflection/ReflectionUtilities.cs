@@ -11,6 +11,19 @@ namespace KanoopCommon.Reflection
 {
 	public class ReflectionUtilities
 	{
+		public static void SetProperty(Object thing, String propertyName, String value)
+		{
+			PropertyInfo property = thing.GetType().GetProperty(propertyName);
+			if(property != null)
+			{
+				Object valueObject;
+				if(TryParseValue(property.PropertyType.FullName, value, out valueObject))
+				{
+					property.SetValue(thing, valueObject);
+				}
+			}
+		}
+
 		public static void ClearAllEventHandlers(Object fromObject)
 		{
 			FieldInfo[] fields = fromObject.GetType().GetFields(BindingFlags.NonPublic | BindingFlags.Instance);

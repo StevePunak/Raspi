@@ -8,21 +8,21 @@ using KanoopCommon.Geometry;
 using KanoopCommon.Logging;
 using KanoopCommon.Serialization;
 
-namespace RaspiCommon.Lidar.Environs
+namespace RaspiCommon.Spatial.Imaging
 {
-	public class LandmarkList : List<Landmark>
+	public class ImageVectorList : List<ImageVector>
 	{
-		public LandmarkList()
+		public ImageVectorList()
 			: base() { }
 
-		public LandmarkList(byte[] landmarks)
+		public ImageVectorList(byte[] landmarks)
 			: base()
 		{
 			using(BinaryReader br = new BinaryReader(new MemoryStream(landmarks)))
 			{
-				for(int x = 0;x < landmarks.Length / Landmark.ByteArraySize;x++)
+				for(int x = 0;x < landmarks.Length / ImageVector.ByteArraySize;x++)
 				{
-					Landmark landmark = new Landmark(br.ReadBytes(Landmark.ByteArraySize));
+					ImageVector landmark = new ImageVector(br.ReadBytes(ImageVector.ByteArraySize));
 					Add(landmark);
 				}
 			}
@@ -30,10 +30,10 @@ namespace RaspiCommon.Lidar.Environs
 
 		public byte[] Serialize()
 		{
-			byte[] serialized = new byte[Landmark.ByteArraySize * Count];
+			byte[] serialized = new byte[ImageVector.ByteArraySize * Count];
 			using(BinaryWriter bw = new BinaryWriter(new MemoryStream(serialized)))
 			{
-				foreach(Landmark landmark in this)
+				foreach(ImageVector landmark in this)
 				{
 					bw.Write(landmark.Serialize());
 				}
@@ -49,7 +49,7 @@ namespace RaspiCommon.Lidar.Environs
 				if(Count > 2)
 				{
 					PointD origin = null;
-					foreach(Landmark landmark in this)
+					foreach(ImageVector landmark in this)
 					{
 						if(origin == null)
 						{
@@ -69,21 +69,21 @@ namespace RaspiCommon.Lidar.Environs
 		public PointDList GetPoints()
 		{
 			PointDList points = new PointDList();
-			foreach(Landmark landmark in this)
+			foreach(ImageVector landmark in this)
 			{
 				points.Add(landmark.GetPoint());
 			}
 			return points;
 		}
 
-		public Landmark GetCentroid(PointD origin)
+		public ImageVector GetCentroid(PointD origin)
 		{
 			if(HaveSameOrigin == false)
 			{
 				throw new GeometryException("Can't get centroid with disimilar origins");
 			}
 			PointD centroid = GetPoints().Centroid;
-			return new Landmark(origin, new BearingAndRange(origin, centroid));
+			return new ImageVector(origin, new BearingAndRange(origin, centroid));
 		}
 
 		public bool Contains(PointD landmark, Double withinMeters, Double scale)
@@ -97,19 +97,27 @@ namespace RaspiCommon.Lidar.Environs
 			return this.Find(l => l.GetPoint().DistanceTo(landmark) <= withinRange) != null;
 		}
 
+		public void Scale(Double scale)
+		{
+			foreach(ImageVector vector in this)
+			{
+				vector.Scale(scale);
+			}
+		}
+
 		public void DumpToLog()
 		{
 			Log.SysLogText(LogLevel.DEBUG, "Dumping Landmarks");
-			foreach(Landmark landmark in this)
+			foreach(ImageVector landmark in this)
 			{
 				Log.SysLogText(LogLevel.DEBUG, "{0}", landmark);
 			}
 		}
 
-		public LandmarkList Clone()
+		public ImageVectorList Clone()
 		{
-			LandmarkList list = new LandmarkList();
-			foreach(Landmark landmark in this)
+			ImageVectorList list = new ImageVectorList();
+			foreach(ImageVector landmark in this)
 			{
 				list.Add(landmark.Clone());
 			}
@@ -117,12 +125,12 @@ namespace RaspiCommon.Lidar.Environs
 		}
 	}
 
-	public class LandmarkGroupList : List<LandmarkList>
+	public class ImageVectorGroupList : List<ImageVectorList>
 	{
-		public LandmarkList FindGroupWithinRangeOfPoint(PointD point, Double range)
+		public ImageVectorList FindGroupWithinRangeOfPoint(PointD point, Double range)
 		{
-			LandmarkList groupList = null;
-			foreach(LandmarkList group in this)
+			ImageVectorList groupList = null;
+			foreach(ImageVectorList group in this)
 			{
 				if(group.Contains(point, range))
 				{
@@ -135,23 +143,30 @@ namespace RaspiCommon.Lidar.Environs
 	}
 
 	[IsSerializable]
-	public class Landmark
+	public class ImageVector
 	{
 		public static int ByteArraySize = PointD.ByteArraySize + BearingAndRange.ByteArraySize;
 
 		public PointD Origin { get; private set; }
 		public BearingAndRange Vector { get; private set; }
 
-		public Landmark()
+		public Object Tag { get; set; }
+
+		public ImageVector()
 			: this(new PointD(), new BearingAndRange()) { }
 
-		public Landmark(PointD origin, BearingAndRange vector)
+		public ImageVector(PointD origin, BearingAndRange vector)
 		{
 			Origin = origin;
 			Vector = vector;
 		}
 
-		public Landmark(byte[] serialized)
+		public void Scale(Double scale)
+		{
+			Vector.Range *= scale;
+		}
+
+		public ImageVector(byte[] serialized)
 		{
 			using(BinaryReader br = new BinaryReader(new MemoryStream(serialized)))
 			{
@@ -176,14 +191,14 @@ namespace RaspiCommon.Lidar.Environs
 			return Origin.GetPointAt(Vector.Bearing, Vector.Range);
 		}
 
-		public Landmark Clone()
+		public ImageVector Clone()
 		{
-			return new Landmark(Origin.Clone(), Vector.Clone());
+			return new ImageVector(Origin.Clone(), Vector.Clone());
 		}
 
 		public override string ToString()
 		{
-			return String.Format("Landmark @ {0}", GetPoint());
+			return String.Format("Landmark {0} @ {1}", Vector, GetPoint());
 		}
 	}
 }

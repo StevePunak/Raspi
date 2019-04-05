@@ -6,9 +6,9 @@ using System.Text;
 using System.Threading.Tasks;
 using KanoopCommon.Geometry;
 
-namespace RaspiCommon.Lidar.Environs
+namespace RaspiCommon.Spatial.Imaging
 {
-	public class BarrierList : List<Barrier>
+	public class BarrierList : List<ImageBarrier>
 	{
 		public BarrierList()
 			: base() { }
@@ -17,7 +17,7 @@ namespace RaspiCommon.Lidar.Environs
 		{
 			foreach(Line line in lines)
 			{
-				Barrier barrier = new Barrier(origin, line);
+				ImageBarrier barrier = new ImageBarrier(origin, line);
 				barrier.Tag = line.Tag;
 				Add(barrier);
 			}
@@ -28,9 +28,9 @@ namespace RaspiCommon.Lidar.Environs
 		{
 			using(BinaryReader br = new BinaryReader(new MemoryStream(barriers)))
 			{
-				for(int x = 0;x < barriers.Length / Barrier.ByteArraySize;x++)
+				for(int x = 0;x < barriers.Length / ImageBarrier.ByteArraySize;x++)
 				{
-					Barrier barrier = new Barrier(br.ReadBytes(Barrier.ByteArraySize));
+					ImageBarrier barrier = new ImageBarrier(br.ReadBytes(ImageBarrier.ByteArraySize));
 					Add(barrier);
 				}
 			}
@@ -38,10 +38,10 @@ namespace RaspiCommon.Lidar.Environs
 
 		public byte[] Serialize()
 		{
-			byte[] serialized = new byte[Barrier.ByteArraySize * Count];
+			byte[] serialized = new byte[ImageBarrier.ByteArraySize * Count];
 			using(BinaryWriter bw = new BinaryWriter(new MemoryStream(serialized)))
 			{
-				foreach(Barrier barrier in this)
+				foreach(ImageBarrier barrier in this)
 				{
 					bw.Write(barrier.Serialize());
 				}
@@ -49,7 +49,7 @@ namespace RaspiCommon.Lidar.Environs
 			return serialized;
 		}
 
-		public bool Contains(Barrier barrier, Double withinMeters, Double scale, Double bearingSlack)
+		public bool Contains(ImageBarrier barrier, Double withinMeters, Double scale, Double bearingSlack)
 		{
 			Double withinPixels = withinMeters * scale;
 			return this.Find(b => b.GetLine().SharesEndpointAndBearing(barrier.GetLine(), withinPixels, bearingSlack)) != null;
@@ -58,7 +58,7 @@ namespace RaspiCommon.Lidar.Environs
 		public BarrierList Clone()
 		{
 			BarrierList list = new BarrierList();
-			foreach(Barrier barrier in this)
+			foreach(ImageBarrier barrier in this)
 			{
 				list.Add(barrier.Clone());
 			}
@@ -66,7 +66,7 @@ namespace RaspiCommon.Lidar.Environs
 		}
 	}
 
-	public class Barrier
+	public class ImageBarrier
 	{
 		public const int ByteArraySize = PointD.ByteArraySize + BearingAndRange.ByteArraySize + BearingAndRange.ByteArraySize;
 
@@ -76,20 +76,20 @@ namespace RaspiCommon.Lidar.Environs
 
 		public object Tag { get; set; }
 
-		public Barrier(PointD origin, PointD p1, PointD p2)
+		public ImageBarrier(PointD origin, PointD p1, PointD p2)
 			: this(origin, new BearingAndRange(origin, p1), new BearingAndRange(origin, p2)) {}
 
-		public Barrier(PointD origin, Line line)
+		public ImageBarrier(PointD origin, Line line)
 			: this(origin, line.P1, line.P2) { }
 
-		public Barrier(PointD origin, BearingAndRange v1, BearingAndRange v2)
+		public ImageBarrier(PointD origin, BearingAndRange v1, BearingAndRange v2)
 		{
 			Origin = origin;
 			V1 = v1;
 			V2 = v2;
 		}
 
-		public Barrier(byte[] serialized)
+		public ImageBarrier(byte[] serialized)
 		{
 			using(BinaryReader br =new BinaryReader(new MemoryStream(serialized)))
 			{
@@ -116,9 +116,9 @@ namespace RaspiCommon.Lidar.Environs
 			return serialized;
 		}
 
-		public Barrier Clone()
+		public ImageBarrier Clone()
 		{
-			return new Barrier(Origin.Clone(), V1.Clone(), V2.Clone());
+			return new ImageBarrier(Origin.Clone(), V1.Clone(), V2.Clone());
 		}
 
 		public override string ToString()
