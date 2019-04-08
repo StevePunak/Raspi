@@ -17,7 +17,7 @@ using KanoopCommon.Threading;
 using RaspiCommon;
 using RaspiCommon.Lidar;
 
-namespace RaspiCommon
+namespace RaspiCommon.Devices.Spatial
 {
 
 	public partial class RPLidar
@@ -125,7 +125,7 @@ namespace RaspiCommon
 
 			DebugAngle = -1;
 
-			VectorRefreshTime = TimeSpan.FromSeconds(1);
+			VectorRefreshTime = TimeSpan.FromSeconds(.5);
 		}
 
 		public Double GetRangeAtBearing(Double bearing)
@@ -410,7 +410,7 @@ namespace RaspiCommon
 			}
 			catch(Exception e)
 			{
-				Log.SysLogText(LogLevel.ERROR, "Exception: {0}", e.Message);
+				Log.SysLogText(LogLevel.ERROR, "Lidar Exception: {0}\n{1}", e.Message, ThreadBase.GetFormattedStackTrace(e));
 			}
 		}
 
@@ -419,24 +419,28 @@ namespace RaspiCommon
 			Double angle = response.Angle.AddDegrees(Offset).AddDegrees(Bearing);
 			if(DebugAngle >= 0 && angle.AngularDifference(DebugAngle) < 1)
 			{
-				Log.SysLogText(LogLevel.DEBUG, "response Angle {0:0.000}°  adjusted {1:000}° to {2:0.000}°  Range: {3:0.00}m  Quality {4}",
-					response.Angle, Bearing, angle, response.Distance, response.Quality);
+				Log.SysLogText(LogLevel.DEBUG, "response Angle {0:0.000}°  adjusted {1:000}° + {2:0.000}° to {3:0.000}°  Range: {4:0.00}m  Quality {5}",
+					response.Angle, Bearing, Offset, angle, response.Distance, response.Quality);
 			}
 			if(response.Quality > 10 && response.CheckBit == 1 && response.StartFlag == 1 && response.Angle < 360 && response.Angle >= 0)
 			{
 				Double offset = angle / VectorSize;
 
-//				Console.WriteLine("Got entry at {0}... Clear from {1} to {2}", intOffset, VectorArrayInc(_lastScanOffset), intOffset);
-				Double distance = Math.Max(response.Distance, .001);
-				DateTime now = DateTime.UtcNow;
-				Vectors[(int)offset].Range = distance;
-				Vectors[(int)offset].RefreshTime = now;
-				_lastGoodSampleTime = now;
+				//				Console.WriteLine("Got entry at {0}... Clear from {1} to {2}", intOffset, VectorArrayInc(_lastScanOffset), intOffset);
+				if(response.Distance > .010)
+				{
+					Double distance = Math.Max(response.Distance, .001);
+					DateTime now = DateTime.UtcNow;
+				//	Log.SysLogText(LogLevel.DEBUG, "Putting sample at offset {0}  Bearing {1}  Offset {2}", offset, Bearing, Offset);
+					Vectors[(int)offset].Range = distance;
+					Vectors[(int)offset].RefreshTime = now;
+					_lastGoodSampleTime = now;
 
-				LidarSample sample = new LidarSample(angle, distance, now);
-				Sample(sample);
+					LidarSample sample = new LidarSample(angle, distance, now);
+					Sample(sample);
 
-				_lastScanOffset = (int)offset;
+					_lastScanOffset = (int)offset;
+				}
 			}
 
 			if(DateTime.UtcNow > _lastTrimTime + VectorRefreshTime)

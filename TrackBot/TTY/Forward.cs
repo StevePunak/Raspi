@@ -24,11 +24,11 @@ namespace TrackBot.TTY
 			if(parm > 10 || parm == 0)
 			{
 				TimeSpan time = TimeSpan.FromMilliseconds(parm);
-				Widgets.Tracks.ForwardTime(time, Widgets.Tracks.StandardSpeed);
+				Widgets.Instance.Tracks.ForwardTime(time, Widgets.Instance.Tracks.StandardSpeed);
 			}
 			else
 			{
-				Widgets.Tracks.ForwardMeters(parm, Widgets.Tracks.StandardSpeed);
+				Widgets.Instance.Tracks.ForwardMeters(parm, Widgets.Instance.Tracks.StandardSpeed);
 			}
 
 			return true;

@@ -5,7 +5,9 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using KanoopCommon.Geometry;
+using KanoopCommon.Logging;
 using RaspiCommon;
+using RaspiCommon.Spatial.Imaging;
 
 namespace TrackBot.Spatial
 {
@@ -13,7 +15,7 @@ namespace TrackBot.Spatial
 	{
 		const Double MAX_RANGE_FROM_DEST = .15;
 
-		public Line Destination { get; private set; }
+		public FuzzyPath Destination { get; private set; }
 
 		public RoamAndSeek()
 			: base(ActivityType.RoamAndSeek)
@@ -24,7 +26,7 @@ namespace TrackBot.Spatial
 
 		protected override bool OnStop()
 		{
-			Widgets.Tracks.Stop();
+			Widgets.Instance.Tracks.Stop();
 			return base.OnStop();
 		}
 
@@ -32,7 +34,7 @@ namespace TrackBot.Spatial
 
 		protected override bool RunInitState()
 		{
-			Widgets.Tracks.Stop();
+			Widgets.Instance.Tracks.Stop();
 			SwitchState(ActivityStates.TravelToDest);
 			return true;
 		}
@@ -43,7 +45,7 @@ namespace TrackBot.Spatial
 
 		bool InitIdleState()
 		{
-			Widgets.Tracks.Stop();
+			Widgets.Instance.Tracks.Stop();
 			Interval = TimeSpan.FromMilliseconds(500);
 			return true;
 		}
@@ -60,65 +62,38 @@ namespace TrackBot.Spatial
 		bool InitTravelToDestState()
 		{
 			// find a place to travel to
-			Destination = Widgets.ImageEnvironment.FindGoodDestination().GetLineFrom(Widgets.ImageEnvironment.Location);
-			if(Destination == null)
+			if((Destination = Widgets.Instance.ImageEnvironment.FindGoodDestination(Program.Config.ShortRangeClearance)) == null)
 			{
 				Console.WriteLine("Could not find a good destination");
 				return false;
 			}
-			Widgets.Tracks.TurnToBearing(Destination.Bearing);
 
-			Console.WriteLine("Found a good destination at {0} bearing {1:0.0}°", Destination, Destination.Bearing);
+			Widgets.Instance.ImageEnvironment.FuzzyPath = Destination;
+			Widgets.Instance.Tracks.TurnToBearing(Destination.Vector.Bearing);
+			
+			Log.LogText(LogLevel.DEBUG, "Found a good destination at {0} bearing {1:0.0}°... setting into path", Destination, Destination.Vector.Bearing);
 
+			// set into environment to generate events
+			Widgets.Instance.ImageEnvironment.FuzzyPath = Destination;
 
 			/*** DEBUG ONLY */
-//			Widgets.Environment.ToImage GenerateBitmap();
+			//			Widgets.Instance.Environment.ToImage GenerateBitmap();
 
-			Widgets.Tracks.SetStart();
-			Widgets.Tracks.Speed = Widgets.Tracks.Slow;
+			Widgets.Instance.Tracks.SetStart();
+			Widgets.Instance.Tracks.Speed = Widgets.Instance.Tracks.Slow;
 
 			return true;
 		}
 
 		override protected bool RunTravelToDestState()
 		{
-			bool result = false;
-			while(DateTime.UtcNow < EnterStateTime + TimeSpan.FromSeconds(10))
-			{
-				GpioSharp.Sleep(20);
+			Widgets.Instance.Tracks.TurnToBearing(Destination.Vector.Bearing);
+			Widgets.Instance.Tracks.ForwardMeters(Math.Min(Destination.Vector.Range, 1), Widgets.Instance.Tracks.StandardSpeed);
 
-				PointD location;
-				if(Widgets.Tracks.TryCalculateCurrentLocation(out location))
-				{
-					Widgets.ImageEnvironment.RelativeLocation = location;
-
-					if(location.DistanceTo(Destination.P2 as PointD) < .15)
-					{
-						Console.WriteLine("Arrived at location");
-						result = true;
-						break;
-					}
-
-					if(Widgets.ImageEnvironment.FuzzyRangeAtBearing(Widgets.GyMag.Bearing, Widgets.ImageEnvironment.RangeFuzz) < .2)
-					{
-						Console.WriteLine("Hit obstacle");
-						break;
-					}
-				}
-			}
-
-			if(!result)
-			{
-				Console.WriteLine("Abandoning attempt");
-				SwitchState(ActivityStates.Idle);
-			}
-			else
-			{
-				SwitchState(ActivityStates.TravelToDest);
-			}
+			SwitchState(ActivityStates.TravelToDest);
 
 
-			return result;
+			return true;
 		}
 
 		#endregion

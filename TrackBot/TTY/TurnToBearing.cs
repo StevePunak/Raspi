@@ -22,7 +22,7 @@ namespace TrackBot.TTY
 				throw new CommandException("Invalid bearing");
 			}
 
-			Widgets.Tracks.TurnToBearing(to);
+			Widgets.Instance.Tracks.TurnToBearing(to);
 
 			return true;
 		}

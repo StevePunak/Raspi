@@ -11,8 +11,10 @@ using Emgu.CV.Util;
 using KanoopCommon.Extensions;
 using KanoopCommon.Geometry;
 using KanoopCommon.Logging;
+using RaspiCommon.Devices.Spatial;
 using RaspiCommon.Extensions;
 using RaspiCommon.Server;
+using RaspiCommon.Spatial;
 using RaspiCommon.Spatial.Imaging;
 
 namespace RaspiCommon.Lidar.Environs
@@ -20,14 +22,6 @@ namespace RaspiCommon.Lidar.Environs
 	public class LidarEnvironment
 	{
 		#region Constants
-
-		const Double MINIMUM_LANDMARK_SEGMENT = .10;		// line segments must be at least this many meters in order to be considered
-		const Double MINIMUM_CONNECT_LENGTH = .025;			// right angle rays must be within this many meters to connect
-		const Double MAXIMUM_CONNECT_LENGTH = 1;			// will not connect right angle this far apart
-		const Double RIGHT_ANGLE_SLACK_DEGREES = 1;			// slack from 90° which may still constitute right angle
-		const Double MINIMUM_LANDMARK_SEPARATION = .1;		// landmarks must be this many meters apart
-		const Double BEARING_SLACK = 2;                     // degrees slack when computing similar angles
-		const Double LINE_PATH_WIDTH = .1;                  // lines must be within this many meters to be consolidated into a single line
 
 		public Double RangeFuzz { get; set; }
 
@@ -60,6 +54,8 @@ namespace RaspiCommon.Lidar.Environs
 
 		public PointD RelativeLocation { get; set; }
 
+		public ProcessingMetrics ProcessingMetrics { get; set; }
+
 		FuzzyPath _fuzzyPath;
 		public FuzzyPath FuzzyPath
 		{
@@ -68,6 +64,7 @@ namespace RaspiCommon.Lidar.Environs
 			{
 				_fuzzyPath = value;
 				FuzzyPathChanged(value);
+				Log.SysLogText(LogLevel.DEBUG, "New fuzzy path {0}", _fuzzyPath);
 			}
 		}
 
@@ -89,8 +86,6 @@ namespace RaspiCommon.Lidar.Environs
 		};
 		int _colorIndex;
 
-		TelemetryServer _server;
-
 		List<String> _debugTags = new List<string>() { "006", "009", "014" };
 
 		public LidarEnvironment(Double metersSquare, Double pixelsPerMeter)
@@ -107,12 +102,28 @@ namespace RaspiCommon.Lidar.Environs
 			Barriers = new BarrierList();
 			Paths = new List<RectangleD>();
 
-			FuzzyPathChanged += delegate {};
-			LandmarksChanged += delegate {};
+			FuzzyPathChanged += delegate { };
+			LandmarksChanged += delegate { };
 			BarriersChanged += delegate { };
 
 			Log.SysLogText(LogLevel.DEBUG, "Init 3");
 			_colorIndex = 0;
+
+			ProcessingMetrics = new ProcessingMetrics()
+			{
+				CannyThreshold = 120,                // 180
+				CannyThresholdLinking = 120,         // 120
+				RhoRes = 2,
+				ThetaResPiDivisor = 45,
+				HoughThreshold = 10,                 // decrease to get more lines
+				MinimumLandmarkSegment = .05,        // line segments must be at least this many meters in order to be considered
+				MinimumConnectLength = .025,         // right angle rays must be within this many meters to connect
+				MaximumConnectLength = .2,           // will not connect right angle this far apart
+				RightAngleSlackDegrees = 1,          // slack from 90° which may still constitute right angle
+				MinimumLandmarkSeparation = .1,      // landmarks must be this many meters apart
+				BearingSlack = 2,                    // degrees slack when computing similar angles
+				LinePathWidth = .1,                  // lines must be within this many meters to be consolidated into a single line
+		};
 		}
 
 		public void ProcessImage(Mat image, Double imageOrientation, Double imagePixelsPerMeter)
@@ -121,24 +132,14 @@ namespace RaspiCommon.Lidar.Environs
 
 			Image = image;
 
-			Double cannyThreshold = 120;				// 180
-			Double cannyThresholdLinking = 120;         // 120
 			PointD center = image.Center();
-
-			Double rhoRes = 2;
-			Double thetaRes = Math.PI / 45;
-			int threshold = 20;							// decrease to get more lines
 
 			Mat outputImage = Image.Clone();
 
-			CvInvoke.Canny(Image, outputImage, cannyThreshold, cannyThresholdLinking);
-			LineSegment2D[] segments = CvInvoke.HoughLinesP(outputImage, rhoRes, thetaRes, (int)threshold);
+			CvInvoke.Canny(Image, outputImage, ProcessingMetrics.CannyThreshold, ProcessingMetrics.CannyThresholdLinking);
+			LineSegment2D[] segments = CvInvoke.HoughLinesP(outputImage, ProcessingMetrics.RhoRes, Math.PI / ProcessingMetrics.ThetaResPiDivisor, ProcessingMetrics.HoughThreshold);
 			LineList lines = segments.ToLineList();
 			lines.RemoveInvalid();
-
-			lines.DumpToLog();
-
-			Log.SysLogText(LogLevel.DEBUG, "---------------Sort ----------------");
 
 			lines.SortUpperLeft();
 
@@ -162,19 +163,6 @@ namespace RaspiCommon.Lidar.Environs
 
 			LandmarksChanged(landmarks);
 			BarriersChanged(barriers);
-		}
-
-		public Mat GetImageWithLandmarks()
-		{
-			Mat output = Image.Clone();
-
-			PointD imageCenter = output.Center();
-			foreach(ImageVector landmark in Landmarks)
-			{
-				CvInvoke.Circle(output, landmark.GetPoint().ToPoint(), 4, new Bgr(Color.Blue).MCvScalar);
-			}
-
-			return output;
 		}
 
 		PointD ImagePointToInternalPoint(PointD imagePoint, PointD imageOrigin, Double imageOrientation, Double imagePixelsPerMeter)
@@ -201,7 +189,7 @@ namespace RaspiCommon.Lidar.Environs
 
 			// get rid of short lines
 			LineList lines = new LineList(segments);
-			Double minimumSizePixels = MINIMUM_LANDMARK_SEGMENT * PixelsPerMeter;
+			Double minimumSizePixels = ProcessingMetrics.MinimumLandmarkSegment * PixelsPerMeter;
 			lines.RemoveShorterThan(minimumSizePixels);
 			Log.SysLogText(LogLevel.DEBUG, "Keeping {0} out of {1} after applying size filter", lines.Count, segments.Count);
 
@@ -230,7 +218,7 @@ namespace RaspiCommon.Lidar.Environs
 
 		private ImageVectorList ConsolidateLandmarks(PointD origin, ImageVectorList from)
 		{
-			Double minimumPixelDistance = MINIMUM_LANDMARK_SEPARATION * PixelsPerMeter;
+			Double minimumPixelDistance = ProcessingMetrics.MinimumLandmarkSeparation * PixelsPerMeter;
 
 			// group them into bunches by range
 			ImageVectorGroupList groups = new ImageVectorGroupList();
@@ -274,16 +262,16 @@ namespace RaspiCommon.Lidar.Environs
 					LinePair pair = new LinePair(l1, l2);
 					Line join = pair.ClosestPoints;
 
-					Double actualDistance = ConvertToEnviroment(join.Length);
-					if(actualDistance >= MINIMUM_CONNECT_LENGTH && actualDistance <= MAXIMUM_CONNECT_LENGTH)
+					Double actualDistance = ConvertToEnviromentLength(join.Length);
+					if(actualDistance >= ProcessingMetrics.MinimumConnectLength && actualDistance <= ProcessingMetrics.MaximumConnectLength)
 					{
 						Double angularDifference = Degrees.AngularDifference(l1.Bearing, l2.Bearing);
-						if(angularDifference.IsWithinDegressOf(90, RIGHT_ANGLE_SLACK_DEGREES))
+						if(angularDifference.IsWithinDegressOf(90, ProcessingMetrics.RightAngleSlackDegrees))
 						{
 							PointD intersection;
 							FlatGeo.GetIntersection(l1, l2, out intersection);
 
-							if(landmarks.Contains(intersection, MINIMUM_LANDMARK_SEPARATION, PixelsPerMeter) == false)
+							if(landmarks.Contains(intersection, ProcessingMetrics.MinimumLandmarkSeparation, PixelsPerMeter) == false)
 							{
 								ImageVector landmark = new ImageVector(origin, new BearingAndRange(origin, intersection));
 								landmarks.Add(landmark);
@@ -318,7 +306,7 @@ namespace RaspiCommon.Lidar.Environs
 		{
 			// find the segments that are alike
 			List<LineList> groups = new List<LineList>();
-			Double pathWidthPixels = LINE_PATH_WIDTH * PixelsPerMeter;
+			Double pathWidthPixels = ProcessingMetrics.LinePathWidth * PixelsPerMeter;
 			while(lines.Count > 0)
 			{
 				Double extendPath = .15 * PixelsPerMeter;
@@ -332,7 +320,7 @@ namespace RaspiCommon.Lidar.Environs
 
 					// is line1 like line2?
 					//  1. Check to see if bearing is similar
-					if(l1.Bearing.IsWithinDegressOf(l2.Bearing, BEARING_SLACK) || l1.Bearing.AddDegrees(180).IsWithinDegressOf(l2.Bearing, BEARING_SLACK))
+					if(l1.Bearing.IsWithinDegressOf(l2.Bearing, ProcessingMetrics.BearingSlack) || l1.Bearing.AddDegrees(180).IsWithinDegressOf(l2.Bearing, ProcessingMetrics.BearingSlack))
 					{
 						// do the lines lie on leach others path?
 						RectangleD rect1, rect2;
@@ -354,7 +342,7 @@ namespace RaspiCommon.Lidar.Environs
 					for(int x = 0;x < groups.Count;x++)
 					{
 						LineList group = groups[x];
-						if(group.AverageBearing.AngularDifference(similarLines.AverageBearing) <= BEARING_SLACK &&
+						if(group.AverageBearing.AngularDifference(similarLines.AverageBearing) <= ProcessingMetrics.BearingSlack &&
 							group.ContainsLinesAlongThePathOf(similarLines, pathWidthPixels))
 						{
 							group.AddRange(similarLines);
@@ -380,35 +368,44 @@ namespace RaspiCommon.Lidar.Environs
 			return groups;
 		}
 
-		public Double ConvertToEnviroment(Double length)
+		public Double ConvertToEnviromentLength(Double length)
 		{
 			return length / PixelsPerMeter;
 		}
 
-		public Double ConvertToBitmap(Double length)
+		public Double ConvertToBitmapLength(Double length)
 		{
 			return length * PixelsPerMeter;
 		}
 
-		public Mat GetEnvironmentImage(bool drawDebugLines)
+		public Mat CreateImage(SpatialObjects objects)
 		{
 			Mat image = Image.Clone();
 
-			Cross2DF cross = new Cross2DF(BitmapCenter.ToPoint(), 4, 4);
-			CvInvoke.Line(image, cross.Vertical.P1.ToPoint(), cross.Vertical.P2.ToPoint(), new Bgr(Color.GreenYellow).MCvScalar);
-			CvInvoke.Line(image, cross.Horizontal.P1.ToPoint(), cross.Horizontal.P2.ToPoint(), new Bgr(Color.GreenYellow).MCvScalar);
-
-			foreach(ImageBarrier barrier in Barriers)
+			if((objects & SpatialObjects.CenterPoint) != 0)
 			{
-				Color color = NextColor;
-				Line line = barrier.GetLine();
-				CvInvoke.Line(image, line.P1.ToPoint(), line.P2.ToPoint(), new Bgr(color).MCvScalar, 2);
+				Cross2DF cross = new Cross2DF(BitmapCenter.ToPoint(), 4, 4);
+				CvInvoke.Line(image, cross.Vertical.P1.ToPoint(), cross.Vertical.P2.ToPoint(), new Bgr(Color.GreenYellow).MCvScalar);
+				CvInvoke.Line(image, cross.Horizontal.P1.ToPoint(), cross.Horizontal.P2.ToPoint(), new Bgr(Color.GreenYellow).MCvScalar);
 			}
 
-			foreach(ImageVector landmark in Landmarks)
+			if((objects & SpatialObjects.Barriers) != 0)
 			{
-				CircleF circle1 = new CircleF(landmark.Origin.ToPoint(), 3);
-				CvInvoke.Circle(image, circle1.Center.ToPoint(), (int)circle1.Radius, new Bgr(Color.Red).MCvScalar, 1);
+				foreach(ImageBarrier barrier in Barriers)
+				{
+					Color color = NextColor;
+					Line line = barrier.GetLine();
+					CvInvoke.Line(image, line.P1.ToPoint(), line.P2.ToPoint(), new Bgr(color).MCvScalar, 2);
+				}
+			}
+
+			if((objects & SpatialObjects.Landmarks) != 0)
+			{
+				foreach(ImageVector landmark in Landmarks)
+				{
+					CircleF circle1 = new CircleF(landmark.GetPoint().ToPoint(), 3);
+					CvInvoke.Circle(image, circle1.Center.ToPoint(), (int)circle1.Radius, new Bgr(Color.Blue).MCvScalar, 2);
+				}
 			}
 
 			return image;
@@ -424,7 +421,7 @@ namespace RaspiCommon.Lidar.Environs
 			while(angle.IsWithinDegressOf(end, Lidar.VectorSize) == false)
 			{
 				Double distance = Lidar.GetRangeAtBearing(angle);
-				//Log.SysLogText(LogLevel.DEBUG, "At {0:0.000}° range is {1:0.000}", angle, distance);
+//				Log.SysLogText(LogLevel.DEBUG, "At {0:0.000}° range is {1:0.000}", angle, distance);
 				if(distance != 0)
 				{
 					allDistances.Add(distance);
@@ -438,6 +435,11 @@ namespace RaspiCommon.Lidar.Environs
 
 		public Double FuzzyRangeAtBearing(Double trueBearing, Double angularWidth)
 		{
+			if(angularWidth == 0)
+			{
+				angularWidth = RangeFuzz;
+			}
+
 			Double start = trueBearing.SubtractDegrees(angularWidth / 2);
 			Double end = trueBearing.AddDegrees((angularWidth / 2) + 1);
 
@@ -465,7 +467,7 @@ namespace RaspiCommon.Lidar.Environs
 
 		public FuzzyPath MakeFuzzyPath(Double bearing, Double rangeFuzz)
 		{
-			Log.SysLogText(LogLevel.DEBUG, "Finding fuzzy path at bearing {0:0.00}°  fuzz {1:0.00}°", bearing, rangeFuzz);
+//			Log.SysLogText(LogLevel.DEBUG, "Finding fuzzy path at bearing {0:0.00}°  fuzz {1:0.00}°", bearing, rangeFuzz);
 
 			Double start = bearing.SubtractDegrees(rangeFuzz / 2);
 			Double end = bearing.AddDegrees((rangeFuzz / 2) + 1);

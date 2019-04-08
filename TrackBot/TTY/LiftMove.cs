@@ -36,9 +36,9 @@ namespace TrackBot.TTY
 				throw new CommandException("Could not parse # of steps");
 			}
 
-			Widgets.Lift.Running = true;
-			Widgets.Lift.Speed = MotorSpeed.VeryFast;
-			Widgets.Lift.Rotate(direction, steps);
+			Widgets.Instance.Lift.Running = true;
+			Widgets.Instance.Lift.Speed = MotorSpeed.VeryFast;
+			Widgets.Instance.Lift.Rotate(direction, steps);
 
 			return true;
 		}

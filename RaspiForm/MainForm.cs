@@ -17,6 +17,10 @@ using RaspiCommon.Lidar;
 using KanoopCommon.CommonObjects;
 using KanoopCommon.Logging;
 using KanoopCommon.Geometry;
+using RaspiCommon.Devices.MotorControl;
+using RaspiCommon.Devices.Servos;
+using RaspiCommon.Devices.Spatial;
+using RaspiCommon.Devices.Locomotion;
 
 namespace RaspiForm
 {
@@ -32,7 +36,7 @@ namespace RaspiForm
 
 		bool _initialized;
 
-		MotorDriver _motorDriver;
+		PWMMotorDriver _motorDriver;
 
 		RPLidar _lidar;
 
@@ -168,7 +172,7 @@ namespace RaspiForm
 		{
 			if(_motorDriver == null)
 			{
-				_motorDriver = new MotorDriver(Program.Config.StepperA1Pin, Program.Config.StepperA2Pin, Program.Config.StepperB1Pin, Program.Config.StepperB2Pin);
+				_motorDriver = new PWMMotorDriver(Program.Config.StepperA1Pin, Program.Config.StepperA2Pin, Program.Config.StepperB1Pin, Program.Config.StepperB2Pin);
 				_motorDriver.Start();
 			}
 		}

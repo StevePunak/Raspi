@@ -4,10 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace RaspiCommon
+namespace RaspiCommon.Devices.Locomotion
 {
-	public interface ICompass
+	public interface IMotorizedChassis
 	{
-		Double Bearing { get; }
+
 	}
 }

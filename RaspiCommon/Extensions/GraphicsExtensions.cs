@@ -31,5 +31,18 @@ namespace RaspiCommon.Extensions
 		{
 			return new PointD(bitmap.Width / 2, bitmap.Height / 2);
 		}
+
+		public static void DrawCross(this Mat image, PointD where, MCvScalar color, int lineWidth = 1)
+		{
+			Cross2DF cross = new Cross2DF(where.ToPoint(), 4, 4);
+			CvInvoke.Line(image, cross.Vertical.P1.ToPoint(), cross.Vertical.P2.ToPoint(), color, lineWidth);
+			CvInvoke.Line(image, cross.Horizontal.P1.ToPoint(), cross.Horizontal.P2.ToPoint(), color, lineWidth);
+		}
+
+		public static void Circle(this Mat image, Circle circle, MCvScalar color, int lineWidth = 1)
+		{
+			CvInvoke.Circle(image, circle.Center.ToPoint(), (int)circle.Radius, color, lineWidth);
+		}
+
 	}
 }

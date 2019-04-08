@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace RaspiCommon
+namespace RaspiCommon.Devices.MotorControl
 {
 	public class ESC
 	{

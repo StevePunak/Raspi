@@ -20,11 +20,11 @@ namespace TrackBot.TTY
 				throw new CommandException("Invalid parameter value");
 			}
 
-			Widgets.Tracks.StandardSpeed = parm;
+			Widgets.Instance.Tracks.StandardSpeed = parm;
 			Program.Config.StandardSpeed = parm;
 			Program.Config.Save();
 
-			Console.WriteLine("Standard speed set to {0}", Widgets.Tracks.StandardSpeed);
+			Console.WriteLine("Standard speed set to {0}", Widgets.Instance.Tracks.StandardSpeed);
 
 			return true;
 		}

@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace RaspiCommon
+namespace RaspiCommon.Devices.Servos
 {
 	public class Servo
 	{

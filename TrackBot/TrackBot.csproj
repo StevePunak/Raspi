@@ -62,6 +62,7 @@
     <Compile Include="Spatial\Activity.cs" />
     <Compile Include="Spatial\Cell.cs" />
     <Compile Include="Spatial\Area.cs" />
+    <Compile Include="Spatial\GoToDestination.cs" />
     <Compile Include="Spatial\Grid.cs" />
     <Compile Include="Spatial\RoamAndSeek.cs" />
     <Compile Include="Spatial\SpatialPoll.cs" />
@@ -69,6 +70,7 @@
     <Compile Include="Spatial\TravelLongestPath.cs" />
     <Compile Include="Spatial\Types.cs" />
     <Compile Include="Spatial\VirtualEnvironment.cs" />
+    <Compile Include="Testing.cs" />
     <Compile Include="TrackBotException.cs" />
     <Compile Include="TTY\Backward.cs" />
     <Compile Include="TTY\CalibrateCompass.cs" />
@@ -81,6 +83,7 @@
     <Compile Include="TTY\ExitCommand.cs" />
     <Compile Include="TTY\FindPath.cs" />
     <Compile Include="TTY\Forward.cs" />
+    <Compile Include="TTY\GoCommand.cs" />
     <Compile Include="TTY\LandmarkCommand.cs" />
     <Compile Include="TTY\LiftMove.cs" />
     <Compile Include="TTY\Render.cs" />
@@ -119,13 +122,6 @@
       <Project>{BAA12E3A-EED6-4607-BE68-C6DD3780FA36}</Project>
       <Name>TrackBotCommon</Name>
     </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="License-LGPL.txt" />
-    <Content Include="README.txt" />
-    <Content Include="tank.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
   </ItemGroup>
   <ItemGroup>
     <Folder Include="EmguCV\arm-raspi\" />

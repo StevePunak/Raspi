@@ -12,6 +12,7 @@ using KanoopCommon.Extensions;
 using KanoopCommon.Geometry;
 using KanoopCommon.Logging;
 using RaspiCommon;
+using RaspiCommon.Devices.Spatial;
 using RaspiCommon.Extensions;
 using RaspiCommon.Lidar;
 using RaspiCommon.Lidar.Environs;
@@ -21,7 +22,7 @@ namespace TrackBot.Spatial
 {
 	class TrackLidar : LidarEnvironment, IImageEnvironment
 	{
-		public Double Range { get { return FuzzyRangeAtBearing(Widgets.GyMag.Bearing, RangeFuzz); } }
+		public Double Range { get { return FuzzyRangeAtBearing(Widgets.Instance.GyMag.Bearing, RangeFuzz); } }
 		public Double CompassOffset { get { return Lidar.Offset; } set { Lidar.Offset = value; } }
 		public Size PixelSize { get { return new Size((int)(PixelsPerMeter * MetersSquare), (int)(PixelsPerMeter * MetersSquare)); } }
 		public PointD PixelCenter { get { return new PointD((int)(PixelsPerMeter * MetersSquare) / 2, (int)(PixelsPerMeter * MetersSquare) / 2); } }
@@ -63,39 +64,37 @@ namespace TrackBot.Spatial
 			Log.SysLogText(LogLevel.DEBUG, "LIDAR stopped");
 		}
 
-		public FuzzyPath FindGoodDestination()
+		public FuzzyPath FindGoodDestination(Double requireClearUpTo)
 		{
+			const Double SHORT_CLEARANCE_ANGLE = 90;
+
 			Console.WriteLine("Finding a destination");
 
-			Line longestLine = null;
+			FuzzyPath longestLine = null;
 
-			Double startBearing = Widgets.GyMag.Bearing;
+			Double startBearing = Widgets.Instance.GyMag.Bearing;
 			PointD currentLocation = new PointD(0, 0);
-			for(double x = 1;x < 360;x ++)
+			for(double angle = 0;angle < 360;angle ++)
 			{
-				if(FuzzyRangeAtBearing(x, RangeFuzz) != 0)
+				Double range = FuzzyRangeAtBearing(angle, RangeFuzz);
+//				Log.SysLogText(LogLevel.DEBUG, "Range at {0}° is {1:0.000}m", angle, range);
+				if(range != 0)
 				{
-					Double bearing = startBearing.AddDegrees(x);
-					//				Console.WriteLine("From {0:0}° to {1:0}°", startBearing, bearing);
-					Line line = new Line(currentLocation, FlatGeo.GetPoint(currentLocation, bearing, Widgets.ImageEnvironment.GetRangeAtBearing(x)));
-					if(line != null)
+					if(longestLine == null || range > longestLine.Vector.Range)
 					{
-						if(longestLine == null || line.Length > longestLine.Length)
+						Double shortRangeClearance = ShortestRangeAtBearing(angle, SHORT_CLEARANCE_ANGLE);
+//						Log.SysLogText(LogLevel.DEBUG, "Shortest Range at {0}° is {1:0.000}m", angle, shortRangeClearance);
+						if(shortRangeClearance >= requireClearUpTo)
 						{
-//							Console.WriteLine("Got longest line {0:0.0} meters [{1} to {2}] at {3:0.00}°", line.Length, line.P1, line.P2, line.Bearing);
-							longestLine = line;
+							Log.SysLogText(LogLevel.DEBUG, "This is the longest line!");
+							longestLine = MakeFuzzyPath(angle, RangeFuzz);
 						}
 					}
 				}
 			}
 
-			FuzzyPath path = null;
-			if(longestLine != null)
-			{
-				path = MakeFuzzyPath(longestLine.Bearing, RangeFuzz);
-			}
-
-			return path;
+			Log.SysLogText(LogLevel.DEBUG, "Longest line {0}", longestLine == null ? "NULL" : longestLine.ToString());
+			return longestLine;
 
 		}
 
@@ -119,6 +118,21 @@ namespace TrackBot.Spatial
 			CvInvoke.Rectangle(mat, rect, new Bgr(Color.Yellow).MCvScalar);
 
 			return mat;
+		}
+
+		public byte[] MakeRangeBlob()
+		{
+			byte[] output = new byte[sizeof(Double) * Vectors.Length];
+
+			using(BinaryWriter bw = new BinaryWriter(new MemoryStream(output)))
+			{
+				for(int offset = 0;offset < Vectors.Length;offset++)
+				{
+					IVector vector = Vectors[offset];
+					bw.Write(vector.Range);
+				}
+			}
+			return output;
 		}
 
 		public double GetRangeAtBearing(double bearing)

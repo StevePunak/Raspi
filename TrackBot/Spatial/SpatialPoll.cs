@@ -5,6 +5,8 @@ using System.Text;
 using System.Threading.Tasks;
 using KanoopCommon.Logging;
 using KanoopCommon.Threading;
+using RaspiCommon;
+using RaspiCommon.Devices.Spatial;
 
 namespace TrackBot.Spatial
 {
@@ -36,7 +38,16 @@ namespace TrackBot.Spatial
 		{
 			if(Paused == false)
 			{
-				//Log.LogText(LogLevel.DEBUG, "There are {0} landmarks", Widgets.Environment.Landmarks.Count);
+				HCSR04_RangeFinder rangeFinder;
+				if(Widgets.Instance.RangeFinders.TryGetValue(RFDir.Front, out rangeFinder))
+				{
+					Widgets.Instance.SetForwardSecondaryRange(rangeFinder.Range);
+				}
+				if(Widgets.Instance.RangeFinders.TryGetValue(RFDir.Rear, out rangeFinder))
+				{
+					Widgets.Instance.SetBackwardSecondaryRange(rangeFinder.Range);
+				}
+				//Log.LogText(LogLevel.DEBUG, "There are {0} landmarks", Widgets.Instance.Environment.Landmarks.Count);
 			}
 			return true;
 		}

@@ -11,14 +11,14 @@ namespace KanoopControls.SimpleTextSelection
 {
 	public partial class SimpleTextSelectionDialog : Form
 	{
-		String m_strPrompt;
+		String _prompt;
 
-		String m_strTitle;
-		String m_strDefaultText;
-		String m_strAnswer;
-		List<String> m_ComboBoxList;
+		String _title;
+		String _defaultText;
+		String _answer;
+		List<String> _comboBoxList;
 
-		public String Answer { get { return m_strAnswer; } }
+		public String Answer { get { return _answer; } }
 
 		public SimpleTextSelectionDialog(String prompt)
 			: this(prompt, String.Empty, "") {}
@@ -31,22 +31,22 @@ namespace KanoopControls.SimpleTextSelection
 
 		public SimpleTextSelectionDialog(String strPrompt, String strTitle, String strDefaultText, List<String> comboBoxList)
 		{
-			m_strTitle = strTitle;
-			m_strPrompt = strPrompt;
-			m_strDefaultText = strDefaultText;
-			m_ComboBoxList = comboBoxList;
+			_title = strTitle;
+			_prompt = strPrompt;
+			_defaultText = strDefaultText;
+			_comboBoxList = comboBoxList;
 
 			InitializeComponent();
 		}
 
 		private void OnFormLoad(object sender, EventArgs e)
 		{
-			Text = m_strTitle;
-			lblQuestion.Text = m_strPrompt;
-			textAnswer.Text = m_strDefaultText;
-			if(m_ComboBoxList != null)
+			Text = _title;
+			lblQuestion.Text = _prompt;
+			textAnswer.Text = _defaultText;
+			if(_comboBoxList != null)
 			{
-				foreach(String str in m_ComboBoxList)
+				foreach(String str in _comboBoxList)
 				{
 					textAnswer.Items.Add(str);
 				}
@@ -56,7 +56,7 @@ namespace KanoopControls.SimpleTextSelection
 
 		private void OnOKClicked(object sender, EventArgs e)
 		{
-			m_strAnswer = textAnswer.Text;
+			_answer = textAnswer.Text;
 			DialogResult = DialogResult.OK;
 			Close();
 		}

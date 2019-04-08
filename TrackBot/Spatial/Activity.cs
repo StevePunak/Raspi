@@ -64,6 +64,11 @@ namespace TrackBot.Spatial
 						RunningActivity.Start();
 						RunningActivityType = ActivityType.RoamAndSeek;
 						break;
+					case ActivityType.GoToDestination:
+						RunningActivity = new GoToDestination();
+						RunningActivity.Start();
+						RunningActivityType = ActivityType.GoToDestination;
+						break;
 					case ActivityType.TravelLongestPath:
 						RunningActivity = new TravelLongestPath();
 						RunningActivity.Start();
@@ -145,7 +150,7 @@ namespace TrackBot.Spatial
 				method = GetStateMethod(StateTransition.Stop, ActivityState, out methodName);
 				if(method != null)
 				{
-					Log.LogText(LogLevel.DEBUG, "Invoking '{0}'", methodName);
+//					Log.LogText(LogLevel.DEBUG, "Invoking '{0}'", methodName);
 					if((result = (bool)method.Invoke(this, null)) == false)
 					{
 						throw new TrackBotException("Method {0} return false", method);
@@ -153,7 +158,7 @@ namespace TrackBot.Spatial
 				}
 				else
 				{
-					Log.LogText(LogLevel.DEBUG, "No method exists called '{0}'... continuing", methodName);
+//					Log.LogText(LogLevel.DEBUG, "No method exists called '{0}'... continuing", methodName);
 				}
 
 				ActivityState = state;
@@ -163,7 +168,7 @@ namespace TrackBot.Spatial
 				method = GetStateMethod(StateTransition.Init, ActivityState, out methodName);
 				if(method != null)
 				{
-					Log.LogText(LogLevel.DEBUG, "Invoking '{0}'... continuing", methodName);
+//					Log.LogText(LogLevel.DEBUG, "Invoking '{0}'... continuing", methodName);
 					if((result = (bool)method.Invoke(this, null)) == false)
 					{
 						throw new TrackBotException("Method {0} return false", method);
@@ -171,7 +176,7 @@ namespace TrackBot.Spatial
 				}
 				else
 				{
-					Log.LogText(LogLevel.DEBUG, "No method exists called '{0}'... continuing", methodName);
+//					Log.LogText(LogLevel.DEBUG, "No method exists called '{0}'... continuing", methodName);
 				}
 			}
 			catch(Exception e)

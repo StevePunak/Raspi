@@ -25,11 +25,11 @@ namespace TrackBot.TTY
 				{
 					throw new CommandException("Value must be between -359 and 359.9");
 				}
-				Widgets.ImageEnvironment.CompassOffset = value;
+				Widgets.Instance.ImageEnvironment.CompassOffset = value;
 				Program.Config.LidarOffsetDegrees = value;
 				Program.Config.Save();
 
-				Widgets.ImageEnvironment.PointsToBitmap().Save(Program.Config.SaveImageLocation);
+				Widgets.Instance.ImageEnvironment.PointsToBitmap().Save(Program.Config.SaveImageLocation);
 			}
 			return true;
 		}

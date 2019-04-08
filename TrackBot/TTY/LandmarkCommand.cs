@@ -31,14 +31,14 @@ namespace TrackBot.TTY
 			}
 			else if(subCommand == "lc")		// list found
 			{
-				foreach(ImageVector landmark in Widgets.ImageEnvironment.Landmarks)
+				foreach(ImageVector landmark in Widgets.Instance.ImageEnvironment.Landmarks)
 				{
 					Console.WriteLine("{0}", landmark);
 				}
 			}
 			else if(subCommand == "addall")    // add all
 			{
-				Program.Config.Landmarks.AddRange(Widgets.ImageEnvironment.Landmarks);
+				Program.Config.Landmarks.AddRange(Widgets.Instance.ImageEnvironment.Landmarks);
 				Program.Config.Save();
 			}
 			else if(subCommand == "clear")    // clear

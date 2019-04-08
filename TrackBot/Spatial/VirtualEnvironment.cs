@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Emgu.CV;
 using KanoopCommon.Geometry;
 using RaspiCommon.Lidar.Environs;
+using RaspiCommon.Spatial;
 using RaspiCommon.Spatial.Imaging;
 
 namespace TrackBot.Spatial
@@ -88,7 +89,7 @@ namespace TrackBot.Spatial
 			
 		}
 
-		public Mat GetEnvironmentImage(bool drawDebugLines)
+		public Mat CreateImage(SpatialObjects objects)
 		{
 			return new Mat();
 		}
@@ -106,6 +107,16 @@ namespace TrackBot.Spatial
 		public FuzzyPath FindGoodDestination()
 		{
 			return new FuzzyPath();
+		}
+
+		public byte[] MakeRangeBlob()
+		{
+			return new byte[0];
+		}
+
+		public FuzzyPath FindGoodDestination(double requireClearUpTo)
+		{
+			throw new NotImplementedException();
 		}
 	}
 }

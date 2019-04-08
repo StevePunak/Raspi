@@ -17,7 +17,8 @@ namespace TrackBot.TTY
 
 		public override bool Execute(List<string> commandParts)
 		{
-			Console.WriteLine("Adjust X = {0:0.000}  Y = {1:0.000}", Widgets.GyMag.XAdjust, Widgets.GyMag.YAdjust);
+			double shortest = Widgets.Instance.ImageEnvironment.ShortestRangeAtBearing(0, 90);
+			Console.WriteLine("Shortest {0:0.000} ", shortest);
 
 			return true;
 		}

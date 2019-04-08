@@ -13,6 +13,7 @@ using KanoopCommon.PersistentConfiguration;
 using RaspiCommon;
 using RaspiCommon.Data.DataSource;
 using RaspiCommon.Data.Entities;
+using RaspiCommon.Devices.MotorControl;
 using TrackBot.Spatial;
 using TrackBot.Tracks;
 using TrackBot.TTY;
@@ -39,13 +40,13 @@ namespace TrackBot
 			Console.WriteLine("Running pretests...");
 			Test();
 
-			Console.WriteLine("Starting widgets...");
-			Widgets.StartWidgets();
+			Console.WriteLine("Starting Widgets.Instance...");
+			Widgets.Instance.StartWidgets();
 
 			Console.WriteLine("Starting TTY...");
 			Terminal.Run();
 
-			Widgets.StopWidgets();
+			Widgets.Instance.StopWidgets();
 
 		}
 
@@ -53,6 +54,41 @@ namespace TrackBot
 		{
 			try
 			{
+				//Testing.TestRangeFinders();
+				Program.Config.TracksLeftA1Pin = GpioPin.Pin10;
+				Program.Config.TracksLeftA2Pin = GpioPin.Pin09;
+				Program.Config.TracksLeftEnaPin = GpioPin.Pin05;
+				Program.Config.TracksRightA1Pin = GpioPin.Pin11;
+				Program.Config.TracksRightA2Pin = GpioPin.Pin13;
+				Program.Config.TracksRightEnaPin = GpioPin.Pin06;
+//				Program.Config.Save();
+				//DRV8825StepperControl motor = new DRV8825StepperControl(GpioPin.Pin12, GpioPin.Pin13, GpioPin.Pin19);
+				//motor.Speed = 20;
+				//GpioSharp.Sleep(TimeSpan.FromSeconds(2));
+				//motor.Speed = 60;
+				//GpioSharp.Sleep(TimeSpan.FromSeconds(2));
+				//motor.Speed = 100;
+				//GpioSharp.Sleep(TimeSpan.FromSeconds(2));
+				//motor.Speed = 60;
+				//GpioSharp.Sleep(TimeSpan.FromSeconds(2));
+				//motor.Speed = 20;
+				//GpioSharp.Sleep(TimeSpan.FromSeconds(2));
+				//motor.Stop();
+				//GpioSharp.Sleep(TimeSpan.FromSeconds(5));
+				//motor.Speed = -20;
+				//GpioSharp.Sleep(TimeSpan.FromSeconds(2));
+				//motor.Speed = -60;
+				//GpioSharp.Sleep(TimeSpan.FromSeconds(2));
+				//motor.Speed = -100;
+				//GpioSharp.Sleep(TimeSpan.FromSeconds(2));
+				//motor.Speed = -60;
+				//GpioSharp.Sleep(TimeSpan.FromSeconds(2));
+				//motor.Speed = -20;
+				//GpioSharp.Sleep(TimeSpan.FromSeconds(2));
+				//motor.Stop();
+
+				//Console.WriteLine("Done....");
+				//Console.ReadKey();
 			}
 			catch(Exception e)
 			{
@@ -65,9 +101,9 @@ namespace TrackBot
 			Cell cells = grid.GetCellAtLocation(new PointD(4, 7.5));
 #endif
 
-			}
+		}
 
-			private static void OpenConfig()
+		private static void OpenConfig()
 		{
 			String      configFileName = RaspiConfig.GetDefaultConfigFileName();
 

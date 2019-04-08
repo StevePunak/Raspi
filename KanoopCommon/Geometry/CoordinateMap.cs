@@ -19,11 +19,11 @@ namespace KanoopCommon.Geometry
 			set {m_BearingDelta = value; }
 		}
 
-		double m_PixelsPerMeter;
+		double _pixelsPerMeter;
 		public double PixelsPerMeter
 		{
-			get { return m_PixelsPerMeter; }
-			set { m_PixelsPerMeter = value; }
+			get { return _pixelsPerMeter; }
+			set { _pixelsPerMeter = value; }
 		}
 
 		public double MetersPerPixel
@@ -31,18 +31,18 @@ namespace KanoopCommon.Geometry
 			get { return 1 / PixelsPerMeter; }
 		}
 
-		PointD m_PixelReferencePoint;
+		PointD _pixelReferencePoint;
 		public PointD PixPoint
 		{
-			get { return m_PixelReferencePoint; }
-			set { m_PixelReferencePoint = value; }
+			get { return _pixelReferencePoint; }
+			set { _pixelReferencePoint = value; }
 		}
 
-		GeoPoint m_GeoReferencePoint;
+		GeoPoint _geoReferencePoint;
 		public GeoPoint GeoPoint
 		{
-			get { return m_GeoReferencePoint; }
-			set { m_GeoReferencePoint = value; }
+			get { return _geoReferencePoint; }
+			set { _geoReferencePoint = value; }
 		}
 
 		#endregion
@@ -57,10 +57,10 @@ namespace KanoopCommon.Geometry
 
 		public CoordinateMap(PointD pixelReferencePoint, GeoPoint geoReferencePoint, Double bearingDelta, Double pixelsPerMeter)
 		{
-			m_PixelReferencePoint = pixelReferencePoint;
-			m_GeoReferencePoint = geoReferencePoint;
+			_pixelReferencePoint = pixelReferencePoint;
+			_geoReferencePoint = geoReferencePoint;
 			m_BearingDelta = bearingDelta;
-			m_PixelsPerMeter = pixelsPerMeter;
+			_pixelsPerMeter = pixelsPerMeter;
 		}
 
 		public CoordinateMap(PointDList pixPointList, GeoPointList geoPointList)
@@ -79,7 +79,7 @@ namespace KanoopCommon.Geometry
 			// Get and store the pixel to meter ratio (Scale to meters)
 			double geoDistance = EarthGeo.GetDistance(geoPointList[0], geoPointList[1]);
 			double pixDistance = new Line(pixPointList[0],pixPointList[1]).Length;
-			m_PixelsPerMeter = pixDistance / geoDistance;
+			_pixelsPerMeter = pixDistance / geoDistance;
 
 			// Store a pixel cross reference point, from which all other conversions can happen
 			this.PixPoint = new PointD(pixPointList[0].X, pixPointList[0].Y);
@@ -141,8 +141,8 @@ namespace KanoopCommon.Geometry
 			/** draw a line to get our pixel length */
 			Line l1 = new Line(pixPoint, this.PixPoint);
 
-			PointD vectorPoint = new PointD(m_PixelReferencePoint.X + 100, m_PixelReferencePoint.Y);
-			double pixBearing = FlatGeo.Angle(pixPoint, m_PixelReferencePoint, vectorPoint).Degrees + 90;
+			PointD vectorPoint = new PointD(_pixelReferencePoint.X + 100, _pixelReferencePoint.Y);
+			double pixBearing = FlatGeo.Angle(pixPoint, _pixelReferencePoint, vectorPoint).Degrees + 90;
 			double pixDistance = l1.Length;
 
 			double geoBearing = FlatGeo.Radians((pixBearing + this.BearingDelta) % 360);
@@ -186,7 +186,7 @@ namespace KanoopCommon.Geometry
 			/**
 			 * create a new point some ways off from our reference point
 			 */
-			PointD newPoint = m_PixelReferencePoint.Clone() as PointD;
+			PointD newPoint = _pixelReferencePoint.Clone() as PointD;
 			newPoint.X += 100;
 
 			/** 
@@ -197,10 +197,10 @@ namespace KanoopCommon.Geometry
 			/**
 			 * rotate the new point about our reference point
 			 */
-			newPoint.Rotate(m_PixelReferencePoint, degrees);
+			newPoint.Rotate(_pixelReferencePoint, degrees);
 
-			GeoPointList geoPoints = new GeoPointList() { m_GeoReferencePoint, geoPoint };
-			PointDList pixPoints = new PointDList() { m_PixelReferencePoint, newPoint };
+			GeoPointList geoPoints = new GeoPointList() { _geoReferencePoint, geoPoint };
+			PointDList pixPoints = new PointDList() { _pixelReferencePoint, newPoint };
 
 			/**
 			 * Reinitialize ourself with the new rotation
@@ -215,10 +215,10 @@ namespace KanoopCommon.Geometry
 		public void Scale(Double scale)
 		{
 			/** find the new pixel point */
-			m_PixelReferencePoint.Scale(scale);
+			_pixelReferencePoint.Scale(scale);
 
 			/** scale the pixels per meter */
-			m_PixelsPerMeter *= scale;
+			_pixelsPerMeter *= scale;
 		}
 
 		/// <summary>
@@ -239,9 +239,9 @@ namespace KanoopCommon.Geometry
 		{
 			CoordinateMap ret = new CoordinateMap();
 			ret.m_BearingDelta = m_BearingDelta;
-			ret.m_PixelsPerMeter = m_PixelsPerMeter;
-			ret.m_PixelReferencePoint = m_PixelReferencePoint.Clone() as PointD;
-			ret.m_GeoReferencePoint = m_GeoReferencePoint.Clone() as GeoPoint;
+			ret._pixelsPerMeter = _pixelsPerMeter;
+			ret._pixelReferencePoint = _pixelReferencePoint.Clone() as PointD;
+			ret._geoReferencePoint = _geoReferencePoint.Clone() as GeoPoint;
 			return ret;
 		}
 

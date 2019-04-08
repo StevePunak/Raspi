@@ -26,17 +26,22 @@ namespace RaspiCommon.Server
 
 		public event ImageLandmarksReceivedHandler ImageLandmarksReceived;
 		public event RangeBlobReceivedHandler RangeBlobReceived;
+		public event LandscapeMetricsReceivedHandler LandscapeMetricsReceived;
+		public event ImageMetricsReceivedHandler ImageMetricsReceived;
+		public event EnvironmentInfoReceivedHandler EnvironmentInfoReceived;
 
 		public LidarVector[] Vectors;
 
 		public FuzzyPath FuzzyPath { get; private set; }
 		public BarrierList ImageBarriers { get; private set; }
-		public ImageVectorList ImageVectors { get; private set; }
+		public ImageVectorList ImageLandmarks { get; private set; }
 		public ImageVectorList LandscapeVectors { get; private set; }
 		public Double Bearing { get; private set; }
 
 		public ImageMetrics ImageMetrics { get; private set; }
 		public LandscapeMetrics LandscapeMetrics { get; private set; }
+
+		public EnvironmentInfo EnvironmentInfo { get; private set; }
 
 		public TelemetryClient(String host, String clientID, List<String> topics)
 			: base(host, clientID, topics)
@@ -59,22 +64,16 @@ namespace RaspiCommon.Server
 			// stub our own events
 			ImageLandmarksReceived += delegate {};
 			RangeBlobReceived += delegate {};
+			LandscapeMetricsReceived += delegate {};
+			ImageMetricsReceived += delegate {};
+			EnvironmentInfoReceived += delegate {};
 		}
 
 		private void OnLidarClientInboundSubscribedMessage(MqttClient client, PublishMessage packet)
 		{
 			if(packet.Topic == MqttTypes.RangeBlobTopic)
 			{
-				using(BinaryReader br = new BinaryReader(new MemoryStream(packet.Message)))
-				{
-					for(int offset = 0;offset < Vectors.Length;offset++)
-					{
-						Double range = br.ReadDouble();
-						Vectors[offset].Range = range;
-						Vectors[offset].RefreshTime = DateTime.UtcNow;
-					}
-
-				}
+				LidarVector.LoadFromRangeBlob(Vectors, packet.Message);
 				RangeBlobReceived(Vectors);
 			}
 			else
@@ -92,8 +91,8 @@ namespace RaspiCommon.Server
 				else if(packet.Topic == MqttTypes.LandmarksTopic)
 				{
 					ImageVectorList landmarks = new ImageVectorList(packet.Message);
-					ImageVectors = landmarks;
-					ImageLandmarksReceived(ImageVectors);
+					ImageLandmarks = landmarks;
+					ImageLandmarksReceived(ImageLandmarks);
 				}
 				else if(packet.Topic == MqttTypes.BearingTopic)
 				{
@@ -103,20 +102,27 @@ namespace RaspiCommon.Server
 				{
 					ImageMetrics = KVPSerializer.Deserialize<ImageMetrics>(ASCIIEncoding.UTF8.GetString(packet.Message));
 					ScaleLandmarks();
+					ImageMetricsReceived(ImageMetrics);
 				}
 				else if(packet.Topic == MqttTypes.LandscapeMetricsTopic)
 				{
 					LandscapeMetrics = KVPSerializer.Deserialize<LandscapeMetrics>(ASCIIEncoding.UTF8.GetString(packet.Message));
 					ScaleLandmarks();
+					LandscapeMetricsReceived(LandscapeMetrics);
+				}
+				else if(packet.Topic == MqttTypes.DistanceAndBearingTopic)
+				{
+					EnvironmentInfo = BinarySerializer.Deserialize<EnvironmentInfo>(packet.Message);
+					EnvironmentInfoReceived(EnvironmentInfo);
 				}
 			}
 		}
 
 		void ScaleLandmarks()
 		{
-			if(ImageMetrics.PixelsPerMeter > 0)
+			if(ImageMetrics.PixelsPerMeter > 0 && ImageLandmarks != null)
 			{
-				ImageVectorList scaled = ImageVectors.Clone();
+				ImageVectorList scaled = ImageLandmarks.Clone();
 				scaled.Scale(1 / ImageMetrics.PixelsPerMeter);
 				LandscapeVectors = scaled;
 			}

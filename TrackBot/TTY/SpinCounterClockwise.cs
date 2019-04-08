@@ -22,7 +22,7 @@ namespace TrackBot.TTY
 			}
 
 			SpinDirection direction = SpinDirection.CounterClockwise;
-			Widgets.Tracks.Spin(direction, Widgets.Tracks.StandardSpeed);
+			Widgets.Instance.Tracks.Spin(direction, Widgets.Instance.Tracks.StandardSpeed);
 
 			DateTime startTime = DateTime.UtcNow;
 
@@ -31,7 +31,7 @@ namespace TrackBot.TTY
 				GpioSharp.Sleep(TimeSpan.FromMilliseconds(25));
 			}
 
-			Widgets.Tracks.Stop();
+			Widgets.Instance.Tracks.Stop();
 
 			return true;
 		}

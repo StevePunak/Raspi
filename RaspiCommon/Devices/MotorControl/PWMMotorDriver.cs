@@ -7,9 +7,9 @@ using System.Threading.Tasks;
 using KanoopCommon.Logging;
 using KanoopCommon.Threading;
 
-namespace RaspiCommon
+namespace RaspiCommon.Devices.MotorControl
 {
-	public class MotorDriver : ThreadBase
+	public class PWMMotorDriver : ThreadBase
 	{
 		int _index;
 
@@ -52,8 +52,8 @@ namespace RaspiCommon
 			}
 		}
 
-		public MotorDriver(GpioPin a1, GpioPin a2, GpioPin b1, GpioPin b2)
-			: base(typeof(MotorDriver).Name)
+		public PWMMotorDriver(GpioPin a1, GpioPin a2, GpioPin b1, GpioPin b2)
+			: base(typeof(PWMMotorDriver).Name)
 		{
 			Log.SysLogText(LogLevel.DEBUG, "Instantiating motor driver");
 
@@ -131,7 +131,7 @@ namespace RaspiCommon
 			}
 			catch(Exception e)
 			{
-				Log.SysLogText(LogLevel.DEBUG, "Exception: {0}", e.Message);
+				Log.SysLogText(LogLevel.DEBUG, "MD Exception: {0}", e.Message);
 			}
 			return true;
 		}

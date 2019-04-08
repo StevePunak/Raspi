@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using KanoopCommon.Logging;
 
 namespace RaspiCommon
 {
@@ -11,35 +12,70 @@ namespace RaspiCommon
 	public class PigCommand
 	{
 		public CommandType Type { get; set; }
-		public UInt32 Parameter1 { get; set; }
+		public UInt32 ParameterPin { get; set; }
+		public UInt32 Parmameter1 { get; set; }
 		public UInt32 Parameter2 { get; set; }
-		public UInt32 Parameter3 { get; set; }
 
-		public PigCommand(CommandType type, GpioPin p1, UInt32 p2)
-			: this(type, (UInt32)p1, p2, 0) { }
+		public bool Extended { get { return _extendedItems != null && _extendedItems.Count > 0; } }
 
-		public PigCommand(CommandType type, UInt32 p1, UInt32 p2)
-			: this(type, p1, p2, 0) { }
+		List<Object> _extendedItems;
 
-		public PigCommand(CommandType type, UInt32 p1, UInt32 p2, UInt32 p3)
+		public PigCommand(CommandType type, GpioPin ping, UInt32 parm1)
+			: this(type, ping, parm1, 0, null) { }
+
+		public PigCommand(CommandType type, GpioPin pin, UInt32 parm1, UInt32 ext1)
+			: this(type, pin, parm1, 4, new List<object>() { ext1 }) {}
+
+		public PigCommand(CommandType type, GpioPin pin, UInt32 p1, UInt32 p2, List<Object> extended)
 		{
 			Type = type;
-			Parameter1 = p1;
+			ParameterPin = (UInt32)pin;
+			Parmameter1 = p1;
 			Parameter2 = p2;
-			Parameter3 = p3;
+			_extendedItems = extended;
 		}
 
 		public byte[] Serialize()
 		{
-			byte[] buffer = new byte[sizeof(UInt32) * 4];
+			const int BASE_SIZE = sizeof(UInt32) * 4;
+
+			int size = BASE_SIZE;
+			if(Extended)
+			{
+				foreach(Object item in _extendedItems)
+				{
+					if(item is UInt16 || item is Int16)
+						size += 2;
+					else if(item is UInt32 || item is Int32)
+						size += 4;
+					else if(item is UInt64 || item is Int64)
+						size += 8;
+					else
+						throw new RaspiException("Unsupported extended information to pigs");
+				}
+			}
+
+			byte[] buffer = new byte[size];
 
 			using(MemoryStream ms = new MemoryStream(buffer))
 			using(BinaryWriter bw = new BinaryWriter(ms))
 			{
 				bw.Write((UInt32)Type);
-				bw.Write(Parameter1);
+				bw.Write(ParameterPin);
+				bw.Write(Parmameter1);
 				bw.Write(Parameter2);
-				bw.Write(Parameter3);
+				if(Extended)
+				{
+					foreach(Object item in _extendedItems)
+					{
+						if(item is UInt16 || item is Int16)
+							bw.Write((UInt16)item);
+						else if(item is UInt32 || item is Int32)
+							bw.Write((UInt32)item);
+						else if(item is UInt64 || item is Int64)
+							bw.Write((UInt64)item);
+					}
+				}
 			}
 
 			return buffer;
@@ -47,7 +83,7 @@ namespace RaspiCommon
 
 		public override string ToString()
 		{
-			return String.Format("{0} {1:X4} {2:X4} {3:X4}", Type, Parameter1, Parameter2, Parameter3);
+			return String.Format("{0} {1:X4} {2:X4} {3:X4}", Type, ParameterPin, Parmameter1, Parameter2);
 		}
 
 		public enum CommandType

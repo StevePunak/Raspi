@@ -9,4 +9,5 @@ namespace RaspiCommon.Spatial.Imaging
 	public delegate void FuzzyPathChangedHandler(FuzzyPath path);
 	public delegate void LandmarksChangedHandler(ImageVectorList landmarks);
 	public delegate void BarriersChangedHandler(BarrierList barriers);
+
 }

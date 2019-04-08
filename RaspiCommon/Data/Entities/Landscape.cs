@@ -21,10 +21,12 @@ namespace RaspiCommon.Data.Entities
 
 		public PointD Center { get { return new PointD(MetersSquare / 2, MetersSquare / 2); } }
 		public LandmarkList Landmarks { get; set; }
+		public LandmarkList PointMarkers { get; set; }
 
 		public Landscape()
 		{
 			Landmarks = new LandmarkList();
+			PointMarkers = new LandmarkList();
 		}
 
 		public override string ToString()

@@ -36,14 +36,15 @@ namespace RaspiCommon.Spatial.Imaging
 		FuzzyPath FuzzyPath { get; set; }
 
 		void ProcessImage(Mat image, Double imageOrientation, Double imagePixelsPerMeter);
-		Mat GetEnvironmentImage(bool drawDebugLines);
+		Mat CreateImage(SpatialObjects objects);
+		byte[] MakeRangeBlob();
 
 		Double GetRangeAtBearing(Double bearing);
 		Double FuzzyRangeAtBearing(Double bearing, Double fuzz);
 		Double ShortestRangeAtBearing(Double bearing, Double fuzz);
 		DateTime GetLastSampleTimeAtBearing(Double bearing);
 		Mat PointsToBitmap();
-		FuzzyPath FindGoodDestination();
+		FuzzyPath FindGoodDestination(Double requireClearUpTo);
 		ImageVectorList Landmarks { get; }
 
 		void Reset();

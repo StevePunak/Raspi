@@ -7,15 +7,16 @@ using KanoopCommon.Geometry;
 using KanoopCommon.Extensions;
 using RaspiCommon;
 using KanoopCommon.Logging;
+using RaspiCommon.Spatial.Imaging;
 
 namespace TrackBot.Spatial
 {
 	class TravelLongestPath : Activity
 	{
 		const Double MAX_RANGE_FROM_DEST = .15;
-		const Double FORWARD_COLLISION_WARNING = .3;
+		const Double FORWARD_COLLISION_WARNING = .15;
 
-		public Line Destination { get; private set; }
+		public FuzzyPath Destination { get; private set; }
 
 		public TravelLongestPath()
 			: base(ActivityType.TravelLongestPath)
@@ -26,7 +27,7 @@ namespace TrackBot.Spatial
 
 		protected override bool OnStop()
 		{
-			Widgets.Tracks.Stop();
+			Widgets.Instance.Tracks.Stop();
 			return base.OnStop();
 		}
 
@@ -34,7 +35,7 @@ namespace TrackBot.Spatial
 
 		protected override bool RunInitState()
 		{
-			Widgets.Tracks.Stop();
+			Widgets.Instance.Tracks.Stop();
 			SwitchState(ActivityStates.FindDestination);
 			return true;
 		}
@@ -45,7 +46,7 @@ namespace TrackBot.Spatial
 
 		bool InitIdleState()
 		{
-			Widgets.Tracks.Stop();
+			Widgets.Instance.Tracks.Stop();
 			Interval = TimeSpan.FromMilliseconds(500);
 			return true;
 		}
@@ -53,7 +54,7 @@ namespace TrackBot.Spatial
 		protected override bool RunIdleState()
 		{
 			Interval = TimeSpan.FromMilliseconds(500);
-			Widgets.Tracks.Stop();
+			Widgets.Instance.Tracks.Stop();
 
 			return true;
 		}
@@ -75,10 +76,12 @@ namespace TrackBot.Spatial
 			bool result = false;
 
 			// find a place to travel to
-			Destination = Widgets.ImageEnvironment.FindGoodDestination().GetLineFrom(Widgets.ImageEnvironment.Location);
+			Destination = Widgets.Instance.ImageEnvironment.FindGoodDestination(Program.Config.ShortRangeClearance);
 			if(Destination != null)
 			{
-				Console.WriteLine("Found a good destination at {0} bearing {1:0.0}°", Destination, Destination.Bearing);
+				Console.WriteLine("Found a good destination at {0}", Destination);
+				Widgets.Instance.ImageEnvironment.FuzzyPath = Destination;
+
 				SwitchState(ActivityStates.TravelToDest);
 				result = true;
 			}
@@ -99,17 +102,18 @@ namespace TrackBot.Spatial
 		{
 			bool result = false;
 
-			if(Widgets.ImageEnvironment.FuzzyRangeAtBearing(Widgets.GyMag.Bearing, Widgets.ImageEnvironment.RangeFuzz) < FORWARD_COLLISION_WARNING)
+			if(Widgets.Instance.ImageEnvironment.FuzzyRangeAtBearing(Widgets.Instance.GyMag.Bearing, Widgets.Instance.ImageEnvironment.RangeFuzz) < FORWARD_COLLISION_WARNING)
 			{
 				Console.WriteLine("Backing it up");
-				Widgets.Tracks.BackwardTime(TimeSpan.FromSeconds(1), Widgets.Tracks.Slow);
+				Widgets.Instance.Tracks.BackwardTime(TimeSpan.FromSeconds(1), Widgets.Instance.Tracks.Slow);
+				GpioSharp.Sleep(TimeSpan.FromSeconds(1.5));
 			}
 
-			Log.LogText(LogLevel.DEBUG, "Turn to bearing {0:0.00}°", Destination.Bearing);
+			Log.LogText(LogLevel.DEBUG, "Turn to bearing {0:0.00}°", Destination.Vector.Bearing);
 
-			Widgets.Tracks.TurnToBearing(Destination.Bearing);
+			Widgets.Instance.Tracks.TurnToBearing(Destination.Vector.Bearing);
 
-			Double diff = Widgets.GyMag.Bearing.AngularDifference(Destination.Bearing);
+			Double diff = Widgets.Instance.GyMag.Bearing.AngularDifference(Destination.Vector.Bearing);
 			if(diff > 5)
 			{
 				Console.WriteLine("Abandoning due to angular difference of {0:0.0}° too high", diff);
@@ -117,11 +121,12 @@ namespace TrackBot.Spatial
 			}
 			else
 			{
-				Console.WriteLine("Rotated to within {0:0.0}° of {1:0.0}°", diff, Destination.Bearing);
-				Widgets.Tracks.SetStart();
-				Widgets.Tracks.Speed = Widgets.Tracks.Slow;
+				Console.WriteLine("Rotated to within {0:0.0}° of {1:0.0}°", diff, Destination.Vector.Bearing);
 
-				Interval = TimeSpan.FromMilliseconds(50);
+				GpioSharp.Sleep(TimeSpan.FromSeconds(5));
+
+				Widgets.Instance.Tracks.SetStart();
+
 				result = true;
 			}
 
@@ -133,16 +138,28 @@ namespace TrackBot.Spatial
 			bool result = true;
 
 			// make sure we are not hitting anything
-			if(Widgets.ImageEnvironment.FuzzyRangeAtBearing(Widgets.GyMag.Bearing, Widgets.ImageEnvironment.RangeFuzz) < FORWARD_COLLISION_WARNING)
+			if(Widgets.Instance.ImageEnvironment.FuzzyRangeAtBearing(Widgets.Instance.GyMag.Bearing, Widgets.Instance.ImageEnvironment.RangeFuzz) < FORWARD_COLLISION_WARNING)
 			{
 				Console.WriteLine("activating emergency stop");
 				SwitchState(ActivityStates.Idle);
-				Widgets.Tracks.Stop();
+				Widgets.Instance.Tracks.Stop();
 				result = false;
 			}
 			else
 			{
-				Widgets.Tracks.AdjustSpeed(Destination.Bearing, Widgets.GyMag.Bearing);
+				Double range = Destination.Vector.Range;
+				if(Destination.ShortestRange > Destination.Vector.Range)
+				{
+					Log.SysLogText(LogLevel.DEBUG, "Shortening original range of {0:0.000}m to {1:0.000}m due to shortest", Destination.Vector.Range, Destination.ShortestRange);
+					range = Destination.ShortestRange;
+				}
+				else if(Destination.Vector.Range > 2)
+				{
+					Log.SysLogText(LogLevel.DEBUG, "Shortening original range of {0:0.000}m to {1:0.000}m for no real reason", Destination.Vector.Range, 1);
+					range = 2;
+				}
+				Widgets.Instance.Tracks.ForwardMeters(range, Widgets.Instance.Tracks.StandardSpeed);
+				SwitchState(ActivityStates.FindDestination);
 			}
 
 			return result;

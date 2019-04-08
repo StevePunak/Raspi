@@ -11,6 +11,8 @@ using RaspberrySharp.System.Timers;
 using RaspiCommon;
 using System.IO;
 using System.Runtime.InteropServices;
+using RaspiCommon.Devices.Spatial;
+using RaspiCommon.Devices.MotorControl;
 
 namespace Raspi
 {
@@ -148,20 +150,20 @@ namespace Raspi
 		{
 			Console.WriteLine("Socket open");
 
-			PigCommand command = new PigCommand(PigCommand.CommandType.SERVO, 25, 600);
+			PigCommand command = new PigCommand(PigCommand.CommandType.SERVO, GpioPin.Pin25, 600);
 			UInt32 value;
 			for(int x = 0;x < 4;x++)
 			{
 				for(value = 600;value < 2500;value++)
 				{
-					command.Parameter2 = value;
+					command.Parmameter1 = value;
 					Pigs.SendCommand(command);
 					Timer.Sleep(1);
 				}
 
 				for(;value > 600;value--)
 				{
-					command.Parameter2 = value;
+					command.Parmameter1 = value;
 					Pigs.SendCommand(command);
 					Timer.Sleep(1);
 				}

@@ -23,24 +23,24 @@ namespace TrackBot.TTY
 			{
 				Console.WriteLine("Calibrating speed at {0}", motorSpeed);
 
-				Double startRange = Widgets.ImageEnvironment.Range;
+				Double startRange = Widgets.Instance.ImageEnvironment.Range;
 
 				// move out
-				Widgets.Tracks.Speed = motorSpeed;
+				Widgets.Instance.Tracks.Speed = motorSpeed;
 				GpioSharp.Sleep(runtime);
-				Widgets.Tracks.Stop();
+				Widgets.Instance.Tracks.Stop();
 
 				GpioSharp.Sleep(1000);
-				Double endRange = Widgets.ImageEnvironment.Range;
+				Double endRange = Widgets.Instance.ImageEnvironment.Range;
 				Double speed = (startRange - endRange) / runtime.Seconds;
 				Console.WriteLine("travelled {0:00} meters in {1}ms for speed of {2:0.00}m/s", (startRange - endRange), runtime, speed);
 
 				Program.Config.MetersPerSecondAtPower.Add(motorSpeed, speed);
 
 				// move back
-				Widgets.Tracks.Speed = -motorSpeed;
+				Widgets.Instance.Tracks.Speed = -motorSpeed;
 				GpioSharp.Sleep(runtime);
-				Widgets.Tracks.Stop();
+				Widgets.Instance.Tracks.Stop();
 
 				GpioSharp.Sleep(1000);
 			}

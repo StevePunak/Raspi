@@ -14,6 +14,8 @@ namespace RaspiCommon.Spatial.Imaging
 		public BearingAndRange Vector { get; set; }
 		public BearingAndRangeList Elements { get; set; }
 
+		public Double ShortestRange { get { return Elements.Min(e => e.Range); } }
+
 		public FuzzyPath()
 			: this(0, null) {}
 

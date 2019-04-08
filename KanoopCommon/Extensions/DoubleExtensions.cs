@@ -440,6 +440,8 @@ namespace KanoopCommon.Extensions
 			Double result = value + count;
 			if(result >= 360)
 				result -= 360;
+			if(result < 0)
+				result += 360;
 			return result;
 		}
 
@@ -454,6 +456,8 @@ namespace KanoopCommon.Extensions
 			Double result = value - count;
 			if(result < 0)
 				result += 360;
+			if(result >= 360)
+				result -= 360;
 			return result;
 		}
 

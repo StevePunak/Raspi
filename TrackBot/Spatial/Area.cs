@@ -79,7 +79,7 @@ namespace TrackBot.Spatial
 
 			Line longestLine = null;
 
-			Double startBearing = Widgets.GyMag.Bearing;
+			Double startBearing = Widgets.Instance.GyMag.Bearing;
 			for(double x = 0;x < 360;x += 10)
 			{
 				Double bearing = startBearing.AddDegrees(x);
@@ -101,7 +101,7 @@ namespace TrackBot.Spatial
 
 		public void SaveBitmap()
 		{
-			Mat bitmap = Widgets.ImageEnvironment.PointsToBitmap();
+			Mat bitmap = Widgets.Instance.ImageEnvironment.PointsToBitmap();
 			bitmap.Save("/var/www/html/grid.png");
 
 			Console.WriteLine("Bitmap saved");

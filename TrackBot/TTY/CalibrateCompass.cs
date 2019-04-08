@@ -15,19 +15,19 @@ namespace TrackBot.TTY
 
 		public override bool Execute(List<String> commandParts)
 		{
-			Widgets.SpatialPollThread.Paused = true;
+			Widgets.Instance.SpatialPollThread.Paused = true;
 
-			Widgets.Tracks.Spin(SpinDirection.Clockwise, Widgets.Tracks.StandardSpeed);
+			Widgets.Instance.Tracks.Spin(SpinDirection.Clockwise, Widgets.Instance.Tracks.Medium);
 
-			Widgets.GyMag.Calibrate();
+			Widgets.Instance.GyMag.Calibrate();
 
-			Widgets.Tracks.Stop();
+			Widgets.Instance.Tracks.Stop();
 
-			Console.WriteLine("Adjust X = {0:0.000}  Y = {1:0.000}", Widgets.GyMag.XAdjust, Widgets.GyMag.YAdjust);
-			Program.Config.CompassXAdjust = Widgets.GyMag.XAdjust;
-			Program.Config.CompassYAdjust = Widgets.GyMag.YAdjust;
+			Console.WriteLine("Adjust X = {0:0.000}  Y = {1:0.000}", Widgets.Instance.GyMag.XAdjust, Widgets.Instance.GyMag.YAdjust);
+			Program.Config.CompassXAdjust = Widgets.Instance.GyMag.XAdjust;
+			Program.Config.CompassYAdjust = Widgets.Instance.GyMag.YAdjust;
 
-			Widgets.SpatialPollThread.Paused = false;
+			Widgets.Instance.SpatialPollThread.Paused = false;
 
 			return true;
 		}

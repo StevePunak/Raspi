@@ -10,7 +10,7 @@ using KanoopCommon.Logging;
 using KanoopCommon.Threading;
 using RaspberrySharp.IO.GeneralPurpose;
 
-namespace RaspiCommon
+namespace RaspiCommon.Devices.Spatial
 {
 	public class HCSR04_RangeFinder
 	{

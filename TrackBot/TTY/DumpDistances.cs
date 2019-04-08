@@ -25,11 +25,11 @@ namespace TrackBot.TTY
 				throw new CommandException("Invalid parameter value");
 			}
 
-			for(Double angle = a1;angle.AngularDifference(a2) > Widgets.ImageEnvironment.VectorSize;angle = angle.AddDegrees(Widgets.ImageEnvironment.VectorSize))
+			for(Double angle = a1;angle.AngularDifference(a2) > Widgets.Instance.ImageEnvironment.VectorSize;angle = angle.AddDegrees(Widgets.Instance.ImageEnvironment.VectorSize))
 			{
-				DateTime time = Widgets.ImageEnvironment.GetLastSampleTimeAtBearing(angle);
+				DateTime time = Widgets.Instance.ImageEnvironment.GetLastSampleTimeAtBearing(angle);
 				String timeString = time == DateTime.MinValue ? "MIN" : (DateTime.UtcNow - time).ToAbbreviatedFormat(true);
-				Log.SysLogText(LogLevel.DEBUG, "At {0:0.00}°  range is {1:0.00}m  Time: {2}", angle, Widgets.ImageEnvironment.GetRangeAtBearing(angle), timeString);
+				Log.SysLogText(LogLevel.DEBUG, "At {0:0.00}°  range is {1:0.000}m  Time: {2}", angle, Widgets.Instance.ImageEnvironment.GetRangeAtBearing(angle), timeString);
 			}
 			
 			return true;

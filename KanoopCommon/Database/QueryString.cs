@@ -7,31 +7,31 @@ namespace KanoopCommon.Database
 {
 	public class QueryString
 	{
-		protected String		m_strValue;
-		public String Value { get { return m_strValue; } }
+		protected String		_value;
+		public String Value { get { return _value; } }
 
-		protected bool			m_bTrusted;
-		public bool Trusted { get { return m_bTrusted; } }
+		protected bool			_trusted;
+		public bool Trusted { get { return _trusted; } }
 
 		protected QueryString(bool trusted)
 			: this(trusted, String.Empty) {}
 
 		public QueryString(String other)
 		{
-			m_bTrusted = false;
-			m_strValue = other;
+			_trusted = false;
+			_value = other;
 		}
 
 		protected QueryString(bool trusted, String other)
 		{
-			m_bTrusted = trusted;
-			m_strValue = other;
+			_trusted = trusted;
+			_value = other;
 		}
 
 		protected QueryString(bool trusted, String format, params object[] args)
 		{
-			m_bTrusted = trusted;
-			m_strValue = Format(format, args);
+			_trusted = trusted;
+			_value = Format(format, args);
 		}
 
 		public static QueryString operator +(QueryString s1, String s2)
@@ -54,7 +54,7 @@ namespace KanoopCommon.Database
 				/** if there are no parms, just use the format entry */
 				formatted = format;
 			}
-			else if(m_bTrusted)
+			else if(_trusted)
 			{
 				/** if this is a trusted query string, use stock format */
 				formatted = String.Format(format, parms);
@@ -91,27 +91,27 @@ namespace KanoopCommon.Database
 
 		protected virtual void AppendString(String value)
 		{
-			m_strValue += value;
+			_value += value;
 		}
 
 		public bool Contains(String value)
 		{
-			return m_strValue.Contains(value);
+			return _value.Contains(value);
 		}
 
 		public QueryString TrimEnd(char ch)
 		{
-			return Create(Trusted, m_strValue.Trim(ch));
+			return Create(Trusted, _value.Trim(ch));
 		}
 
 		public QueryString Replace(String oldValue, String newValue)
 		{
-			return Create(Trusted, m_strValue.Replace(oldValue, newValue));
+			return Create(Trusted, _value.Replace(oldValue, newValue));
 		}
 
 		public override String ToString()
 		{
-			return m_strValue;
+			return _value;
 		}
 	}
 }

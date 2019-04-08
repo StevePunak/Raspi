@@ -6,6 +6,8 @@ using System.Text;
 using System.Threading.Tasks;
 using KanoopCommon.Extensions;
 using KanoopCommon.Threading;
+using RaspiCommon.Devices.MotorControl;
+using RaspiCommon.Devices.Spatial;
 
 namespace RaspiCommon
 {
@@ -30,9 +32,9 @@ namespace RaspiCommon
 				{
 					((HCSR04_RangeFinder.TriggerThread)thread).Stop(); 
 				}
-				if(thread.GetType() == typeof(MotorDriver))
+				if(thread.GetType() == typeof(PWMMotorDriver))
 				{
-					((MotorDriver)thread).Stop();
+					((PWMMotorDriver)thread).Stop();
 				}
 			}
 

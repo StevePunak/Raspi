@@ -20,11 +20,11 @@ namespace TrackBot.TTY
 				throw new CommandException("Invalid parameter value");
 			}
 
-			Widgets.Tracks.StoppingDistance = parm;
+			Widgets.Instance.Tracks.StoppingDistance = parm;
 			Program.Config.StoppingDistance = parm;
 			Program.Config.Save();
 
-			Console.WriteLine("Stopping distance set to {0}", Widgets.Tracks.StoppingDistance);
+			Console.WriteLine("Stopping distance set to {0}", Widgets.Instance.Tracks.StoppingDistance);
 
 			return true;
 		}

@@ -16,10 +16,13 @@ using KanoopCommon.Geometry;
 using KanoopCommon.Logging;
 using KanoopCommon.Queueing;
 using KanoopCommon.Threading;
+using RaspiCommon.Devices.MotorControl;
+using RaspiCommon.Devices.Spatial;
 using RaspiCommon.Extensions;
 using RaspiCommon.Lidar;
 using RaspiCommon.Lidar.Environs;
 using RaspiCommon.Server;
+using RaspiCommon.Spatial;
 
 namespace RaspiCommon
 {
@@ -67,10 +70,10 @@ namespace RaspiCommon
 					env.Location = currentPoint;
 					env.ProcessImage(image, 0, PixelsPerMeter);
 
-					Mat output = env.GetEnvironmentImage(false);
+					Mat output = env.CreateImage(SpatialObjects.Everything);
 					String outFile = String.Format(@"{0}\output_{1:000}-a.png", root, index);
 					output.Save(outFile);
-					output = env.GetEnvironmentImage(true);
+					output = env.CreateImage(SpatialObjects.Everything);
 					outFile = String.Format(@"{0}\output_{1:000}-b.png", root, index);
 					output.Save(outFile);
 
@@ -86,7 +89,7 @@ namespace RaspiCommon
 
 		static void RunMotor()
 		{
-			MotorDriver motor = new MotorDriver(GpioPin.Pin12,  GpioPin.Pin26, GpioPin.Pin16, GpioPin.Pin20);
+			PWMMotorDriver motor = new PWMMotorDriver(GpioPin.Pin12,  GpioPin.Pin26, GpioPin.Pin16, GpioPin.Pin20);
 			motor.Speed = MotorSpeed.Fast;
 			motor.Start();
 

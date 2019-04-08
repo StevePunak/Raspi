@@ -54,11 +54,20 @@ namespace RaspiCommon
 		public int TracksSpeed { get; set; }
 
 		public GpioPin TracksRightA1Pin { get; set; }
+		public GpioPin TracksRightA2Pin { get; set; }
+		public GpioPin TracksRightB1Pin { get; set; }
+		public GpioPin TracksRightB2Pin { get; set; }
+		public GpioPin TracksRightEnaPin { get; set; }
+		public GpioPin TracksRightDirectionPin { get; set; }
+		public GpioPin TracksRightStepPin { get; set; }
 		public GpioPin TracksLeftA1Pin { get; set; }
 		public GpioPin TracksLeftA2Pin { get; set; }
-		public GpioPin TracksRightA2Pin { get; set; }
-		public GpioPin TracksRightEnaPin { get; set; }
+		public GpioPin TracksLeftB1Pin { get; set; }
+		public GpioPin TracksLeftB2Pin { get; set; }
 		public GpioPin TracksLeftEnaPin { get; set; }
+		public GpioPin TracksLeftDirectionPin { get; set; }
+		public GpioPin TracksLeftStepPin { get; set; }
+
 		public GpioPin EscControlPinPin { get; set; }
 		public GpioPin RangeFinderInputPin { get; set; }
 		public GpioPin ServoPin { get; set; }
@@ -82,6 +91,7 @@ namespace RaspiCommon
 		public TimeSpan RampUp { get { return TimeSpan.FromMilliseconds(50); } }
 		public TimeSpan RampDown { get { return TimeSpan.FromMilliseconds(50); } }
 		public Double MaxRangeDetect { get { return .5; } }
+		public Double ShortRangeClearance { get { return .3; } }
 
 		public Double LidarOffsetDegrees { get; set; }
 		public int StandardSpeed { get; set; }
@@ -198,6 +208,20 @@ namespace RaspiCommon
 		public Point LastRadarWindowLocation { get; set; }
 		public int SplitRadarPosition { get; set; }
 		public int SplitTopToBottomPosition { get; set; }
+
+		ProcessingMetrics _processingMetrics;
+		public ProcessingMetrics ProcessingMetrics
+		{
+			get
+			{
+				if(_processingMetrics == null)
+				{
+					_processingMetrics = new ProcessingMetrics();
+				}
+				return _processingMetrics;
+			}
+			set { _processingMetrics = value; }
+		}
 
 		public static String GetDefaultConfigFileName()
 		{

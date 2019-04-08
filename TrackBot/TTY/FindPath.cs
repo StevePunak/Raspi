@@ -17,10 +17,10 @@ namespace TrackBot.TTY
 
 		public override bool Execute(List<string> commandParts)
 		{
-			FuzzyPath path = Widgets.ImageEnvironment.FindGoodDestination();
+			FuzzyPath path = Widgets.Instance.ImageEnvironment.FindGoodDestination(Program.Config.ShortRangeClearance);
 			if(path != null)
 			{
-				Widgets.ImageEnvironment.FuzzyPath = path;
+				Widgets.Instance.ImageEnvironment.FuzzyPath = path;
 			}
 
 			return true;

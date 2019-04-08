@@ -279,7 +279,7 @@ namespace KanoopCommon.Logging
 					{
 						DateTime sysTime = _UTCTimestamps ? DateTime.UtcNow : DateTime.Now;
 
-						String strLeading = "";
+						String leading = "";
 
 						// -----------------------------------------------------------------------
 						// add thread ID, if required
@@ -288,11 +288,11 @@ namespace KanoopCommon.Logging
 						{
 							if(Thread.CurrentThread.Name == null)
 							{
-								strLeading += String.Format("[{0}]", Thread.CurrentThread.GetHashCode());
+								leading += String.Format("[{0}]", Thread.CurrentThread.GetHashCode());
 							}
 							else
 							{
-								strLeading += String.Format("[{0}]", Thread.CurrentThread.Name);
+								leading += String.Format("[{0}]", Thread.CurrentThread.Name);
 							}
 						}
 
@@ -301,7 +301,7 @@ namespace KanoopCommon.Logging
 						// -----------------------------------------------------------------------
 						if((logFlags & OpenFlags.CONTENT_DATESTAMP) != 0)
 						{
-							strLeading += sysTime.ToString("MMM dd ");
+							leading += sysTime.ToString("MMM dd ");
 						}
 
 						// -----------------------------------------------------------------------
@@ -309,7 +309,7 @@ namespace KanoopCommon.Logging
 						// -----------------------------------------------------------------------
 						if((logFlags & OpenFlags.CONTENT_TIMESTAMP) != 0)
 						{
-							strLeading += sysTime.ToString(LogMicroseconds ? "HH:mm:ss.ffffff " : "HH:mm:ss.fff ");
+							leading += sysTime.ToString(LogMicroseconds ? "HH:mm:ss.ffffff " : "HH:mm:ss.fff ");
 						}
 
 						/**
@@ -317,19 +317,19 @@ namespace KanoopCommon.Logging
 						 */
 						if((logFlags & OpenFlags.CONTENT_LINE_NUMBERS) != 0)
 						{
-							strLeading += GetSourceModuleInfo();
-							strLeading += ' ';
+							leading += GetSourceModuleInfo();
+							leading += ' ';
 						}
 
 						if((logFlags & OpenFlags.CONTENT_PRINT_LEVEL) != 0)
 						{
-							strLeading += (logLevel <= LogLevel.FATAL) ? _levelText[(int)logLevel] : "???";
-							strLeading += ' ';
+							leading += (logLevel <= LogLevel.FATAL) ? _levelText[(int)logLevel] : "???";
+							leading += ' ';
 						}
 
 						String strOut = parms.Length == 0
-							? strLeading + text
-							: strLeading + String.Format(text, parms);
+							? leading + text
+							: leading + String.Format(text, parms);
 
 						LogToDevices(logLevel, strOut);
 					}
@@ -851,7 +851,7 @@ namespace KanoopCommon.Logging
 		 * @return          void
 		 *
 		 */
-		void LogToFile(String strLogText)
+		void LogToFile(String text)
 		{
 			if(_queueing == false)
 			{
@@ -859,7 +859,7 @@ namespace KanoopCommon.Logging
 				{
 					if(DateTime.Compare(DateTime.Now, _rotateTime) > 0)
 					{
-						_fileTextWriter.WriteLine("Start log rotation at {0} with the following line: {1}", DateTime.Now.ToString("MMM dd HH:mm:ss.fff"), strLogText);
+						_fileTextWriter.WriteLine("Start log rotation at {0} with the following line: {1}", DateTime.Now.ToString("MMM dd HH:mm:ss.fff"), text);
 						_fileTextWriter.Flush();
 
 						/** disallow use of the file stream... all output will be queued */
@@ -869,7 +869,7 @@ namespace KanoopCommon.Logging
 						LogRotationThread thread = new LogRotationThread(this, _fileTextWriter, _lock);
 						thread.Start();
 
-						_outputQueue.Add(strLogText);
+						_outputQueue.Add(text);
 					}
 					else
 					{
@@ -888,14 +888,14 @@ namespace KanoopCommon.Logging
 							}
 						}
 						/** write the current text, and flush output */
-						_fileTextWriter.WriteLine(strLogText);
+						_fileTextWriter.WriteLine(text);
 						_fileTextWriter.Flush();
 					}
 				}
 			}
 			else
 			{
-				_outputQueue.Add(strLogText);
+				_outputQueue.Add(text);
 			}
 		}
 

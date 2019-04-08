@@ -13,6 +13,7 @@ using RaspiCommon;
 using RaspiCommon.Data.DataSource;
 using RaspiCommon.Data.Entities;
 using RaspiCommon.Server;
+using RaspiCommon.Spatial;
 using RaspiCommon.Spatial.Imaging;
 using TrackBotCommon.Environs;
 
@@ -42,22 +43,21 @@ namespace Radar
 
 		static void Test()
 		{
-			ImageMetrics metrics = new ImageMetrics()
+			EnvironmentInfo info = new EnvironmentInfo()
 			{
-				MetersSquare = 10,
-				PixelsPerMeter = 50
+				BackwardPrimaryRange = 12.3,
+				ForwardPrimaryRange = 1,
+				ForwardSecondaryRange = 2.1123,
+				BackwardSecondaryRange = 27,
+				Bearing = 231.4,
+				DestinationBearing = 7,
+				DistanceLeft = 0,
+				DistanceToTravel = 1
 			};
-			String serialized = KVPSerializer.Serialize(metrics);
 
-			ImageMetrics m2 = KVPSerializer.Deserialize<ImageMetrics>(serialized);
-			TrackBotLandscape landscape;
-			TrackDataSource ds = DataSourceFactory.Create<TrackDataSource>(Program.Config.DBCredentials);
-			if(ds.LandscapeGet<TrackBotLandscape>("Man Cave", out landscape).ResultCode == DBResult.Result.Success)
-			{
-				LandmarkList landmarks;
-				ds.LandmarksGet(landscape, out landmarks);
-//				ds.LandmarkInsert(lm);
-			}
+			byte[] serialized = BinarySerializer.Serialize(info);
+
+			EnvironmentInfo info2 = BinarySerializer.Deserialize<EnvironmentInfo>(serialized);
 		}
 
 		private static void OpenConfig()

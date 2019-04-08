@@ -232,6 +232,7 @@
     <Compile Include="Logging\LogRotationThread.cs" />
     <Compile Include="Logging\MemoryLog.cs" />
     <Compile Include="Logging\OpenFlags.cs" />
+    <Compile Include="Serialization\BinarySerializer.cs" />
     <Compile Include="Serialization\KVPSerializer.cs" />
     <Compile Include="Serial\MonoSerialPort.cs" />
     <Compile Include="Performance\BitRateMonitor.cs" />

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
+using KanoopCommon.Logging;
 
 namespace RaspiCommon
 {
@@ -50,6 +51,17 @@ namespace RaspiCommon
 //			Console.WriteLine("PIGS set mode {0} {1}", gpioPin, mode);
 
 			PigCommand command = new PigCommand(PigCommand.CommandType.MODES, gpioPin, (char)mode);
+			SendCommand(command);
+		}
+
+		public static void SetHardwarePWM(GpioPin gpioPin, UInt32 frequency, UInt32 dutyCyclePercent)
+		{
+			if(dutyCyclePercent > 100)
+			{
+				throw new RaspiException("Duty cycle must be 0-100");
+			}
+
+			PigCommand command = new PigCommand(PigCommand.CommandType.HP, gpioPin, frequency, dutyCyclePercent * 10000);
 			SendCommand(command);
 		}
 

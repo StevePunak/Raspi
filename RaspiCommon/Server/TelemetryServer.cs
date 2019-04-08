@@ -15,6 +15,7 @@ using KanoopCommon.Serialization;
 using KanoopCommon.TCP;
 using KanoopCommon.Threading;
 using MQTT;
+using RaspiCommon.Devices.Compass;
 using RaspiCommon.Lidar;
 using RaspiCommon.Lidar.Environs;
 using RaspiCommon.Spatial;
@@ -28,13 +29,11 @@ namespace RaspiCommon.Server
 		static readonly TimeSpan SlowRunInterval = TimeSpan.FromSeconds(1);
 		static readonly TimeSpan StandardRunInterval = TimeSpan.FromMilliseconds(250);
 
-		public IImageEnvironment Environment { get; set; }
-		public ILandscape Landscape { get; set; }
+		public IWidgetCollection Widgets { get; private set; }
 		
 		public MqttClient Client { get; private set; }
 
 		public String MqqtClientID { get; private set; }
-		public ICompass Compass { get; private set; }
 
 		public IPAddress Address { get; private set; }
 
@@ -42,11 +41,13 @@ namespace RaspiCommon.Server
 		private bool _fuzzyPathChanged;
 
 		private ImageVectorList _landmarks;
+		private EnvironmentInfo _environmentInfo;
 		private bool _landmarksChanged;
 		private BarrierList _barriers;
 		private bool _barriersChanged;
+		private bool _distancesChanged;
 
-		public TelemetryServer(IImageEnvironment environment, ILandscape landscape, ICompass compass, String mqqtBrokerAddress, String mqqtClientID)
+		public TelemetryServer(IWidgetCollection widgets, String mqqtBrokerAddress, String mqqtClientID)
 			: base(typeof(TelemetryServer).Name)
 		{
 			IPAddress address;
@@ -58,16 +59,25 @@ namespace RaspiCommon.Server
 			}
 			Address = address;
 			MqqtClientID = mqqtClientID;
-			Environment = environment;
-			Landscape = landscape;
-			Compass = compass;
+			Widgets = widgets;
 
-			Environment.FuzzyPathChanged += OnEnvironment_FuzzyPathChanged;
-			Environment.BarriersChanged += OnEnvironment_BarriersChanged;
-			Environment.LandmarksChanged += OnEnvironment_LandmarksChanged;
+			Widgets.FuzzyPathChanged += OnEnvironment_FuzzyPathChanged;
+			Widgets.BarriersChanged += OnEnvironment_BarriersChanged;
+			Widgets.LandmarksChanged += OnEnvironment_LandmarksChanged;
+			Widgets.BearingChanged += OnWidgets_BearingChanged;
+			Widgets.ForwardPrimaryRange += OnWidgets_ForwardPrimaryRange;
+			Widgets.BackwardPrimaryRange += OnWidgets_BackwardPrimaryRange;
+			Widgets.ForwardSecondaryRange += OnWidgets_ForwardSecondaryRange;
+			Widgets.BackwardSecondaryRange += OnWidgets_BackwardSecondaryRange;
+			Widgets.NewDestinationBearing += OnWidgets_NewDestinationBearing;
+			Widgets.DistanceToTravel += OnWidgets_DistanceToTravel;
+			Widgets.DistanceLeft += OnWidgets_DistanceLeft;
+			
 			_fuzzyPathChanged = false;
 			_barriersChanged = false;
 			_landmarksChanged = false;
+
+			_environmentInfo = new EnvironmentInfo();
 
 			Interval = TimeSpan.FromMilliseconds(250);
 		}
@@ -104,6 +114,10 @@ namespace RaspiCommon.Server
 					{
 						SendLandmarks();
 					}
+					if(_distancesChanged)
+					{
+						SendBearingAndRange();
+					}
 				}
 
 			}
@@ -117,17 +131,37 @@ namespace RaspiCommon.Server
 
 		private void SendBearing()
 		{
-			byte[] output = BitConverter.GetBytes(Compass.Bearing);
+			Double forwardBearing = Widgets.Compass.Bearing;
+			Double backwardBearing = forwardBearing.AddDegrees(180);
+			Double forwardPrimaryRange = Widgets.ImageEnvironment.FuzzyRangeAtBearing(forwardBearing, 0);
+			Double backwardPrimaryRange = Widgets.ImageEnvironment.FuzzyRangeAtBearing(backwardBearing, 0);
+
+			if( forwardBearing != _environmentInfo.Bearing ||
+				forwardPrimaryRange != _environmentInfo.ForwardPrimaryRange ||
+				backwardPrimaryRange != _environmentInfo.BackwardPrimaryRange)
+			{
+				_environmentInfo.Bearing = forwardBearing;
+				_environmentInfo.ForwardPrimaryRange = forwardPrimaryRange;
+				_environmentInfo.BackwardPrimaryRange = backwardPrimaryRange;
+				_distancesChanged = true;
+			}
+
+			byte[] output = BitConverter.GetBytes(forwardBearing);
 			Client.Publish(MqttTypes.BearingTopic, output, true);
 		}
 
 		private void SendFuzzyPath()
 		{
-			Log.LogText(LogLevel.DEBUG, "Sending fuzzy path");
-
 			byte[] output = _fuzzyPath.Serizalize();
 			Client.Publish(MqttTypes.CurrentPathTopic, output, true);
 			_fuzzyPathChanged = false;
+		}
+
+		private void SendBearingAndRange()
+		{
+			byte[] output = BinarySerializer.Serialize(_environmentInfo);
+			Client.Publish(MqttTypes.DistanceAndBearingTopic, output, true);
+			_distancesChanged = false;
 		}
 
 		private void SendLandmarks()
@@ -152,16 +186,16 @@ namespace RaspiCommon.Server
 
 			ImageMetrics imageMetrics = new ImageMetrics()
 			{
-				MetersSquare = Environment.MetersSquare,
-				PixelsPerMeter = Environment.PixelsPerMeter
+				MetersSquare = Widgets.ImageEnvironment.MetersSquare,
+				PixelsPerMeter = Widgets.ImageEnvironment.PixelsPerMeter
 			};
 			String output = KVPSerializer.Serialize(imageMetrics);
 			Client.Publish(MqttTypes.ImageMetricsTopic, output, true);
 
 			LandscapeMetrics landscapeMetrics = new LandscapeMetrics()
 			{
-				MetersSquare = Landscape.MetersSquare,
-				Name =  Landscape.Name
+				MetersSquare = Widgets.Landscape.MetersSquare,
+				Name =  Widgets.Landscape.Name
 			};
 			output = KVPSerializer.Serialize(imageMetrics);
 			Client.Publish(MqttTypes.LandscapeMetricsTopic, output, true);
@@ -169,23 +203,12 @@ namespace RaspiCommon.Server
 
 		void SendRangeData()
 		{
-			byte[] output = new byte[RangeBlobPacketSize * Environment.Vectors.Length];
-
-			using(BinaryWriter bw = new BinaryWriter(new MemoryStream(output)))
-			{
-				for(int offset = 0;offset < Environment.Vectors.Length;offset++)
-				{
-					IVector vector = Environment.Vectors[offset];
-					bw.Write(vector.Range);
-				}
-			}
-
+			byte[] output = Widgets.ImageEnvironment.MakeRangeBlob();
 			Client.Publish(MqttTypes.RangeBlobTopic, output);
 		}
 
 		private void OnEnvironment_FuzzyPathChanged(FuzzyPath path)
 		{
-			Log.LogText(LogLevel.DEBUG, "FuzzyPath path changed");
 			_fuzzyPath = path.Clone();
 			_fuzzyPathChanged = true;
 		}
@@ -204,6 +227,54 @@ namespace RaspiCommon.Server
 
 			_barriers = barriers.Clone();
 			_barriersChanged = true;
+		}
+
+		private void OnWidgets_BearingChanged(double bearing)
+		{
+			_environmentInfo.Bearing = bearing;
+			_distancesChanged = true;
+		}
+
+		private void OnWidgets_ForwardPrimaryRange(double range)
+		{
+			_environmentInfo.ForwardPrimaryRange = range;
+			_distancesChanged = true;
+		}
+
+		private void OnWidgets_BackwardPrimaryRange(double range)
+		{
+			_environmentInfo.BackwardPrimaryRange = range;
+			_distancesChanged = true;
+		}
+
+		private void OnWidgets_ForwardSecondaryRange(double range)
+		{
+			_environmentInfo.ForwardSecondaryRange = range;
+			_distancesChanged = true;
+		}
+
+		private void OnWidgets_BackwardSecondaryRange(double range)
+		{
+			_environmentInfo.BackwardSecondaryRange = range;
+			_distancesChanged = true;
+		}
+
+		private void OnWidgets_NewDestinationBearing(double bearing)
+		{
+			_environmentInfo.DestinationBearing = bearing;
+			_distancesChanged = true;
+		}
+
+		private void OnWidgets_DistanceToTravel(double range)
+		{
+			_environmentInfo.DistanceToTravel = range;
+			_distancesChanged = true;
+		}
+
+		private void OnWidgets_DistanceLeft(double range)
+		{
+			_environmentInfo.DistanceLeft = range;
+			_distancesChanged = true;
 		}
 
 		void GetConnected()
