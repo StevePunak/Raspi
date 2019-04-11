@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using KanoopCommon.Extensions;
 using KanoopCommon.Serialization;
 
 namespace KanoopCommon.Geometry
@@ -42,6 +43,15 @@ namespace KanoopCommon.Geometry
 		}
 
 		public static BearingAndRange Empty { get { return new BearingAndRange(); } }
+
+		/// <summary>
+		/// Roteate the bearing around the origin
+		/// </summary>
+		/// <param name="degrees"></param>
+		public void Rotate(Double degrees)
+		{
+			Bearing = Bearing.AddDegrees(degrees);
+		}
 
 		public byte[] Serialize()
 		{

@@ -113,16 +113,37 @@ namespace RaspiCommon.Extensions
 			return new PointD(bitmap.Width / 2, bitmap.Height / 2);
 		}
 
-		public static void DrawCross(this Mat image, PointD where, MCvScalar color, int lineWidth = 1)
+		public static void DrawCircle(this Mat image, PointD where, int radius, Color color, int lineWidth = 1)
 		{
-			Cross2DF cross = new Cross2DF(where.ToPoint(), 4, 4);
+			image.DrawCircle(where, radius, new Bgr(color).MCvScalar, lineWidth);
+		}
+
+		public static void DrawCircle(this Mat image, PointD where, int radius, MCvScalar color, int lineWidth = 1)
+		{
+			CvInvoke.Circle(image, where.ToPoint(), radius, color, lineWidth);
+		}
+
+		public static void DrawCross(this Mat image, PointD where, int size, Color color, int lineWidth = 1)
+		{
+			image.DrawCross(where, size, new Bgr(color).MCvScalar, lineWidth);
+		}
+
+		public static void DrawCross(this Mat image, PointD where, int size, MCvScalar color, int lineWidth = 1)
+		{
+			Cross2DF cross = new Cross2DF(where.ToPoint(), size, size);
 			CvInvoke.Line(image, cross.Vertical.P1.ToPoint(), cross.Vertical.P2.ToPoint(), color, lineWidth);
 			CvInvoke.Line(image, cross.Horizontal.P1.ToPoint(), cross.Horizontal.P2.ToPoint(), color, lineWidth);
 		}
 
-		public static void Circle(this Mat image, Circle circle, MCvScalar color, int lineWidth = 1)
+		public static void DrawCircleCross(this Mat image, PointD where, int size, Color color, int lineWidth = 1)
 		{
-			CvInvoke.Circle(image, circle.Center.ToPoint(), (int)circle.Radius, color, lineWidth);
+			image.DrawCircleCross(where, size, new Bgr(color).MCvScalar, lineWidth);
+		}
+
+		public static void DrawCircleCross(this Mat image, PointD where, int size, MCvScalar color, int lineWidth = 1)
+		{
+			image.DrawCross(where, size, color, lineWidth);
+			image.DrawCircle(where, size / 2, color);
 		}
 
 	}

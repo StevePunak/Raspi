@@ -17,6 +17,7 @@ using KanoopCommon.Logging;
 using KanoopCommon.Queueing;
 using KanoopCommon.Threading;
 using RaspiCommon;
+using RaspiCommon.Devices.Chassis;
 using RaspiCommon.Devices.MotorControl;
 using RaspiCommon.Devices.Spatial;
 using RaspiCommon.Extensions;
@@ -44,6 +45,13 @@ namespace Testing
 
 		private static void PointCloudTest()
 		{
+			Chassis chassis = new XiaorTankTracks();
+			chassis.Points.Add(ChassisParts.Lidar, new PointD(chassis.Points[ChassisParts.RearLeft].X + 150, chassis.Points[ChassisParts.CenterPoint].Y + 140));
+			chassis.Points.Add(ChassisParts.FrontRangeFinder, new PointD(chassis.Width / 2, 0));
+			chassis.Points.Add(ChassisParts.RearRangeFinder, new PointD(chassis.Width / 2, chassis.Length));
+
+			BearingAndRange toFrontLeft = chassis.GetBearingAndRange(ChassisParts.Lidar, ChassisParts.FrontLeft, 0);
+			BearingAndRange toFrontRight = chassis.GetBearingAndRange(ChassisParts.Lidar, ChassisParts.FrontRight, 0);
 			Mat input = new Mat(@"f:\tmp\1.png");
 
 			PointCloud2D cloud = input.ToPointCloud(.25);
@@ -56,6 +64,45 @@ namespace Testing
 			output.Save(@"f:\tmp\output1.png");
 
 		}
+
+		public Double FuzzyRangeAtBearing(Mat bitmap, PointCloud2D vectorsFromLidar, BearingAndRange frontLeftWheelOffset, BearingAndRange frontRightWheelOffset, Double bearingStraightAhead, Double angularWidth, out PointCloud2D fromFrontLeft, out PointCloud2D fromFrontRight)
+		{
+			PointD center = bitmap.Center();
+			bitmap.DrawCross(center, 5, Color.White);
+
+			if(angularWidth == 0)
+			{
+				angularWidth = 25;
+			}
+
+			Log.SysLogText(LogLevel.DEBUG, "Getting vectors from lidar");
+
+			fromFrontLeft = vectorsFromLidar.Move(frontLeftWheelOffset);
+			fromFrontRight = vectorsFromLidar.Move(frontRightWheelOffset);
+
+			Log.SysLogText(LogLevel.DEBUG, "FL: {0} FR: {1}", fromFrontLeft, fromFrontRight);
+
+			Double start = bearingStraightAhead.SubtractDegrees(angularWidth / 2);
+			Double end = bearingStraightAhead.AddDegrees((angularWidth / 2) + 1);
+
+			List<Double> allDistances = new List<double>();
+			Double angle = start;
+			while(angle.IsWithinDegressOf(end, Lidar.VectorSize) == false)
+			{
+				Double d1 = fromFrontLeft.GetRangeAtBearing(angle);
+				Double d2 = fromFrontRight.GetRangeAtBearing(angle);
+				Log.SysLogText(LogLevel.DEBUG, "At {0:0.000}° range is {1:0.000}  and  {2:0.000}", angle, d1, d2);
+				if(d1 != 0)
+					allDistances.Add(d1);
+				if(d2 != 0)
+					allDistances.Add(d1);
+
+				angle = angle.AddDegrees(Lidar.VectorSize);
+			}
+
+			return allDistances.Count > 0 ? allDistances.Average() : 0;
+		}
+
 		private static void EMGUTest()
 		{
 			String root = Environment.OSVersion.Platform == PlatformID.Unix ? "./" : @"c:\pub\tmp";

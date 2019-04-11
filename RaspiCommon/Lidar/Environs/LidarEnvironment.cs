@@ -451,12 +451,12 @@ namespace RaspiCommon.Lidar.Environs
 		/// <summary>
 		/// Will return an average range from both the front right and front left chassis points
 		/// </summary>
-		/// <param name="frontLeftOffset"></param>
-		/// <param name="frontRightOffset"></param>
+		/// <param name="frontLeftWheelOffset"></param>
+		/// <param name="frontRightWheelOffset"></param>
 		/// <param name="bearingStraightAhead"></param>
 		/// <param name="angularWidth"></param>
 		/// <returns></returns>
-		public Double FuzzyRangeAtBearing(BearingAndRange frontLeftOffset, BearingAndRange frontRightOffset, Double bearingStraightAhead, Double angularWidth, out PointCloud2D fromFrontLeft, out PointCloud2D fromFrontRight)
+		public Double FuzzyRangeAtBearing(BearingAndRange frontLeftWheelOffset, BearingAndRange frontRightWheelOffset, Double bearingStraightAhead, Double angularWidth, out PointCloud2D fromFrontLeft, out PointCloud2D fromFrontRight)
 		{
 			if(angularWidth == 0)
 			{
@@ -466,8 +466,8 @@ namespace RaspiCommon.Lidar.Environs
 			Log.SysLogText(LogLevel.DEBUG, "Getting vectors from lidar");
 			PointCloud2D vectorsFromLidar = Lidar.Vectors.ToPointCloud2D();
 
-			fromFrontLeft = vectorsFromLidar.Move(frontLeftOffset);
-			fromFrontRight = vectorsFromLidar.Move(frontRightOffset);
+			fromFrontLeft = vectorsFromLidar.Move(frontLeftWheelOffset);
+			fromFrontRight = vectorsFromLidar.Move(frontRightWheelOffset);
 
 			Log.SysLogText(LogLevel.DEBUG, "FL: {0} FR: {1}", fromFrontLeft, fromFrontRight);
 
