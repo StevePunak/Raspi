@@ -29,6 +29,7 @@ namespace RaspiCommon.Server
 		public event LandscapeMetricsReceivedHandler LandscapeMetricsReceived;
 		public event ImageMetricsReceivedHandler ImageMetricsReceived;
 		public event EnvironmentInfoReceivedHandler EnvironmentInfoReceived;
+		public event CommandReceivedHandler CommandReceived;
 
 		public LidarVector[] Vectors;
 
@@ -67,6 +68,7 @@ namespace RaspiCommon.Server
 			LandscapeMetricsReceived += delegate {};
 			ImageMetricsReceived += delegate {};
 			EnvironmentInfoReceived += delegate {};
+			CommandReceived += delegate {};
 		}
 
 		private void OnLidarClientInboundSubscribedMessage(MqttClient client, PublishMessage packet)
@@ -114,6 +116,11 @@ namespace RaspiCommon.Server
 				{
 					EnvironmentInfo = BinarySerializer.Deserialize<EnvironmentInfo>(packet.Message);
 					EnvironmentInfoReceived(EnvironmentInfo);
+				}
+				else if(packet.Topic == MqttTypes.CommandsTopic)
+				{
+					String command = ASCIIEncoding.UTF8.GetString(packet.Message);
+					CommandReceived(command);
 				}
 			}
 		}

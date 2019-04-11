@@ -8,6 +8,28 @@ namespace RaspiCommon
 {
 	public delegate void GPIOInputCallback(GpioPin pin, EdgeType edgeType, UInt64 nanoseconds);
 
+	public enum ChassisParts
+	{
+		FrontLeft,
+		FrontRight,
+		RearRight,
+		RearLeft,
+		CenterPoint,
+		Lidar,
+		FrontRangeFinder,
+		RearRangeFinder,
+	}
+
+	public enum DeviceType
+	{
+		Invalid = 0,
+
+		RaspberryPI = 1,
+		Lidar = 2,
+		FrontRangeFinder = 3,
+		RearRangeFinder = 4,
+	}
+
 	public enum RFDir
 	{
 		Front = 0,
@@ -50,6 +72,8 @@ namespace RaspiCommon
 
 	public enum SpinDirection
 	{
+		None,
+
 		Clockwise,
 		CounterClockwise
 	}

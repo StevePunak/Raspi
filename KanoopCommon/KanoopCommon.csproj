@@ -139,6 +139,7 @@
     <Compile Include="Database\TrustedQueryString.cs" />
     <Compile Include="Database\Unescaped.cs" />
     <Compile Include="Extensions\AssemblyExtensions.cs" />
+    <Compile Include="Extensions\BearingAndRangeExtensions.cs" />
     <Compile Include="Extensions\BitmapExtensions.cs" />
     <Compile Include="Extensions\BooleanExtensions.cs" />
     <Compile Include="Extensions\ByteArrayExtensions.cs" />
@@ -204,6 +205,9 @@
     <Compile Include="Geometry\Line.cs" />
     <Compile Include="Geometry\MappingGrid.cs" />
     <Compile Include="Geometry\Offset.cs" />
+    <Compile Include="Geometry\Point3D.cs" />
+    <Compile Include="Geometry\PointCloud2D.cs" />
+    <Compile Include="Geometry\PointCloud2DSlice.cs" />
     <Compile Include="Geometry\PointCommon.cs" />
     <Compile Include="Geometry\PointD.cs" />
     <Compile Include="Geometry\Polygon.cs" />

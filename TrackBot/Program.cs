@@ -40,7 +40,7 @@ namespace TrackBot
 			Console.WriteLine("Running pretests...");
 			Test();
 
-			Console.WriteLine("Starting Widgets.Instance...");
+			Console.WriteLine("Starting Widgets...");
 			Widgets.Instance.StartWidgets();
 
 			Console.WriteLine("Starting TTY...");
@@ -60,8 +60,9 @@ namespace TrackBot
 				Program.Config.TracksLeftEnaPin = GpioPin.Pin05;
 				Program.Config.TracksRightA1Pin = GpioPin.Pin11;
 				Program.Config.TracksRightA2Pin = GpioPin.Pin13;
-				Program.Config.TracksRightEnaPin = GpioPin.Pin06;
-//				Program.Config.Save();
+				Program.Config.TracksRightEnaPin = GpioPin.Pin04;
+				Program.Config.TracksHardwarePWM = false;
+				Program.Config.Save();
 				//DRV8825StepperControl motor = new DRV8825StepperControl(GpioPin.Pin12, GpioPin.Pin13, GpioPin.Pin19);
 				//motor.Speed = 20;
 				//GpioSharp.Sleep(TimeSpan.FromSeconds(2));

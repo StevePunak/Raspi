@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Emgu.CV;
 using KanoopCommon.Geometry;
+using RaspiCommon.Devices.Chassis;
 
 namespace RaspiCommon.Spatial.Imaging
 {
@@ -40,7 +41,9 @@ namespace RaspiCommon.Spatial.Imaging
 		byte[] MakeRangeBlob();
 
 		Double GetRangeAtBearing(Double bearing);
-		Double FuzzyRangeAtBearing(Double bearing, Double fuzz);
+		Double FuzzyRangeAtBearing(Chassis chassis, Double bearingStraightAhead, Double angularWidth);
+		Double FuzzyRangeAtBearing(Chassis chassis, Double bearingStraightAhead, Double angularWidth, out PointCloud2D fromFrontLeft, out PointCloud2D fromFrontRight);
+		Double FuzzyRangeAtBearing(BearingAndRange offset1, BearingAndRange offset2, Double bearing, Double fuzz, out PointCloud2D fromFrontLeft, out PointCloud2D fromFrontRight);
 		Double ShortestRangeAtBearing(Double bearing, Double fuzz);
 		DateTime GetLastSampleTimeAtBearing(Double bearing);
 		Mat PointsToBitmap();

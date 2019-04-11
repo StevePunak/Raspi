@@ -9,7 +9,7 @@ using KanoopCommon.Serialization;
 namespace KanoopCommon.Geometry
 {
 	[IsSerializable]
-	public class BearingAndRange
+	public class BearingAndRange : IVector
 	{
 		public const int ByteArraySize = sizeof(Double) + sizeof(Double);
 
@@ -41,6 +41,8 @@ namespace KanoopCommon.Geometry
 			}
 		}
 
+		public static BearingAndRange Empty { get { return new BearingAndRange(); } }
+
 		public byte[] Serialize()
 		{
 			byte[] serialized = new byte[ByteArraySize];
@@ -65,6 +67,40 @@ namespace KanoopCommon.Geometry
 
 	public class BearingAndRangeList : List<BearingAndRange>
 	{
+		public BearingAndRangeList()
+			: base() { }
+
+		public BearingAndRangeList(int size)
+		{
+			for(int x = 0;x < size;x++)
+			{
+				Add(new BearingAndRange());
+			}
+		}
+
+		protected void LoadFromReader(BinaryReader br)
+		{
+			int count = br.ReadInt32();
+			for(int x = 0;x < count;x++)
+			{
+				Add(new BearingAndRange(br.ReadBytes(BearingAndRange.ByteArraySize)));
+			}
+		}
+
+		public virtual byte[] Serialize()
+		{
+			byte[] serialized = new byte[sizeof(Int32) + (Count * BearingAndRange.ByteArraySize)];
+			using(BinaryWriter bw = new BinaryWriter(new MemoryStream(serialized)))
+			{
+				bw.Write(Count);
+				foreach(BearingAndRange bar in this)
+				{
+					bw.Write(bar.Serialize());
+				}
+			}
+			return serialized;
+		}
+
 		public BearingAndRangeList Clone()
 		{
 			BearingAndRangeList list = new BearingAndRangeList();

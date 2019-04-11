@@ -4,6 +4,7 @@ using KanoopCommon.Geometry;
 using KanoopCommon.Logging;
 using RaspiCommon;
 using RaspiCommon.Devices.Locomotion;
+using RaspiCommon.Devices.Spatial;
 using RaspiCommon.Spatial;
 
 namespace TrackBot.Tracks
@@ -146,7 +147,7 @@ namespace TrackBot.Tracks
 				{
 					if(LeftSpeed > TooSlow && RightSpeed > TooSlow)
 					{
-						SpinDirection direction = GetClosestSpinDirection(actualBearing, desiredBearing);
+						SpinDirection direction = Utility.GetClosestSpinDirection(actualBearing, desiredBearing);
 						if(direction == SpinDirection.Clockwise)
 						{
 							if(LeftSpeed < LastSpeed + MAX_SPEED_ADJUST)
@@ -219,15 +220,16 @@ namespace TrackBot.Tracks
 
 			DistanceToTravel(meters);
 
-			Double startDistance = RangeAtDirection(direction);
+			Double startDistance = Widgets.Instance.GetRangeAtDirection(direction);
 			Log.SysLogText(LogLevel.DEBUG, "Start move {0} meters at {1:0.00} distance from nearest obstacle", meters, startDistance);
 
 			DateTime startTime = DateTime.UtcNow;
 			Widgets.Instance.Tracks.Speed = direction == Direction.Forward ? motorSpeed : -motorSpeed;
 			while(true)
 			{
-				Double forwardRange = RangeAtDirection(Direction.Forward);
-				Double backwardRange = RangeAtDirection(Direction.Backward);
+				Double forwardRange = Widgets.Instance.GetRangeAtDirection(Direction.Forward);
+				Double backwardRange = Widgets.Instance.GetRangeAtDirection(Direction.Backward);
+
 				ForwardPrimaryRange(forwardRange);
 				BackwardPrimaryRange(backwardRange);
 
@@ -243,18 +245,18 @@ namespace TrackBot.Tracks
 				Double distanceTraveled = startDistance - range;
 				if(DateTime.UtcNow > startTime + MAX_TIME_TO_RUN)
 				{
-					Console.WriteLine("Ran out of time");
+					Log.SysLogText(LogLevel.DEBUG, "Ran out of time");
 					break;
 				}
 				else if(distanceTraveled >= meters)
 				{
-					Console.WriteLine("Traveled our distance");
+					Log.SysLogText(LogLevel.DEBUG, "Traveled our distance");
 					result = true;
 					break;
 				}
 				else if(range < StoppingDistance)
 				{
-					Console.WriteLine("Ran out of space");
+					Log.SysLogText(LogLevel.DEBUG, "Ran out of space");
 					break;
 				}				
 				GpioSharp.Sleep(100);
@@ -264,16 +266,6 @@ namespace TrackBot.Tracks
 			return result;
 		}
 
-		private Double RangeAtDirection(Direction direction)
-		{
-			Double bearing = Widgets.Instance.GyMag.Bearing;
-			if(direction == Direction.Backward)
-				bearing = bearing.AddDegrees(180);
-			Double range = Widgets.Instance.ImageEnvironment.FuzzyRangeAtBearing(bearing, Widgets.Instance.ImageEnvironment.RangeFuzz);
-//			Log.SysLogText(LogLevel.DEBUG, "Range at {0} bearing {1:0.00}° is {2:0.000}m", direction, bearing, range);
-			return range;
-		}
-
 		public bool MoveMetersUsingUltraSound(Direction direction, Double meters, int motorSpeed)
 		{
 			bool result = true;
@@ -281,7 +273,7 @@ namespace TrackBot.Tracks
 			TimeSpan timeToRun;
 			Double speedMPS;
 
-			Log.SysLogText(LogLevel.DEBUG, "Start move {0} meters at {1:0.00} distance from nearest obstacle", meters, Widgets.Instance.ImageEnvironment.FuzzyRangeAtBearing(Widgets.Instance.GyMag.Bearing, Widgets.Instance.ImageEnvironment.RangeFuzz));
+			Log.SysLogText(LogLevel.DEBUG, "Start move {0} meters at {1:0.00} distance from nearest obstacle", meters, Widgets.Instance.ImageEnvironment.FuzzyRangeAtBearing(Widgets.Instance.Chassis, Widgets.Instance.GyMag.Bearing, Widgets.Instance.ImageEnvironment.RangeFuzz));
 			if(TryGetTimeForDistance(meters, motorSpeed, out timeToRun, out speedMPS))
 			{
 				timeToRun += direction == Direction.Forward ? RampUp : -RampDown;
@@ -306,7 +298,7 @@ namespace TrackBot.Tracks
 					Widgets.Instance.ImageEnvironment.RelativeLocation = FlatGeo.GetPoint(Widgets.Instance.ImageEnvironment.Location, Widgets.Instance.GyMag.Bearing, metersPerInterval);
 //					Log.SysLogText(LogLevel.DEBUG, "Moved to {0}", Widgets.Instance.Environment.Location);
 
-					if(direction == Direction.Forward && Widgets.Instance.ImageEnvironment.FuzzyRangeAtBearing(Widgets.Instance.GyMag.Bearing, Widgets.Instance.ImageEnvironment.RangeFuzz) <= Program.Config.StopDistance)
+					if(direction == Direction.Forward && Widgets.Instance.ImageEnvironment.FuzzyRangeAtBearing(Widgets.Instance.Chassis, Widgets.Instance.GyMag.Bearing, Widgets.Instance.ImageEnvironment.RangeFuzz) <= Program.Config.StopDistance)
 					{
 						Console.WriteLine("Stopping due to range");
 						result = false;
@@ -322,7 +314,8 @@ namespace TrackBot.Tracks
 				result = false;
 			}
 
-			Log.SysLogText(LogLevel.DEBUG, "Stopped move {0} meters at {1:0.00} distance from nearest obstacle", meters, Widgets.Instance.ImageEnvironment.FuzzyRangeAtBearing(Widgets.Instance.GyMag.Bearing, Widgets.Instance.ImageEnvironment.RangeFuzz));
+			Log.SysLogText(LogLevel.DEBUG, "Stopped move {0} meters at {1:0.00} distance from nearest obstacle", 
+				meters, Widgets.Instance.ImageEnvironment.FuzzyRangeAtBearing(Widgets.Instance.Chassis, Widgets.Instance.GyMag.Bearing, Widgets.Instance.ImageEnvironment.RangeFuzz));
 			return result;
 		}
 
@@ -343,16 +336,7 @@ namespace TrackBot.Tracks
 			return time != TimeSpan.Zero;
 		}
 
-		public static SpinDirection GetClosestSpinDirection(Double from, Double to)
-		{
-			Double clockwiseDiff = Degrees.ClockwiseDifference(from, to);
-			Double counterClockwiseDiff = Degrees.CounterClockwiseDifference(from, to);
-			SpinDirection direction = clockwiseDiff < counterClockwiseDiff
-				? SpinDirection.Clockwise : SpinDirection.CounterClockwise;
-			return direction;
-		}
-
-		public bool TurnToBearing(Double to)
+		public bool TurnToBearing(Double to, SpinDirection direction = SpinDirection.None)
 		{
 			const Double THRESHOLD = 2;
 
@@ -361,17 +345,21 @@ namespace TrackBot.Tracks
 			Double from = Widgets.Instance.GyMag.Bearing;
 			Double diff = 0;
 
-			SpinDirection direction = GetClosestSpinDirection(from, to);
+			if(direction == SpinDirection.None)
+			{
+				direction = Utility.GetClosestSpinDirection(from, to);
+			}
 
-			Console.WriteLine("Will turn {0} to from {1} to {2}", direction, from, to);
+			Log.SysLogText(LogLevel.DEBUG, "Will turn {0} to from {1} to {2}", direction, from, to);
 
 			Widgets.Instance.Tracks.Spin(direction, Widgets.Instance.Tracks.Fast);
 
 			DateTime start = DateTime.UtcNow;
 
+			Double bearing = 0;
 			while(DateTime.UtcNow < start + TimeSpan.FromSeconds(5))
 			{
-				Double bearing = Widgets.Instance.GyMag.Bearing;
+				bearing = Widgets.Instance.GyMag.Bearing;
 				diff = Degrees.AngularDifference(to, bearing);
 				//Log.SysLogText(LogLevel.DEBUG, "Difference from {0:00}° to {1:00}° is {2:00}°", bearing, to, diff);
 				if(diff < THRESHOLD)
@@ -381,7 +369,7 @@ namespace TrackBot.Tracks
 				GpioSharp.Sleep(TimeSpan.FromMilliseconds(10));
 			}
 
-			Log.SysLogText(LogLevel.DEBUG, "Stopping");
+			Log.SysLogText(LogLevel.DEBUG, "Turn To Bearing finished at {0:0.00}°", bearing);
 			Widgets.Instance.Tracks.Stop();
 
 			return diff < THRESHOLD;

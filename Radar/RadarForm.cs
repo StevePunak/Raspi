@@ -209,11 +209,11 @@ namespace Radar
 				{
 					FuzzyPath path = _client.FuzzyPath.Clone();
 					Pen brownPen = new Pen(Color.RosyBrown);
-					if(path.Elements.Count > 1)
+					if(path.FrontLeft.Count > 1)
 					{
-						PointD p1 = center.GetPointAt(path.Elements.First().Bearing, path.Elements.First().Range * PixelsPerMeterImage);
+						PointD p1 = center.GetPointAt(path.FrontLeft.First().Bearing, path.FrontLeft.First().Range * PixelsPerMeterImage);
 						g.DrawLine(brownPen, center.ToPoint(), p1.ToPoint());
-						PointD p2 = center.GetPointAt(path.Elements.Last().Bearing, path.Elements.Last().Range * PixelsPerMeterImage);
+						PointD p2 = center.GetPointAt(path.FrontLeft.Last().Bearing, path.FrontLeft.Last().Range * PixelsPerMeterImage);
 						g.DrawLine(brownPen, center.ToPoint(), p2.ToPoint());
 					}
 				}

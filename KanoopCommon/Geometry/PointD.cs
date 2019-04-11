@@ -316,6 +316,11 @@ namespace KanoopCommon.Geometry
 			_Y *= scale;
 		}
 
+		public PointD GetPointAt(BearingAndRange vector)
+		{
+			return FlatGeo.GetPoint(this, vector.Bearing, vector.Range);
+		}
+
 		public PointD GetPointAt(Double bearing, Double distance)
 		{
 			return FlatGeo.GetPoint(this, bearing, distance);
@@ -380,6 +385,12 @@ namespace KanoopCommon.Geometry
 		{
 			Line line = new Line(this, other);
 			return line.Bearing;
+		}
+
+		public BearingAndRange BearingAndRangeTo(PointD other)
+		{
+			Line line = new Line(this, other);
+			return new BearingAndRange(line.Bearing, line.Length);
 		}
 
 		public Double DistanceTo(PointD other)

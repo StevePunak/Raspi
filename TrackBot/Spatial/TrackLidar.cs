@@ -22,7 +22,7 @@ namespace TrackBot.Spatial
 {
 	class TrackLidar : LidarEnvironment, IImageEnvironment
 	{
-		public Double Range { get { return FuzzyRangeAtBearing(Widgets.Instance.GyMag.Bearing, RangeFuzz); } }
+		public Double Range { get { return FuzzyRangeAtBearing(Widgets.Instance.Chassis, Widgets.Instance.GyMag.Bearing, RangeFuzz); } }
 		public Double CompassOffset { get { return Lidar.Offset; } set { Lidar.Offset = value; } }
 		public Size PixelSize { get { return new Size((int)(PixelsPerMeter * MetersSquare), (int)(PixelsPerMeter * MetersSquare)); } }
 		public PointD PixelCenter { get { return new PointD((int)(PixelsPerMeter * MetersSquare) / 2, (int)(PixelsPerMeter * MetersSquare) / 2); } }
@@ -66,35 +66,42 @@ namespace TrackBot.Spatial
 
 		public FuzzyPath FindGoodDestination(Double requireClearUpTo)
 		{
-			const Double SHORT_CLEARANCE_ANGLE = 90;
-
 			Console.WriteLine("Finding a destination");
 
-			FuzzyPath longestLine = null;
+			FuzzyPath longestPath = null;
 
 			Double startBearing = Widgets.Instance.GyMag.Bearing;
-			PointD currentLocation = new PointD(0, 0);
+			PointD currentCenterPoint = new PointD(0, 0);
+			PointD lidarLocation = new PointD(0, 0);
+			BearingAndRange toFrontLeftAtZero = Widgets.Instance.Chassis.GetBearingAndRange(ChassisParts.Lidar, ChassisParts.FrontLeft);
+			BearingAndRange toFrontRightAtZero = Widgets.Instance.Chassis.GetBearingAndRange(ChassisParts.Lidar, ChassisParts.FrontRight);
 			for(double angle = 0;angle < 360;angle ++)
 			{
-				Double range = FuzzyRangeAtBearing(angle, RangeFuzz);
+				BearingAndRange frontLeft = new BearingAndRange(toFrontLeftAtZero.Bearing.AddDegrees(angle), toFrontLeftAtZero.Range);
+				BearingAndRange frontRight = new BearingAndRange(toFrontRightAtZero.Bearing.AddDegrees(angle), toFrontRightAtZero.Range);
+				PointD frontLeftPoint = lidarLocation.GetPointAt(frontLeft);
+				PointD frontRightPoint = lidarLocation.GetPointAt(frontRight);
+
+				PointCloud2D fromFrontLeft, fromFrontRight;
+				Double range = FuzzyRangeAtBearing(frontLeft, frontRight, angle, RangeFuzz, out fromFrontLeft, out fromFrontRight);
 //				Log.SysLogText(LogLevel.DEBUG, "Range at {0}° is {1:0.000}m", angle, range);
 				if(range != 0)
 				{
-					if(longestLine == null || range > longestLine.Vector.Range)
+					if(longestPath == null || range > longestPath.ShortestRange)
 					{
-						Double shortRangeClearance = ShortestRangeAtBearing(angle, SHORT_CLEARANCE_ANGLE);
+						Double shortRangeClearance = longestPath.ShortestRange;
 //						Log.SysLogText(LogLevel.DEBUG, "Shortest Range at {0}° is {1:0.000}m", angle, shortRangeClearance);
 						if(shortRangeClearance >= requireClearUpTo)
 						{
-							Log.SysLogText(LogLevel.DEBUG, "This is the longest line!");
-							longestLine = MakeFuzzyPath(angle, RangeFuzz);
+//							Log.SysLogText(LogLevel.DEBUG, "This is the longest line!");
+							longestPath = MakeFuzzyPath(angle, RangeFuzz, frontLeftPoint, fromFrontLeft, frontRightPoint, fromFrontRight);
 						}
 					}
 				}
 			}
 
-			Log.SysLogText(LogLevel.DEBUG, "Longest line {0}", longestLine == null ? "NULL" : longestLine.ToString());
-			return longestLine;
+			Log.SysLogText(LogLevel.DEBUG, "Longest line {0}", longestPath == null ? "NULL" : longestPath.ToString());
+			return longestPath;
 
 		}
 

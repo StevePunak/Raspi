@@ -36,7 +36,7 @@ namespace TrackBot.Spatial
 			if(Widgets.Instance.ImageEnvironment.FuzzyPath != null)
 			{
 				Log.LogText(LogLevel.INFO, "Getting path at {0}", Widgets.Instance.ImageEnvironment.FuzzyPath);
-				Destination = Widgets.Instance.ImageEnvironment.FuzzyPath.Vector;
+				//Destination = Widgets.Instance.ImageEnvironment.FuzzyPath.Vector1;
 				SwitchState(ActivityStates.TravelToDest);
 			}
 			return true;

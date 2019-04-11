@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO.Ports;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using KanoopCommon.Database;
@@ -12,6 +13,7 @@ using KanoopCommon.Threading;
 using RaspiCommon;
 using RaspiCommon.Data.DataSource;
 using RaspiCommon.Data.Entities;
+using RaspiCommon.Devices.Chassis;
 using RaspiCommon.Devices.Compass;
 using RaspiCommon.Devices.Spatial;
 using RaspiCommon.Lidar.Environs;
@@ -19,6 +21,7 @@ using RaspiCommon.Server;
 using RaspiCommon.Spatial;
 using RaspiCommon.Spatial.Imaging;
 using TrackBot.ForkLift;
+using TrackBot.Network;
 using TrackBot.Spatial;
 using TrackBot.Tracks;
 using TrackBotCommon.Environs;
@@ -53,7 +56,11 @@ namespace TrackBot
 
 		public TrackDataSource DataSource { get; private set; }
 
+		public CommandServer CommandServer { get; private set; }
+
 		public ICompass Compass { get { return GyMag; } }
+
+		public Chassis Chassis { get; private set; }
 
 		static Widgets _instance;
 		public static Widgets Instance
@@ -85,6 +92,7 @@ namespace TrackBot
 
 		public void StartWidgets()
 		{
+			StartChassis();
 			StartDatabase();
 			StartRangeFinders();
 			StartTracks();
@@ -93,10 +101,12 @@ namespace TrackBot
 			StartLift();
 			StartSaveImageThread();
 			StartSpatialPolling();
+			StartCommandServer();
 		}
 
 		public void StopWidgets()
 		{
+			StopCommandServer();
 			StopSpatialPolling();
 			StopLift();
 			StopActivities();
@@ -106,11 +116,36 @@ namespace TrackBot
 			GpioSharp.DeInit();
 			StopSaveImageThread();
 			StopDatabase();
+			StopChassis();
 
 			foreach(ThreadBase thread in ThreadBase.GetRunningThreads())
 			{
 				Log.SysLogText(LogLevel.DEBUG, "Remaining: {0}", thread);
 			}
+		}
+
+		private void StartChassis()
+		{
+			Chassis = new XiaorTankTracks();
+			Chassis.Points.Add(ChassisParts.Lidar, new PointD(Chassis.Points[ChassisParts.RearLeft].X + 150, Chassis.Points[ChassisParts.CenterPoint].Y + 140));
+			Chassis.Points.Add(ChassisParts.FrontRangeFinder, new PointD(Chassis.Width / 2, 0));
+			Chassis.Points.Add(ChassisParts.RearRangeFinder,  new PointD(Chassis.Width / 2, Chassis.Length));
+		}
+
+		private void StopChassis()
+		{
+
+		}
+
+		private void StartCommandServer()
+		{
+			CommandServer = new CommandServer(String.Format("raspi.{0}", Environment.MachineName));
+			CommandServer.Start();
+		}
+
+		private void StopCommandServer()
+		{
+			CommandServer.Stop();
 		}
 
 		private void StartDatabase()
@@ -268,6 +303,7 @@ namespace TrackBot
 		private void StartTracks()
 		{
 			Tracks = new BotTracks();
+			Tracks.HardwarePWM = Program.Config.TracksHardwarePWM;
 			Tracks.ForwardPrimaryRange += OnForwardPrimaryRange;
 			Tracks.BackwardPrimaryRange += OnBackwardPrimaryRange;
 			Tracks.ForwardSecondaryRange += OnForwardSecondaryRange;
@@ -345,6 +381,31 @@ namespace TrackBot
 		{
 			BarriersChanged(barriers);
 		}
+
+		public Double GetRangeAtDirection(Direction direction)
+		{
+			Double bearing = Widgets.Instance.GyMag.Bearing;
+			if(direction == Direction.Backward)
+			{
+				bearing = bearing.AddDegrees(180);
+
+			}
+			Double range = Widgets.Instance.ImageEnvironment.FuzzyRangeAtBearing(Widgets.Instance.Chassis, bearing, Widgets.Instance.ImageEnvironment.RangeFuzz);
+
+			HCSR04_RangeFinder rangeFinder;
+			if(direction == Direction.Forward && Widgets.Instance.RangeFinders.TryGetValue(RFDir.Front, out rangeFinder) && rangeFinder.Range != 0)
+			{
+				range = Math.Min(range, rangeFinder.Range);
+			}
+			else if(direction == Direction.Backward && Widgets.Instance.RangeFinders.TryGetValue(RFDir.Rear, out rangeFinder) && rangeFinder.Range != 0)
+			{
+				range = Math.Min(range, rangeFinder.Range);
+			}
+
+			return range;
+		}
+
+
 
 	}
 }

@@ -12,6 +12,8 @@ namespace RaspiCommon.Devices.MotorControl
 		public GpioPin IN2 { get; private set; }
 		public GpioPin SpeedPin { get; private set; }
 
+		public bool HardwarePWM { get; set; }
+
 		Direction _direction;
 		public Direction Direction
 		{
@@ -41,10 +43,15 @@ namespace RaspiCommon.Devices.MotorControl
 			}
 			set
 			{
-				if(value >= 0 && value <= 255)
+				if(HardwarePWM == false && value >= 0 && value <= 255)
 				{
 					_speed = value;
 					Pigs.SetPWM(SpeedPin, _speed);
+				}
+				else if(HardwarePWM == true && value >= 0 && value <= 100)
+				{
+					_speed = value;
+					Pigs.SetHardwarePWM(SpeedPin, 800, _speed);
 				}
 			}
 		}
@@ -61,6 +68,8 @@ namespace RaspiCommon.Devices.MotorControl
 			Direction = Direction.Forward;
 			Speed = 0;
 		}
+
+
 
 		public void Start()
 		{

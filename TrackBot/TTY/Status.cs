@@ -32,8 +32,8 @@ namespace TrackBot.TTY
 #endif
 			Double forwardBearing = Widgets.Instance.GyMag.Bearing;
 			Double backwardBearing = Widgets.Instance.GyMag.Bearing.AddDegrees(180);
-			Double forwardRange = Widgets.Instance.ImageEnvironment.FuzzyRangeAtBearing(forwardBearing, Program.Config.BearingFuzz);
-			Double backwardRange = Widgets.Instance.ImageEnvironment.FuzzyRangeAtBearing(backwardBearing, Program.Config.BearingFuzz);
+			Double forwardRange = Widgets.Instance.ImageEnvironment.FuzzyRangeAtBearing(Widgets.Instance.Chassis, forwardBearing, Program.Config.BearingFuzz);
+			Double backwardRange = Widgets.Instance.ImageEnvironment.FuzzyRangeAtBearing(Widgets.Instance.Chassis, backwardBearing, Program.Config.BearingFuzz);
 			Console.WriteLine("Range at [Forward {0:0.00}° {1:0.00}m]   [Backward {2:0.00}° {3:0.00}m]", forwardBearing, forwardRange, backwardBearing, backwardRange);
 
 			return true;

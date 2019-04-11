@@ -11,6 +11,7 @@ using Emgu.CV.Util;
 using KanoopCommon.Extensions;
 using KanoopCommon.Geometry;
 using KanoopCommon.Logging;
+using RaspiCommon.Devices.Chassis;
 using RaspiCommon.Devices.Spatial;
 using RaspiCommon.Extensions;
 using RaspiCommon.Server;
@@ -433,26 +434,57 @@ namespace RaspiCommon.Lidar.Environs
 			return allDistances.Count > 0 ? allDistances.Min() : 0;
 		}
 
-		public Double FuzzyRangeAtBearing(Double trueBearing, Double angularWidth)
+		public Double FuzzyRangeAtBearing(Chassis chassis, Double bearingStraightAhead, Double angularWidth)
+		{
+			PointCloud2D left, right;
+			return FuzzyRangeAtBearing(chassis, bearingStraightAhead, angularWidth, out left, out right);
+		}
+
+		public Double FuzzyRangeAtBearing(Chassis chassis, Double bearingStraightAhead, Double angularWidth, out PointCloud2D left, out PointCloud2D right)
+		{
+			BearingAndRange toFrontLeft = chassis.GetBearingAndRange(ChassisParts.Lidar, ChassisParts.FrontLeft, bearingStraightAhead);
+			BearingAndRange toFrontRight = chassis.GetBearingAndRange(ChassisParts.Lidar, ChassisParts.FrontRight, bearingStraightAhead);
+
+			return FuzzyRangeAtBearing(toFrontLeft, toFrontRight, bearingStraightAhead, angularWidth, out left, out right);
+		}
+
+		/// <summary>
+		/// Will return an average range from both the front right and front left chassis points
+		/// </summary>
+		/// <param name="frontLeftOffset"></param>
+		/// <param name="frontRightOffset"></param>
+		/// <param name="bearingStraightAhead"></param>
+		/// <param name="angularWidth"></param>
+		/// <returns></returns>
+		public Double FuzzyRangeAtBearing(BearingAndRange frontLeftOffset, BearingAndRange frontRightOffset, Double bearingStraightAhead, Double angularWidth, out PointCloud2D fromFrontLeft, out PointCloud2D fromFrontRight)
 		{
 			if(angularWidth == 0)
 			{
 				angularWidth = RangeFuzz;
 			}
 
-			Double start = trueBearing.SubtractDegrees(angularWidth / 2);
-			Double end = trueBearing.AddDegrees((angularWidth / 2) + 1);
+			Log.SysLogText(LogLevel.DEBUG, "Getting vectors from lidar");
+			PointCloud2D vectorsFromLidar = Lidar.Vectors.ToPointCloud2D();
+
+			fromFrontLeft = vectorsFromLidar.Move(frontLeftOffset);
+			fromFrontRight = vectorsFromLidar.Move(frontRightOffset);
+
+			Log.SysLogText(LogLevel.DEBUG, "FL: {0} FR: {1}", fromFrontLeft, fromFrontRight);
+
+			Double start = bearingStraightAhead.SubtractDegrees(angularWidth / 2);
+			Double end = bearingStraightAhead.AddDegrees((angularWidth / 2) + 1);
 
 			List<Double> allDistances = new List<double>();
 			Double angle = start;
 			while(angle.IsWithinDegressOf(end, Lidar.VectorSize) == false)
 			{
-				Double distance = Lidar.GetRangeAtBearing(angle);
-				 //Log.SysLogText(LogLevel.DEBUG, "At {0:0.000}° range is {1:0.000}", angle, distance);
-				if(distance != 0)
-				{
-					allDistances.Add(distance);
-				}
+				Double d1 = fromFrontLeft.GetRangeAtBearing(angle);
+				Double d2 = fromFrontRight.GetRangeAtBearing(angle);
+				Log.SysLogText(LogLevel.DEBUG, "At {0:0.000}° range is {1:0.000}  and  {2:0.000}", angle, d1, d2);
+				if(d1 != 0)
+					allDistances.Add(d1);
+				if(d2 != 0)
+					allDistances.Add(d1);
 
 				angle = angle.AddDegrees(Lidar.VectorSize);
 			}
@@ -465,7 +497,7 @@ namespace RaspiCommon.Lidar.Environs
 			Lidar.ClearDistanceVectors();
 		}
 
-		public FuzzyPath MakeFuzzyPath(Double bearing, Double rangeFuzz)
+		public FuzzyPath MakeFuzzyPath(Double bearing, Double rangeFuzz, PointD frontLeft, PointCloud2D fromFrontLeft, PointD frontRight, PointCloud2D fromFrontRight)
 		{
 //			Log.SysLogText(LogLevel.DEBUG, "Finding fuzzy path at bearing {0:0.00}°  fuzz {1:0.00}°", bearing, rangeFuzz);
 
@@ -476,15 +508,15 @@ namespace RaspiCommon.Lidar.Environs
 			Double angle = start;
 			while(angle.IsWithinDegressOf(end, Lidar.VectorSize) == false)
 			{
-				Double range = Lidar.GetRangeAtBearing(angle);
+				Double range = fromFrontLeft.GetRangeAtBearing(angle);
 				if(range != 0)
-				{
 					vectors.Add(new BearingAndRange(angle, range));
-				}
-
+				range = fromFrontRight.GetRangeAtBearing(angle);
+				if(range != 0)
+					vectors.Add(new BearingAndRange(angle, range));
 				angle = angle.AddDegrees(Lidar.VectorSize);
 			}
-			FuzzyPath path = new FuzzyPath(bearing, vectors);
+			FuzzyPath path = new FuzzyPath(start, end, fromFrontLeft.GetPointCloud2DSlice(frontLeft, bearing, start, end), fromFrontRight.GetPointCloud2DSlice(frontRight, bearing, start, end));
 			return path;
 		}
 

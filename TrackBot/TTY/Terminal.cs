@@ -17,6 +17,7 @@ namespace TrackBot.TTY
 		public static void Run()
 		{
 			InitCommandProcessors();
+			Widgets.Instance.CommandServer.CommandReceived += OnCommandClientCommandReceived;
 			Console.WriteLine("Welcome to trackbot");
 
 			MainLoop();
@@ -86,14 +87,7 @@ namespace TrackBot.TTY
 						continue;
 					}
 
-					List<String> commandParts = new List<string>(line.Replace("=", " ").Trim().RemoveMultipleWhitespace().Split(' '));
-					CommandBase command;
-					if(_commands.TryGetValue(commandParts[0], out command) == false)
-					{
-						throw new CommandException("Illegal command");
-					}
-
-					if(command.Execute(commandParts) == false)
+					if(!ProcessLine(line))
 						break;
 				}
 				catch(CommandException e)
@@ -103,9 +97,28 @@ namespace TrackBot.TTY
 				}
 				catch(Exception e)
 				{
-					Console.WriteLine("OTHER EXCEPTION:\n{0}", ThreadBase.GetFormattedStackTrace(e));
+					Console.WriteLine("OTHER EXCEPTION {0}:\n{1}", e, ThreadBase.GetFormattedStackTrace(e));
 				}
 			}
+		}
+
+		private static bool ProcessLine(string line)
+		{
+			List<String> commandParts = new List<string>(line.Replace("=", " ").Trim().RemoveMultipleWhitespace().Split(' '));
+			CommandBase command;
+			if(_commands.TryGetValue(commandParts[0], out command) == false)
+			{
+				throw new CommandException("Illegal command");
+			}
+
+			bool result = command.Execute(commandParts);
+
+			return result;
+		}
+
+		private static void OnCommandClientCommandReceived(string command)
+		{
+			ProcessLine(command);
 		}
 
 	}

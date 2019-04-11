@@ -12,6 +12,7 @@ using KanoopCommon.Serialization;
 using RaspiCommon;
 using RaspiCommon.Data.DataSource;
 using RaspiCommon.Data.Entities;
+using RaspiCommon.Devices.Chassis;
 using RaspiCommon.Server;
 using RaspiCommon.Spatial;
 using RaspiCommon.Spatial.Imaging;
@@ -43,21 +44,13 @@ namespace Radar
 
 		static void Test()
 		{
-			EnvironmentInfo info = new EnvironmentInfo()
-			{
-				BackwardPrimaryRange = 12.3,
-				ForwardPrimaryRange = 1,
-				ForwardSecondaryRange = 2.1123,
-				BackwardSecondaryRange = 27,
-				Bearing = 231.4,
-				DestinationBearing = 7,
-				DistanceLeft = 0,
-				DistanceToTravel = 1
-			};
+			Chassis Chassis = new XiaorTankTracks();
+			Chassis.Points.Add(ChassisParts.Lidar, new PointD(Chassis.Points[ChassisParts.RearLeft].X + 150, Chassis.Points[ChassisParts.CenterPoint].Y + 140));
+			Chassis.Points.Add(ChassisParts.FrontRangeFinder, new PointD(Chassis.Width / 2, 0));
+			Chassis.Points.Add(ChassisParts.RearRangeFinder, new PointD(Chassis.Width / 2, Chassis.Length));
 
-			byte[] serialized = BinarySerializer.Serialize(info);
-
-			EnvironmentInfo info2 = BinarySerializer.Deserialize<EnvironmentInfo>(serialized);
+			BearingAndRange toFrontLeft = Chassis.GetBearingAndRange(ChassisParts.Lidar, ChassisParts.FrontLeft, 0);
+			BearingAndRange toFrontRight = Chassis.GetBearingAndRange(ChassisParts.Lidar, ChassisParts.FrontRight, 0);
 		}
 
 		private static void OpenConfig()

@@ -88,6 +88,7 @@ namespace TrackBot.Spatial
 			{
 				if(RunningActivity.State == ThreadState.Started)
 				{
+					Log.SysLogText(LogLevel.INFO, "Stopping previous running activity {0}", RunningActivity);
 					RunningActivity.Stop();
 				}
 			}

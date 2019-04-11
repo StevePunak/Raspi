@@ -1,4 +1,5 @@
 using System;
+using KanoopCommon.Logging;
 using RaspiCommon.Devices.MotorControl;
 using RaspiCommon.Spatial;
 
@@ -14,6 +15,13 @@ namespace RaspiCommon.Devices.Locomotion
 		#endregion
 
 		#region Public Properties
+
+		bool _hardwarePWM;
+		public bool HardwarePWM
+		{
+			get { return _hardwarePWM; }
+			set { _hardwarePWM = Motors[RIGHT_MOTOR].HardwarePWM = Motors[LEFT_MOTOR].HardwarePWM = value ; }
+		}
 
 		L298N_DC_MotorControl[] Motors { get; set; }
 
@@ -58,14 +66,24 @@ namespace RaspiCommon.Devices.Locomotion
 	
 	#endregion
 
-	#region Private Methods
+		#region Private Methods
 
-	void SetValue(L298N_DC_MotorControl motor, double value)
+		void SetValue(L298N_DC_MotorControl motor, double value)
 		{
-			Double percent = Math.Min(Math.Abs(value) / 100, 1);
-			Double speed = (Double)255 * percent;
-			motor.Direction = value >= 0 ? Direction.Forward : Direction.Backward;
-			motor.Speed = (UInt32)speed;
+			if(HardwarePWM)
+			{
+				Double percent = Math.Min(Math.Abs(value) / 100, 1);
+				Double speed = (Double)100 * percent;
+				motor.Direction = value >= 0 ? Direction.Forward : Direction.Backward;
+				motor.Speed = (UInt32)speed;
+			}
+			else
+			{
+				Double percent = Math.Min(Math.Abs(value) / 100, 1);
+				Double speed = (Double)255 * percent;
+				motor.Direction = value >= 0 ? Direction.Forward : Direction.Backward;
+				motor.Speed = (UInt32)speed;
+			}
 		}
 
 		#endregion

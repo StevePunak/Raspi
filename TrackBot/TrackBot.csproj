@@ -56,6 +56,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ForkLift\Lift.cs" />
+    <Compile Include="Network\CommandServer.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SaveImageThread.cs" />
@@ -86,6 +87,7 @@
     <Compile Include="TTY\GoCommand.cs" />
     <Compile Include="TTY\LandmarkCommand.cs" />
     <Compile Include="TTY\LiftMove.cs" />
+    <Compile Include="TTY\Pins.cs" />
     <Compile Include="TTY\Render.cs" />
     <Compile Include="TTY\Roam.cs" />
     <Compile Include="TTY\SaveConfig.cs" />
@@ -113,6 +115,10 @@
     <ProjectReference Include="..\KanoopCommon\KanoopCommon.csproj">
       <Project>{5c9d80a6-6fc0-4b59-b1cf-d2ec261b4b00}</Project>
       <Name>KanoopCommon</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\MQTT\MQTT.csproj">
+      <Project>{52296CEF-4BC8-423A-A1D9-9B900B3E99B9}</Project>
+      <Name>MQTT</Name>
     </ProjectReference>
     <ProjectReference Include="..\RaspiCommon\RaspiCommon.csproj">
       <Project>{0194337c-274d-42f2-a1db-0166f0ac73eb}</Project>

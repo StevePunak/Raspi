@@ -15,8 +15,11 @@ namespace TrackBot.Spatial
 	{
 		const Double MAX_RANGE_FROM_DEST = .15;
 		const Double FORWARD_COLLISION_WARNING = .15;
+		const Double MAX_BEARING_DIFFERENTIAL = 5;
 
 		public FuzzyPath Destination { get; private set; }
+
+		int _unstuckTries;
 
 		public TravelLongestPath()
 			: base(ActivityType.TravelLongestPath)
@@ -54,7 +57,6 @@ namespace TrackBot.Spatial
 		protected override bool RunIdleState()
 		{
 			Interval = TimeSpan.FromMilliseconds(500);
-			Widgets.Instance.Tracks.Stop();
 
 			return true;
 		}
@@ -102,26 +104,27 @@ namespace TrackBot.Spatial
 		{
 			bool result = false;
 
-			if(Widgets.Instance.ImageEnvironment.FuzzyRangeAtBearing(Widgets.Instance.GyMag.Bearing, Widgets.Instance.ImageEnvironment.RangeFuzz) < FORWARD_COLLISION_WARNING)
+			if(Widgets.Instance.ImageEnvironment.FuzzyRangeAtBearing(Widgets.Instance.Chassis, Widgets.Instance.GyMag.Bearing, Widgets.Instance.ImageEnvironment.RangeFuzz) < FORWARD_COLLISION_WARNING)
 			{
 				Console.WriteLine("Backing it up");
 				Widgets.Instance.Tracks.BackwardTime(TimeSpan.FromSeconds(1), Widgets.Instance.Tracks.Slow);
 				GpioSharp.Sleep(TimeSpan.FromSeconds(1.5));
 			}
 
-			Log.LogText(LogLevel.DEBUG, "Turn to bearing {0:0.00}°", Destination.Vector.Bearing);
+			Log.LogText(LogLevel.DEBUG, "Turn to bearing {0:0.00}°", Destination.CenterBearing);
 
-			Widgets.Instance.Tracks.TurnToBearing(Destination.Vector.Bearing);
+			Widgets.Instance.Tracks.TurnToBearing(Destination.CenterBearing);
 
-			Double diff = Widgets.Instance.GyMag.Bearing.AngularDifference(Destination.Vector.Bearing);
-			if(diff > 5)
+			Double diff = Widgets.Instance.GyMag.Bearing.AngularDifference(Destination.CenterBearing);
+			if(diff > MAX_BEARING_DIFFERENTIAL)
 			{
-				Console.WriteLine("Abandoning due to angular difference of {0:0.0}° too high", diff);
-				result = false;
+				Console.WriteLine("We are stuck! Angular difference of {0:0.0}° too damn high", diff);
+				SwitchState(ActivityStates.Stuck);
+				result = true;
 			}
 			else
 			{
-				Console.WriteLine("Rotated to within {0:0.0}° of {1:0.0}°", diff, Destination.Vector.Bearing);
+				Console.WriteLine("Rotated to within {0:0.0}° of {1:0.0}°", diff, Destination.CenterBearing);
 
 				GpioSharp.Sleep(TimeSpan.FromSeconds(5));
 
@@ -138,7 +141,7 @@ namespace TrackBot.Spatial
 			bool result = true;
 
 			// make sure we are not hitting anything
-			if(Widgets.Instance.ImageEnvironment.FuzzyRangeAtBearing(Widgets.Instance.GyMag.Bearing, Widgets.Instance.ImageEnvironment.RangeFuzz) < FORWARD_COLLISION_WARNING)
+			if(Widgets.Instance.ImageEnvironment.FuzzyRangeAtBearing(Widgets.Instance.Chassis, Widgets.Instance.GyMag.Bearing, Widgets.Instance.ImageEnvironment.RangeFuzz) < FORWARD_COLLISION_WARNING)
 			{
 				Console.WriteLine("activating emergency stop");
 				SwitchState(ActivityStates.Idle);
@@ -147,19 +150,85 @@ namespace TrackBot.Spatial
 			}
 			else
 			{
-				Double range = Destination.Vector.Range;
-				if(Destination.ShortestRange > Destination.Vector.Range)
+				Double range = Destination.ShortestRange;
+				if(range > 2)
 				{
-					Log.SysLogText(LogLevel.DEBUG, "Shortening original range of {0:0.000}m to {1:0.000}m due to shortest", Destination.Vector.Range, Destination.ShortestRange);
-					range = Destination.ShortestRange;
-				}
-				else if(Destination.Vector.Range > 2)
-				{
-					Log.SysLogText(LogLevel.DEBUG, "Shortening original range of {0:0.000}m to {1:0.000}m for no real reason", Destination.Vector.Range, 1);
+					Log.SysLogText(LogLevel.DEBUG, "Shortening original range of {0:0.000}m to {1:0.000}m for no real reason", Destination.ShortestRange, 1);
 					range = 2;
 				}
 				Widgets.Instance.Tracks.ForwardMeters(range, Widgets.Instance.Tracks.StandardSpeed);
 				SwitchState(ActivityStates.FindDestination);
+			}
+
+			return result;
+		}
+
+		#endregion
+
+		#region Stuck State
+
+		bool InitStuckState()
+		{
+			// settle down
+			Log.SysLogText(LogLevel.DEBUG, "Settling down to get unstuck");
+			Interval = TimeSpan.FromSeconds(1);
+			_unstuckTries = 3;
+
+			return true;
+		}
+
+		override protected bool RunStuckState()
+		{
+			const Double UNSTUCK_FIDGET_DISTANCE = .25;
+
+			bool result = true;
+
+			// which way is closest?
+			Double forwardRange = Widgets.Instance.GetRangeAtDirection(Direction.Forward);
+			Double backwardRange = Widgets.Instance.GetRangeAtDirection(Direction.Backward);
+
+			Direction direction = forwardRange > backwardRange ? Direction.Forward : Direction.Backward;
+			Log.SysLogText(LogLevel.DEBUG, "Going to move {0} {1} to try and get unstuck", UNSTUCK_FIDGET_DISTANCE, direction);
+
+			Widgets.Instance.Tracks.MoveMeters(direction, .3, Widgets.Instance.Tracks.StandardSpeed);
+			GpioSharp.Sleep(TimeSpan.FromSeconds(1));
+
+			SpinDirection spinDirection = Utility.GetClosestSpinDirection(Widgets.Instance.Compass.Bearing, Destination.CenterBearing);
+
+			Log.LogText(LogLevel.DEBUG, "Turn {0} to bearing {1:0.00}°", spinDirection, Destination.CenterBearing);
+			Widgets.Instance.Tracks.TurnToBearing(Destination.CenterBearing, spinDirection);
+
+			Double diff = Widgets.Instance.GyMag.Bearing.AngularDifference(Destination.CenterBearing);
+			if(diff > MAX_BEARING_DIFFERENTIAL)
+			{
+				spinDirection = spinDirection == SpinDirection.Clockwise ? SpinDirection.CounterClockwise : SpinDirection.Clockwise;
+
+				Log.LogText(LogLevel.DEBUG, "OK. Will try it {0}. Turn to bearing {1:0.00}°", spinDirection, Destination.CenterBearing);
+				GpioSharp.Sleep(TimeSpan.FromSeconds(1));
+				Widgets.Instance.Tracks.TurnToBearing(Destination.CenterBearing, spinDirection);
+
+				diff = Widgets.Instance.GyMag.Bearing.AngularDifference(Destination.CenterBearing);
+				if(diff > MAX_BEARING_DIFFERENTIAL)
+				{
+					if(--_unstuckTries > 0)
+					{
+						Log.LogText(LogLevel.DEBUG, "Gonna rest for a few... I've got {0} tries left", _unstuckTries);
+						Utility.LogSleep("Resting", TimeSpan.FromSeconds(15));
+					}
+					else
+					{
+						Log.LogText(LogLevel.DEBUG, "Fuck it. I give up.");
+						SwitchState(ActivityStates.Idle);
+					}
+				}
+				else
+				{
+					SwitchState(ActivityStates.TravelToDest);
+				}
+			}
+			else
+			{
+				SwitchState(ActivityStates.TravelToDest);
 			}
 
 			return result;

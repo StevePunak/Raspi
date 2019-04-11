@@ -67,6 +67,7 @@ namespace RaspiCommon
 		public GpioPin TracksLeftEnaPin { get; set; }
 		public GpioPin TracksLeftDirectionPin { get; set; }
 		public GpioPin TracksLeftStepPin { get; set; }
+		public bool TracksHardwarePWM { get; set; }
 
 		public GpioPin EscControlPinPin { get; set; }
 		public GpioPin RangeFinderInputPin { get; set; }

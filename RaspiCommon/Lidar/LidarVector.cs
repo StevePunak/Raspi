@@ -16,13 +16,14 @@ namespace RaspiCommon.Lidar
 {
 	public class LidarVector : IVector
 	{
-		public Double Bearing { get; set; }
-		public Double Range { get; set; }
+		public BearingAndRange BearingAndRange { get; set; }
+		public Double Bearing { get { return BearingAndRange.Bearing; } set { BearingAndRange.Bearing = value; } }
+		public Double Range { get { return BearingAndRange.Range; } set { BearingAndRange.Range = value; } }
 		public DateTime RefreshTime { get; set; }
 
 		public LidarVector()
 		{
-			Bearing = Range = 0;
+			BearingAndRange = new BearingAndRange();
 			RefreshTime = DateTime.MinValue;
 		}
 

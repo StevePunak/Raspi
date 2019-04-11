@@ -133,8 +133,8 @@ namespace RaspiCommon.Server
 		{
 			Double forwardBearing = Widgets.Compass.Bearing;
 			Double backwardBearing = forwardBearing.AddDegrees(180);
-			Double forwardPrimaryRange = Widgets.ImageEnvironment.FuzzyRangeAtBearing(forwardBearing, 0);
-			Double backwardPrimaryRange = Widgets.ImageEnvironment.FuzzyRangeAtBearing(backwardBearing, 0);
+			Double forwardPrimaryRange = Widgets.ImageEnvironment.FuzzyRangeAtBearing(Widgets.Chassis, forwardBearing, 0);
+			Double backwardPrimaryRange = Widgets.ImageEnvironment.FuzzyRangeAtBearing(Widgets.Chassis, backwardBearing, 0);
 
 			if( forwardBearing != _environmentInfo.Bearing ||
 				forwardPrimaryRange != _environmentInfo.ForwardPrimaryRange ||

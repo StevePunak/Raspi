@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Emgu.CV;
 using KanoopCommon.Geometry;
+using RaspiCommon.Devices.Chassis;
 using RaspiCommon.Lidar.Environs;
 using RaspiCommon.Spatial;
 using RaspiCommon.Spatial.Imaging;
@@ -14,6 +15,10 @@ namespace TrackBot.Spatial
 {
 	class VirtualEnvironment : IImageEnvironment
 	{
+		public event FuzzyPathChangedHandler FuzzyPathChanged;
+		public event LandmarksChangedHandler LandmarksChanged;
+		public event BarriersChangedHandler BarriersChanged;
+
 		public double Range { get; set; }
 
 		public double CompassOffset { get; set; }
@@ -48,11 +53,11 @@ namespace TrackBot.Spatial
 			RenderPixelsPerMeter = 50;
 			Location = new PointD(250, 250);
 			RelativeLocation = new PointD(250, 250);
-		}
 
-		public event FuzzyPathChangedHandler FuzzyPathChanged;
-		public event LandmarksChangedHandler LandmarksChanged;
-		public event BarriersChangedHandler BarriersChanged;
+			FuzzyPathChanged += delegate {};
+			LandmarksChanged += delegate {};
+			BarriersChanged += delegate {};
+		}
 
 		public double FuzzyRangeAtBearing(double bearing, double fuzz = 2)
 		{
@@ -115,6 +120,21 @@ namespace TrackBot.Spatial
 		}
 
 		public FuzzyPath FindGoodDestination(double requireClearUpTo)
+		{
+			throw new NotImplementedException();
+		}
+
+		public double FuzzyRangeAtBearing(Chassis chassis, double bearingStraightAhead, double angularWidth)
+		{
+			throw new NotImplementedException();
+		}
+
+		public double FuzzyRangeAtBearing(BearingAndRange offset1, BearingAndRange offset2, double bearing, double fuzz, out PointCloud2D fromFrontLeft, out PointCloud2D fromFrontRight)
+		{
+			throw new NotImplementedException();
+		}
+
+		public double FuzzyRangeAtBearing(Chassis chassis, double bearingStraightAhead, double angularWidth, out PointCloud2D fromFrontLeft, out PointCloud2D fromFrontRight)
 		{
 			throw new NotImplementedException();
 		}

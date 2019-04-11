@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using RaspiCommon.Devices.Chassis;
 using RaspiCommon.Devices.Compass;
 using RaspiCommon.Spatial;
 using RaspiCommon.Spatial.Imaging;
@@ -26,5 +27,6 @@ namespace RaspiCommon
 		ICompass Compass { get; }
 		IImageEnvironment ImageEnvironment { get; }
 		ILandscape Landscape { get; }
+		Chassis Chassis { get; }
 	}
 }

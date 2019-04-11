@@ -69,9 +69,9 @@ namespace TrackBot.Spatial
 			}
 
 			Widgets.Instance.ImageEnvironment.FuzzyPath = Destination;
-			Widgets.Instance.Tracks.TurnToBearing(Destination.Vector.Bearing);
+			Widgets.Instance.Tracks.TurnToBearing(Destination.CenterBearing);
 			
-			Log.LogText(LogLevel.DEBUG, "Found a good destination at {0} bearing {1:0.0}°... setting into path", Destination, Destination.Vector.Bearing);
+			Log.LogText(LogLevel.DEBUG, "Found a good destination at {0} bearing {1:0.0}°... setting into path", Destination, Destination.CenterBearing);
 
 			// set into environment to generate events
 			Widgets.Instance.ImageEnvironment.FuzzyPath = Destination;
@@ -87,8 +87,8 @@ namespace TrackBot.Spatial
 
 		override protected bool RunTravelToDestState()
 		{
-			Widgets.Instance.Tracks.TurnToBearing(Destination.Vector.Bearing);
-			Widgets.Instance.Tracks.ForwardMeters(Math.Min(Destination.Vector.Range, 1), Widgets.Instance.Tracks.StandardSpeed);
+			Widgets.Instance.Tracks.TurnToBearing(Destination.CenterBearing);
+			Widgets.Instance.Tracks.ForwardMeters(Math.Min(Destination.CenterBearing, 1), Widgets.Instance.Tracks.StandardSpeed);
 
 			SwitchState(ActivityStates.TravelToDest);
 

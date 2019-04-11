@@ -56,6 +56,7 @@ namespace RaspiCommon
 
 		public static void SetHardwarePWM(GpioPin gpioPin, UInt32 frequency, UInt32 dutyCyclePercent)
 		{
+//			Log.SysLogText(LogLevel.DEBUG, "PIGS set Hardware PWM {0} freq {1}  duty cycle {2}", gpioPin, frequency, dutyCyclePercent);
 			if(dutyCyclePercent > 100)
 			{
 				throw new RaspiException("Duty cycle must be 0-100");
@@ -67,7 +68,7 @@ namespace RaspiCommon
 
 		public static void SetPWM(GpioPin gpioPin, UInt32 dutyCycle)
 		{
-//			Console.WriteLine("PIGS set duty cycle {0} {1}", gpioPin, dutyCycle);
+//			Log.SysLogText(LogLevel.DEBUG, "PIGS set PWM duty cycle {0} {1}", gpioPin, dutyCycle);
 
 			PigCommand command = new PigCommand(PigCommand.CommandType.PWM, gpioPin, dutyCycle);
 			SendCommand(command);
