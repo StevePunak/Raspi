@@ -17,9 +17,10 @@ namespace KanoopCommon.Geometry
 		{
 		}
 
-		public PointCloud2D(int size)
-			: base(size)
+		public PointCloud2D(Double size)
+			: base((int)size)
 		{
+
 		}
 
 		public PointCloud2DSlice GetPointCloud2DSlice(PointD origin, Double bearing, Double from, Double to)
@@ -39,6 +40,16 @@ namespace KanoopCommon.Geometry
 		{
 			Double offset = bearing / VectorSize;
 			return this[(int)offset].Range;
+		}
+
+		public new PointCloud2D Clone()
+		{
+			PointCloud2D list = new PointCloud2D();
+			foreach(BearingAndRange rab in this)
+			{
+				list.Add(rab.Clone());
+			}
+			return list;
 		}
 	}
 }

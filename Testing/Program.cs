@@ -16,6 +16,7 @@ using KanoopCommon.Geometry;
 using KanoopCommon.Logging;
 using KanoopCommon.Queueing;
 using KanoopCommon.Threading;
+using RaspiCommon;
 using RaspiCommon.Devices.MotorControl;
 using RaspiCommon.Devices.Spatial;
 using RaspiCommon.Extensions;
@@ -24,7 +25,7 @@ using RaspiCommon.Lidar.Environs;
 using RaspiCommon.Server;
 using RaspiCommon.Spatial;
 
-namespace RaspiCommon
+namespace Testing
 {
 
 	class Program
@@ -35,11 +36,26 @@ namespace RaspiCommon
 		{
 			OpenLog();
 
-			EMGUTest();
+			PointCloudTest();
+//			EMGUTest();
 
 			RunLidar();
 		}
 
+		private static void PointCloudTest()
+		{
+			Mat input = new Mat(@"f:\tmp\1.png");
+
+			PointCloud2D cloud = input.ToPointCloud(.25);
+
+			Mat output = cloud.ToBitmap(new Size(500, 500), Color.Blue);
+			output.Save(@"f:\tmp\output.png");
+
+			PointCloud2D cloud2 = cloud.Move(new BearingAndRange(45, 10));
+			cloud2.PlaceOnBitmap(output, output.Center(), Color.Green);
+			output.Save(@"f:\tmp\output1.png");
+
+		}
 		private static void EMGUTest()
 		{
 			String root = Environment.OSVersion.Platform == PlatformID.Unix ? "./" : @"c:\pub\tmp";

@@ -349,10 +349,15 @@ namespace KanoopCommon.Geometry
 		{
 			get
 			{
+
+				Double xDiff = P2.X - P1.X;
+				Double yDiff = P2.Y - P1.Y;
+				Double b = Math.Atan2(yDiff, xDiff) * (180 / Math.PI);
+
 				/**
 				 * get a new line and move it down one unit
 				 */
-				Line	newLine = this.Clone() as Line;
+				Line    newLine = this.Clone() as Line;
 				newLine.Move(180, 1);
 
 				Line	l = new Line(newLine.P1, new PointD(newLine.P1.X, newLine.P1.Y - 1));
@@ -365,11 +370,6 @@ namespace KanoopCommon.Geometry
 				//Line l = new Line(m_P1, new PointD(m_P1.X + 100, m_P1.Y));
 				//Angle angle = new Angle(FlatGeo.VectorAngle(l, this));
 
-				/**
-				 * add 90 to get it in the right orientation
-				 */
-				//angle.Degrees += 90;
-				//if(m_P1.Y >
 				return angle.Degrees;
 			}
 		}

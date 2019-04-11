@@ -35,7 +35,7 @@ namespace KanoopCommon.Extensions
 		{
 			PointCloud2D output = new PointCloud2D(inputVectors.Count);
 
-			Double vectorSize = 360 / inputVectors.Count;
+			Double vectorSize = (Double)360 / (Double)inputVectors.Count;
 
 			PointD originalOrigin = new PointD(0, 0);
 			PointD newOrigin = originalOrigin.GetPointAt(offsetFromOrigin);
@@ -43,12 +43,16 @@ namespace KanoopCommon.Extensions
 			int offset = 0;
 			for(Double originalBearing = 0;originalBearing < 360;originalBearing += vectorSize, offset++)
 			{
-				PointD pointFromOriginalOrigin = originalOrigin.GetPointAt(inputVectors[offset]);
-				Line line = new Line(newOrigin, pointFromOriginalOrigin);
+				if(inputVectors[offset].Range != 0)
+				{
+					PointD pointFromOriginalOrigin = originalOrigin.GetPointAt(inputVectors[offset]);
+					Line oline = new Line(originalOrigin, pointFromOriginalOrigin);
+					Line line = new Line(newOrigin, pointFromOriginalOrigin);
 
-				Double outputOffset = line.Bearing / vectorSize;
-				output[(int)outputOffset].Bearing = line.Bearing;
-				output[(int)outputOffset].Range = line.Length;
+					Double outputOffset = line.Bearing / vectorSize;
+					output[(int)outputOffset].Bearing = line.Bearing;
+					output[(int)outputOffset].Range = line.Length;
+				}
 			}
 
 			return output;
