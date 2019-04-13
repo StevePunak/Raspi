@@ -189,7 +189,7 @@ namespace TrackBotCommon.Environs
 
 			PointD position = CurrentLocation.Clone();
 			position.Scale(pixelsPerMeter);
-			image.DrawCross(position, drawing.Color, drawing.LineWidth);
+			image.DrawCross(position, 4, drawing.Color, drawing.LineWidth);
 		}
 
 		private void DrawPossibleLocation(Mat image, Double pixelsPerMeter)
@@ -200,7 +200,7 @@ namespace TrackBotCommon.Environs
 
 				PointD position = CurrentLocation.Clone();
 				position.Scale(pixelsPerMeter);
-				image.DrawCross(position, drawing.Color, drawing.LineWidth);
+				image.DrawCross(position, 4, drawing.Color, drawing.LineWidth);
 			}
 		}
 
@@ -215,7 +215,7 @@ namespace TrackBotCommon.Environs
 					center.Scale(pixelsPerMeter);
 
 					Double radius = circle.Radius * pixelsPerMeter;
-					image.Circle(new Circle(center, radius), drawing.Color, drawing.LineWidth);
+					image.DrawCircle(new Circle(center, radius), drawing.Color, drawing.LineWidth);
 				}
 			}
 		}

@@ -10,7 +10,6 @@ namespace TrackBot.Spatial
 	{
 		None,
 		RoamAndSeekUS,
-		RoamAndSeek,
 		TravelLongestPath,
 		GoToDestination
 	}

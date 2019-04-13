@@ -5,6 +5,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using KanoopCommon.Extensions;
+using KanoopCommon.Logging;
 using KanoopCommon.Threading;
 using RaspiCommon;
 
@@ -88,7 +89,10 @@ namespace TrackBot.TTY
 					}
 
 					if(!ProcessLine(line))
+					{
+						Log.SysLogText(LogLevel.DEBUG, "Exiting");
 						break;
+					}
 				}
 				catch(CommandException e)
 				{
@@ -118,7 +122,18 @@ namespace TrackBot.TTY
 
 		private static void OnCommandClientCommandReceived(string command)
 		{
-			ProcessLine(command);
+			try
+			{
+				if(command.Length > 0)
+				{
+					Log.SysLogText(LogLevel.DEBUG, "Received command '{0}'", command);
+					ProcessLine(command);
+				}
+			}
+			catch(Exception e)
+			{
+				Log.SysLogText(LogLevel.WARNING, "Command Process EXCEPTION: {0}", e.Message);
+			}
 		}
 
 	}

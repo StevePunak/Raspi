@@ -119,11 +119,6 @@ namespace TrackBot.Spatial
 			return new byte[0];
 		}
 
-		public FuzzyPath FindGoodDestination(double requireClearUpTo)
-		{
-			throw new NotImplementedException();
-		}
-
 		public double FuzzyRangeAtBearing(Chassis chassis, double bearingStraightAhead, double angularWidth)
 		{
 			throw new NotImplementedException();
@@ -135,6 +130,16 @@ namespace TrackBot.Spatial
 		}
 
 		public double FuzzyRangeAtBearing(Chassis chassis, double bearingStraightAhead, double angularWidth, out PointCloud2D fromFrontLeft, out PointCloud2D fromFrontRight)
+		{
+			throw new NotImplementedException();
+		}
+
+		public double FuzzyRangeAtBearing(double bearing, BearingAndRange frontLeftWheelOffset, BearingAndRange frontRightWheelOffset, double angularWidth, out PointCloud2D frontLeftCloud, out PointCloud2D frontRightCloud)
+		{
+			throw new NotImplementedException();
+		}
+
+		public FuzzyPathList FindGoodDestinations(double requireClearUpTo)
 		{
 			throw new NotImplementedException();
 		}

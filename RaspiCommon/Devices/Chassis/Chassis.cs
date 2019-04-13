@@ -32,6 +32,11 @@ namespace RaspiCommon.Devices.Chassis
 			}
 		}
 
+		public BearingAndRange FrontLeftLidarVector { get { return GetBearingAndRange(ChassisParts.Lidar, ChassisParts.FrontLeft); } }
+		public BearingAndRange FrontRightLidarVector { get { return GetBearingAndRange(ChassisParts.Lidar, ChassisParts.FrontRight); } }
+
+		public PointD LidarPosition { get { return Points[ChassisParts.Lidar]; } }
+
 		public Dictionary<ChassisParts, PointD> Points { get; private set; }
 		public Dictionary<ChassisParts, Dictionary<ChassisParts, BearingAndRange>> PartVectors { get; private set; }
 
@@ -75,12 +80,12 @@ namespace RaspiCommon.Devices.Chassis
 		{
 			if(_length > 0 && _width > 0)
 			{
-				// rear left is at 0,0
+				// front left is at 0,0
 				Points.Clear();
-				Points.Add(ChassisParts.RearLeft, new PointD(0, 0));
-				Points.Add(ChassisParts.RearRight, new PointD(_width, 0));
-				Points.Add(ChassisParts.FrontLeft, new PointD(0, _length));
-				Points.Add(ChassisParts.FrontRight, new PointD(_width, _length));
+				Points.Add(ChassisParts.FrontLeft, new PointD(0, 0));
+				Points.Add(ChassisParts.FrontRight, new PointD(_width, 0));
+				Points.Add(ChassisParts.RearLeft, new PointD(0, _length));
+				Points.Add(ChassisParts.RearRight, new PointD(_width, _length));
 				PointD centerPoint = new Line(Points[ChassisParts.FrontLeft], Points[ChassisParts.RearRight]).MidPoint;
 				Points.Add(ChassisParts.CenterPoint, centerPoint);
 

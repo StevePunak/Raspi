@@ -8,6 +8,7 @@ using KanoopCommon.Extensions;
 using RaspiCommon;
 using KanoopCommon.Logging;
 using RaspiCommon.Spatial.Imaging;
+using TrackBot.System;
 
 namespace TrackBot.Spatial
 {
@@ -19,13 +20,19 @@ namespace TrackBot.Spatial
 
 		public FuzzyPath Destination { get; private set; }
 
+		public FuzzyPath LastDestination { get { return _lastPaths.Last(); } }
+
 		int _unstuckTries;
+
+		FuzzyPathList _lastPaths;
 
 		public TravelLongestPath()
 			: base(ActivityType.TravelLongestPath)
 		{
 			Interval = TimeSpan.FromMilliseconds(100);
 			ActivityState = ActivityStates.Init;
+
+			_lastPaths = new FuzzyPathList();
 		}
 
 		protected override bool OnStop()
@@ -65,31 +72,48 @@ namespace TrackBot.Spatial
 
 		#region Find Destination State
 
-		bool InitFindDestinationState()
-		{
-			// sit tight for one second
-			Interval = TimeSpan.FromSeconds(1);
-
-			return true;
-		}
-
 		protected override bool RunFindDestinationState()
 		{
+			Log.SysLogText(LogLevel.DEBUG, "================ RunFindDestinationState");
+
 			bool result = false;
 
 			// find a place to travel to
-			Destination = Widgets.Instance.ImageEnvironment.FindGoodDestination(Program.Config.ShortRangeClearance);
-			if(Destination != null)
+			FuzzyPathList possibleDestinations = Widgets.Instance.ImageEnvironment.FindGoodDestinations(Program.Config.ShortRangeClearance);
+			if(possibleDestinations.Count != 0)
 			{
-				Console.WriteLine("Found a good destination at {0}", Destination);
+				possibleDestinations.DumpToLog(String.Format("Finding good destination with current bearing {0} and {1} previous destinations", 
+					Destination == null ? "None" : Destination.Bearing.ToAngleString(), _lastPaths.Count));
+				if(_lastPaths.Count == 0)
+				{
+					Destination = possibleDestinations.Longest;
+				}
+				else
+				{
+					// get the paths cloest to right angles from our previous
+					Double diff1 = LastDestination.Bearing.AddDegrees(90);
+					Double diff2 = LastDestination.Bearing.AddDegrees(270);
+					FuzzyPath p1 = possibleDestinations.ClosestTo(diff1);
+					FuzzyPath p2 = possibleDestinations.ClosestTo(diff2);
+
+					Log.SysLogText(LogLevel.DEBUG, "Prev: {0} - Path closest to {1} is {2}", Destination.Bearing, diff1.ToAngleString(), p1);
+					Log.SysLogText(LogLevel.DEBUG, "Prev: {0} - Path closest to {1} is {2}", Destination.Bearing, diff2.ToAngleString(), p2);
+
+					// of the two, pick the longest one
+					Destination = p1.ShortestRange > p2.ShortestRange ? p1 : p2;
+					Log.SysLogText(LogLevel.DEBUG, "Found best choice at {0}  (Previous: {1})", Destination, LastDestination);
+				}
+				_lastPaths.Add(Destination);
+
+				Log.LogText(LogLevel.DEBUG, "Found a good destination at {0} count {1}", Destination, _lastPaths.Count);
 				Widgets.Instance.ImageEnvironment.FuzzyPath = Destination;
 
-				SwitchState(ActivityStates.TravelToDest);
+				SwitchState(ActivityStates.RotateToNewBearing);
 				result = true;
 			}
 			else
 			{
-				Console.WriteLine("Could not find a good destination");
+				Log.LogText(LogLevel.DEBUG, "Could not find a good destination");
 			}
 
 			return result;
@@ -98,24 +122,26 @@ namespace TrackBot.Spatial
 
 		#endregion
 
-		#region TravelToDest State
+		#region Rotate To Bearing
 
-		bool InitTravelToDestState()
+		protected override bool RunRotateToNewBearingState()
 		{
 			bool result = false;
 
-			if(Widgets.Instance.ImageEnvironment.FuzzyRangeAtBearing(Widgets.Instance.Chassis, Widgets.Instance.GyMag.Bearing, Widgets.Instance.ImageEnvironment.RangeFuzz) < FORWARD_COLLISION_WARNING)
+			Double currentForwardRange = Widgets.Instance.ImageEnvironment.FuzzyRangeAtBearing(Widgets.Instance.Chassis, Widgets.Instance.GyMag.Bearing, Widgets.Instance.ImageEnvironment.RangeFuzz);
+			Log.LogText(LogLevel.DEBUG, "Sitting at {0:0.000}m from forward obstacle with a destination of {1}", currentForwardRange, Destination);
+			if(currentForwardRange < FORWARD_COLLISION_WARNING)
 			{
-				Console.WriteLine("Backing it up");
-				Widgets.Instance.Tracks.BackwardTime(TimeSpan.FromSeconds(1), Widgets.Instance.Tracks.Slow);
+				Log.LogText(LogLevel.DEBUG, "Backing it up");
+				Widgets.Instance.Tracks.BackwardTime(TimeSpan.FromMilliseconds(500), Widgets.Instance.Tracks.Slow);
 				GpioSharp.Sleep(TimeSpan.FromSeconds(1.5));
 			}
 
-			Log.LogText(LogLevel.DEBUG, "Turn to bearing {0:0.00}°", Destination.CenterBearing);
+			Log.LogText(LogLevel.DEBUG, "Turn to bearing {0:0.00}°", Destination.Bearing);
 
-			Widgets.Instance.Tracks.TurnToBearing(Destination.CenterBearing);
+			Widgets.Instance.Tracks.TurnToBearing(Destination.Bearing);
 
-			Double diff = Widgets.Instance.GyMag.Bearing.AngularDifference(Destination.CenterBearing);
+			Double diff = Widgets.Instance.GyMag.Bearing.AngularDifference(Destination.Bearing);
 			if(diff > MAX_BEARING_DIFFERENTIAL)
 			{
 				Console.WriteLine("We are stuck! Angular difference of {0:0.0}° too damn high", diff);
@@ -124,16 +150,26 @@ namespace TrackBot.Spatial
 			}
 			else
 			{
-				Console.WriteLine("Rotated to within {0:0.0}° of {1:0.0}°", diff, Destination.CenterBearing);
+				Console.WriteLine("Rotated to within {0:0.0}° of {1:0.0}°", diff, Destination.Bearing);
 
 				GpioSharp.Sleep(TimeSpan.FromSeconds(5));
 
 				Widgets.Instance.Tracks.SetStart();
+				SwitchState(ActivityStates.TravelToDest);
 
 				result = true;
 			}
 
 			return result;
+		}
+
+		#endregion
+
+		#region TravelToDest State
+
+		bool InitTravelToDestState()
+		{
+			return true;
 		}
 
 		override protected bool RunTravelToDestState()
@@ -171,7 +207,7 @@ namespace TrackBot.Spatial
 		{
 			// settle down
 			Log.SysLogText(LogLevel.DEBUG, "Settling down to get unstuck");
-			Interval = TimeSpan.FromSeconds(1);
+			Interval = TimeSpan.FromSeconds(3);
 			_unstuckTries = 3;
 
 			return true;
@@ -193,21 +229,21 @@ namespace TrackBot.Spatial
 			Widgets.Instance.Tracks.MoveMeters(direction, .3, Widgets.Instance.Tracks.StandardSpeed);
 			GpioSharp.Sleep(TimeSpan.FromSeconds(1));
 
-			SpinDirection spinDirection = Utility.GetClosestSpinDirection(Widgets.Instance.Compass.Bearing, Destination.CenterBearing);
+			SpinDirection spinDirection = Utility.GetClosestSpinDirection(Widgets.Instance.Compass.Bearing, Destination.Bearing);
 
-			Log.LogText(LogLevel.DEBUG, "Turn {0} to bearing {1:0.00}°", spinDirection, Destination.CenterBearing);
-			Widgets.Instance.Tracks.TurnToBearing(Destination.CenterBearing, spinDirection);
+			Log.LogText(LogLevel.DEBUG, "Turn {0} to bearing {1:0.00}°", spinDirection, Destination.Bearing);
+			Widgets.Instance.Tracks.TurnToBearing(Destination.Bearing, spinDirection);
 
-			Double diff = Widgets.Instance.GyMag.Bearing.AngularDifference(Destination.CenterBearing);
+			Double diff = Widgets.Instance.GyMag.Bearing.AngularDifference(Destination.Bearing);
 			if(diff > MAX_BEARING_DIFFERENTIAL)
 			{
 				spinDirection = spinDirection == SpinDirection.Clockwise ? SpinDirection.CounterClockwise : SpinDirection.Clockwise;
 
-				Log.LogText(LogLevel.DEBUG, "OK. Will try it {0}. Turn to bearing {1:0.00}°", spinDirection, Destination.CenterBearing);
+				Log.LogText(LogLevel.DEBUG, "OK. Will try it {0}. Turn to bearing {1:0.00}°", spinDirection, Destination.Bearing);
 				GpioSharp.Sleep(TimeSpan.FromSeconds(1));
-				Widgets.Instance.Tracks.TurnToBearing(Destination.CenterBearing, spinDirection);
+				Widgets.Instance.Tracks.TurnToBearing(Destination.Bearing, spinDirection);
 
-				diff = Widgets.Instance.GyMag.Bearing.AngularDifference(Destination.CenterBearing);
+				diff = Widgets.Instance.GyMag.Bearing.AngularDifference(Destination.Bearing);
 				if(diff > MAX_BEARING_DIFFERENTIAL)
 				{
 					if(--_unstuckTries > 0)
@@ -223,12 +259,12 @@ namespace TrackBot.Spatial
 				}
 				else
 				{
-					SwitchState(ActivityStates.TravelToDest);
+					SwitchState(ActivityStates.RotateToNewBearing);
 				}
 			}
 			else
 			{
-				SwitchState(ActivityStates.TravelToDest);
+				SwitchState(ActivityStates.RotateToNewBearing);
 			}
 
 			return result;

@@ -97,7 +97,7 @@ namespace RaspiCommon
 		public Double LidarOffsetDegrees { get; set; }
 		public int StandardSpeed { get; set; }
 		public Double StoppingDistance { get; set; }
-
+		public int PathsToGet { get; set; }
 
 		Dictionary<RFDir, GpioPin> _rangeFinderOutputPins;
 		public Dictionary<RFDir, GpioPin>  RangeFinderEchoPins

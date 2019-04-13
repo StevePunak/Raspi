@@ -71,6 +71,9 @@ namespace KanoopCommon.Performance
 			get { return _stopwatch.ElapsedTicks; }
 		}
 
+		public PerformanceTimer(Object type)
+			: this(type.ToString()) {}
+
 		public PerformanceTimer(String name)
 		{
 			_stopwatch = new Stopwatch();
@@ -103,6 +106,11 @@ namespace KanoopCommon.Performance
 			}
 			_longest = longest;
 			_shortest = shortest;
+		}
+
+		public virtual void StopAndLog()
+		{
+			Stop(1, Log.SystemLog, LogLevel.DEBUG);
 		}
 
 		public virtual void Stop(long logFrequency, Log log, LogLevel level)

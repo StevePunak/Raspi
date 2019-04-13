@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using System.Text;
@@ -14,9 +15,10 @@ using KanoopCommon.Logging;
 using RaspiCommon.Devices.Chassis;
 using RaspiCommon.Devices.Spatial;
 using RaspiCommon.Extensions;
-using RaspiCommon.Server;
+using RaspiCommon.Network;
 using RaspiCommon.Spatial;
 using RaspiCommon.Spatial.Imaging;
+using RaspiCommon.System;
 
 namespace RaspiCommon.Lidar.Environs
 {
@@ -35,6 +37,8 @@ namespace RaspiCommon.Lidar.Environs
 		public event BarriersChangedHandler BarriersChanged;
 
 		#endregion
+
+		#region Public Properties
 
 		public Double MetersSquare { get; private set; }
 		public Double PixelsPerMeter { get; set; }
@@ -80,6 +84,10 @@ namespace RaspiCommon.Lidar.Environs
 			}
 		}
 
+		#endregion
+
+		#region Private Members
+
 		List<Color> _rotateColors = new List<Color>()
 		{
 			Color.AliceBlue, Color.Aquamarine, Color.Azure, Color.Beige, Color.BlanchedAlmond, Color.BlueViolet, Color.Brown, Color.Chartreuse, Color.CornflowerBlue,
@@ -88,6 +96,10 @@ namespace RaspiCommon.Lidar.Environs
 		int _colorIndex;
 
 		List<String> _debugTags = new List<string>() { "006", "009", "014" };
+
+		#endregion
+
+		#region Constructor
 
 		public LidarEnvironment(Double metersSquare, Double pixelsPerMeter)
 		{
@@ -124,8 +136,10 @@ namespace RaspiCommon.Lidar.Environs
 				MinimumLandmarkSeparation = .1,      // landmarks must be this many meters apart
 				BearingSlack = 2,                    // degrees slack when computing similar angles
 				LinePathWidth = .1,                  // lines must be within this many meters to be consolidated into a single line
-		};
+			};
 		}
+
+		#endregion
 
 		public void ProcessImage(Mat image, Double imageOrientation, Double imagePixelsPerMeter)
 		{
@@ -434,18 +448,112 @@ namespace RaspiCommon.Lidar.Environs
 			return allDistances.Count > 0 ? allDistances.Min() : 0;
 		}
 
-		public Double FuzzyRangeAtBearing(Chassis chassis, Double bearingStraightAhead, Double angularWidth)
+		/// <summary>
+		/// Find the best set of destinations on the map
+		/// </summary>
+		/// <param name="pointCloud"></param>
+		/// <param name="chassis"></param>
+		/// <param name="rangeFuzz"></param>
+		/// <param name="requireClearUpTo"></param>
+		/// <returns></returns>
+		public static FuzzyPathList FindGoodDestinations(PointCloud2D pointCloud, Chassis chassis, Double rangeFuzz, int maxDestinations, Double requireClearUpTo)
 		{
-			PointCloud2D left, right;
-			return FuzzyRangeAtBearing(chassis, bearingStraightAhead, angularWidth, out left, out right);
+			Performance.Timers[TimerTypes.FindDestination].Start();
+
+			Double window = 45;
+			Log.SysLogText(LogLevel.DEBUG, "Finding a destination clear up to {0} with a range fuzz of {1} and {2} vectors in the tank", 
+				requireClearUpTo.ToMetersString(), rangeFuzz.ToAngleString(), pointCloud.Count);
+
+			Performance.Timers[TimerTypes.FindShortestRange].Start();
+
+			Double bearing;
+			//pointCloud.DumpToLog("PC");
+			BearingAndRangeList vectors = new BearingAndRangeList();
+			BearingAndRange[] pointCloudArray = pointCloud.ToArray();
+			for(bearing = 0;bearing < 360;bearing++)
+			{
+				Double range = pointCloudArray.ShortestRangeBetween(bearing.SubtractDegrees(window / 2), bearing.AddDegrees(window / 2));
+				vectors.Add(new BearingAndRange(bearing, range));
+				//Log.SysLogText(LogLevel.DEBUG, "Shortest range between {0} and {1} is {2}m",
+				//	bearing.SubtractDegrees(window / 2).ToAngleString(),
+				//	bearing.AddDegrees(window / 2).ToAngleString(), range);
+			}
+
+			// break the ranges up into chunks
+			// round all ranges to millimeter
+			vectors.RoundRanges(2);
+
+			Double lastRange = vectors[359].Range;
+			//  2. find start point
+			for(bearing = 0;bearing < 360 && vectors[(int)bearing].Range == lastRange;lastRange = vectors[(int)bearing].Range, bearing++) ;
+
+			// group into chunks
+			List<BearingAndRangeList> chunks = new List<BearingAndRangeList>();
+			Double startBearing = bearing;
+			BearingAndRangeList workingChunk = null;
+			lastRange = -1;
+			do
+			{
+				if(vectors[(int)bearing].Range != lastRange)
+				{
+					workingChunk = new BearingAndRangeList();
+					chunks.Add(workingChunk);
+					lastRange = vectors[(int)bearing].Range;
+				}
+				workingChunk.Add(vectors[(int)bearing]);
+
+			} while((bearing = bearing.AddDegrees(1)) != startBearing);
+
+			chunks.Sort(new BearingAndRangeList.BearingAndRangeListRangeComprarer());
+			chunks.Reverse();
+
+			Performance.Timers[TimerTypes.FindShortestRange].StopAndLog();
+
+			const Double MIN_SEPARATION = 45;
+
+			FuzzyPathList paths = new FuzzyPathList();
+			for(int x = 0;x < chunks.Count && paths.Count < maxDestinations;x++)
+			{
+				Double chunkBearing = chunks[x].AverageBearing;
+				if(paths.ContainsPathNearBearing(chunkBearing, MIN_SEPARATION) == false)
+				{
+					PointCloud2D leftCloud, rightCloud;
+					FuzzyPath path = MakeFuzzyPath(pointCloud, chunkBearing, chassis.FrontLeftLidarVector, chassis.FrontRightLidarVector, rangeFuzz, out leftCloud, out rightCloud);
+					paths.Add(path);
+				}
+			}
+
+			Performance.Timers[TimerTypes.FindDestination].StopAndLog();
+
+			return paths;
+
 		}
 
-		public Double FuzzyRangeAtBearing(Chassis chassis, Double bearingStraightAhead, Double angularWidth, out PointCloud2D left, out PointCloud2D right)
+		/// <summary>
+		/// Get the fuzzy range at the given vector
+		/// </summary>
+		/// <param name="chassis"></param>
+		/// <param name="bearing"></param>
+		/// <param name="angularWidth"></param>
+		/// <returns></returns>
+		public Double FuzzyRangeAtBearing(Chassis chassis, Double bearing, Double angularWidth)
 		{
-			BearingAndRange toFrontLeft = chassis.GetBearingAndRange(ChassisParts.Lidar, ChassisParts.FrontLeft, bearingStraightAhead);
-			BearingAndRange toFrontRight = chassis.GetBearingAndRange(ChassisParts.Lidar, ChassisParts.FrontRight, bearingStraightAhead);
+			PointCloud2D left, right;
+			return FuzzyRangeAtBearing(chassis, bearing, angularWidth, out left, out right);
+		}
 
-			return FuzzyRangeAtBearing(toFrontLeft, toFrontRight, bearingStraightAhead, angularWidth, out left, out right);
+		/// <summary>
+		/// Get the fuzzy range at the given vector
+		/// </summary>
+		/// <param name="chassis"></param>
+		/// <param name="bearing"></param>
+		/// <param name="angularWidth"></param>
+		/// <param name="left"></param>
+		/// <param name="right"></param>
+		/// <returns></returns>
+		public Double FuzzyRangeAtBearing(Chassis chassis, Double bearing, Double angularWidth, out PointCloud2D left, out PointCloud2D right)
+		{
+			return FuzzyRangeAtBearing(bearing, chassis.FrontLeftLidarVector, chassis.FrontRightLidarVector, angularWidth, out left, out right);
 		}
 
 		/// <summary>
@@ -453,72 +561,134 @@ namespace RaspiCommon.Lidar.Environs
 		/// </summary>
 		/// <param name="frontLeftWheelOffset"></param>
 		/// <param name="frontRightWheelOffset"></param>
-		/// <param name="bearingStraightAhead"></param>
+		/// <param name="bearing"></param>
 		/// <param name="angularWidth"></param>
 		/// <returns></returns>
-		public Double FuzzyRangeAtBearing(BearingAndRange frontLeftWheelOffset, BearingAndRange frontRightWheelOffset, Double bearingStraightAhead, Double angularWidth, out PointCloud2D fromFrontLeft, out PointCloud2D fromFrontRight)
+		public Double FuzzyRangeAtBearing(
+			Double bearing,
+			BearingAndRange frontLeftWheelOffset, BearingAndRange frontRightWheelOffset,
+			Double angularWidth,
+			out PointCloud2D frontLeftCloud, out PointCloud2D frontRightCloud)
 		{
-			if(angularWidth == 0)
-			{
-				angularWidth = RangeFuzz;
-			}
-
-			Log.SysLogText(LogLevel.DEBUG, "Getting vectors from lidar");
-			PointCloud2D vectorsFromLidar = Lidar.Vectors.ToPointCloud2D();
-
-			fromFrontLeft = vectorsFromLidar.Move(frontLeftWheelOffset);
-			fromFrontRight = vectorsFromLidar.Move(frontRightWheelOffset);
-
-			Log.SysLogText(LogLevel.DEBUG, "FL: {0} FR: {1}", fromFrontLeft, fromFrontRight);
-
-			Double start = bearingStraightAhead.SubtractDegrees(angularWidth / 2);
-			Double end = bearingStraightAhead.AddDegrees((angularWidth / 2) + 1);
-
-			List<Double> allDistances = new List<double>();
-			Double angle = start;
-			while(angle.IsWithinDegressOf(end, Lidar.VectorSize) == false)
-			{
-				Double d1 = fromFrontLeft.GetRangeAtBearing(angle);
-				Double d2 = fromFrontRight.GetRangeAtBearing(angle);
-				Log.SysLogText(LogLevel.DEBUG, "At {0:0.000}° range is {1:0.000}  and  {2:0.000}", angle, d1, d2);
-				if(d1 != 0)
-					allDistances.Add(d1);
-				if(d2 != 0)
-					allDistances.Add(d1);
-
-				angle = angle.AddDegrees(Lidar.VectorSize);
-			}
-
-			return allDistances.Count > 0 ? allDistances.Average() : 0;
+			FuzzyPath fuzzyPath = MakeFuzzyPath(bearing, frontLeftWheelOffset, frontRightWheelOffset, angularWidth, out frontLeftCloud, out frontRightCloud);
+			Double range = fuzzyPath != null ? Math.Min(fuzzyPath.FrontLeft.MinimumRange, fuzzyPath.FrontRight.MinimumRange)
+				: 0;
+			return range;
 		}
 
+		/// <summary>
+		/// Create a fuzzy path along the given vector
+		/// </summary>
+		/// <param name="bearing"></param>
+		/// <param name="chasis"></param>
+		/// <param name="angularWidth"></param>
+		/// <returns></returns>
+		public FuzzyPath MakeFuzzyPath(
+			Double bearing,
+			Chassis chasis,
+			Double angularWidth)
+		{
+			PointCloud2D frontLeftCloud, frontRightCloud;
+			return MakeFuzzyPath(bearing, chasis.FrontLeftLidarVector, chasis.FrontRightLidarVector, angularWidth, out frontLeftCloud, out frontRightCloud);
+		}
+
+		/// <summary>
+		/// Create a fuzzy path along the given vector
+		/// </summary>
+		/// <param name="bearing"></param>
+		/// <param name="frontLeftWheelOffset"></param>
+		/// <param name="frontRightWheelOffset"></param>
+		/// <param name="angularWidth"></param>
+		/// <returns></returns>
+		public FuzzyPath MakeFuzzyPath(
+			Double bearing,
+			BearingAndRange frontLeftWheelOffset, BearingAndRange frontRightWheelOffset,
+			Double angularWidth)
+		{
+			PointCloud2D frontLeftCloud, frontRightCloud;
+			return MakeFuzzyPath(bearing, frontLeftWheelOffset, frontRightWheelOffset, angularWidth, out frontLeftCloud, out frontRightCloud);
+		}
+
+		/// <summary>
+		/// Create a fuzzy path along the given vector
+		/// </summary>
+		/// <param name="bearing"></param>
+		/// <param name="frontLeftWheelOffset"></param>
+		/// <param name="frontRightWheelOffset"></param>
+		/// <param name="angularWidth"></param>
+		/// <param name="frontLeftCloud"></param>
+		/// <param name="frontRightCloud"></param>
+		/// <returns></returns>
+		public FuzzyPath MakeFuzzyPath(
+			Double bearing, 
+			BearingAndRange frontLeftWheelOffset, BearingAndRange frontRightWheelOffset, 
+			Double angularWidth,
+			out PointCloud2D frontLeftCloud, out PointCloud2D frontRightCloud)
+		{
+			FuzzyPath path = null;
+			frontLeftCloud = frontRightCloud = null;
+			try
+			{
+				if(angularWidth == 0)
+				{
+					angularWidth = RangeFuzz;
+				}
+
+				PointCloud2D vectorsFromLidar = Lidar.Vectors.ToPointCloud2D(360);
+
+				path = MakeFuzzyPath(vectorsFromLidar, bearing, frontLeftWheelOffset, frontRightWheelOffset, angularWidth, out frontLeftCloud, out frontRightCloud);
+
+			}
+			catch(Exception e)
+			{
+				Log.SysLogText(LogLevel.DEBUG, "Make fuzzy path EXCEPTION: {0}", e.Message);
+			}
+			
+			return path;
+		}
+
+		/// <summary>
+		/// Create a fuzzy path along the given vector
+		/// </summary>
+		/// <param name="bearing"></param>
+		/// <param name="frontLeftWheelOffset"></param>
+		/// <param name="frontRightWheelOffset"></param>
+		/// <param name="angularWidth"></param>
+		/// <param name="frontLeftCloud"></param>
+		/// <param name="frontRightCloud"></param>
+		/// <returns></returns>
+		public static FuzzyPath MakeFuzzyPath(
+			PointCloud2D vectorsFromLidar,
+			Double bearing,
+			BearingAndRange frontLeftWheelOffset, BearingAndRange frontRightWheelOffset,
+			Double angularWidth,
+			out PointCloud2D frontLeftCloud, out PointCloud2D frontRightCloud)
+		{
+			FuzzyPath path = null;
+
+			frontLeftWheelOffset = frontLeftWheelOffset.Rotate(bearing);
+			frontRightWheelOffset = frontRightWheelOffset.Rotate(bearing);
+
+			frontLeftCloud = vectorsFromLidar.Move(frontLeftWheelOffset);
+			frontRightCloud = vectorsFromLidar.Move(frontRightWheelOffset);
+
+			PointCloud2DSlice frontLeftSlice = new PointCloud2DSlice(new PointD(0,0).GetPointAt(frontLeftWheelOffset), bearing, frontLeftCloud, angularWidth);
+			PointCloud2DSlice frontRightSlice = new PointCloud2DSlice(new PointD(0,0).GetPointAt(frontRightWheelOffset), bearing, frontRightCloud, angularWidth);
+
+			if(frontRightSlice.Count > 0 && frontRightSlice.Count > 0)
+			{
+				path = new FuzzyPath(frontLeftSlice, frontRightSlice);
+			}
+
+			return path;
+		}
+
+		/// <summary>
+		/// Clear all range vectors
+		/// </summary>
 		public void Reset()
 		{
 			Lidar.ClearDistanceVectors();
 		}
-
-		public FuzzyPath MakeFuzzyPath(Double bearing, Double rangeFuzz, PointD frontLeft, PointCloud2D fromFrontLeft, PointD frontRight, PointCloud2D fromFrontRight)
-		{
-//			Log.SysLogText(LogLevel.DEBUG, "Finding fuzzy path at bearing {0:0.00}°  fuzz {1:0.00}°", bearing, rangeFuzz);
-
-			Double start = bearing.SubtractDegrees(rangeFuzz / 2);
-			Double end = bearing.AddDegrees((rangeFuzz / 2) + 1);
-
-			BearingAndRangeList vectors = new BearingAndRangeList();
-			Double angle = start;
-			while(angle.IsWithinDegressOf(end, Lidar.VectorSize) == false)
-			{
-				Double range = fromFrontLeft.GetRangeAtBearing(angle);
-				if(range != 0)
-					vectors.Add(new BearingAndRange(angle, range));
-				range = fromFrontRight.GetRangeAtBearing(angle);
-				if(range != 0)
-					vectors.Add(new BearingAndRange(angle, range));
-				angle = angle.AddDegrees(Lidar.VectorSize);
-			}
-			FuzzyPath path = new FuzzyPath(start, end, fromFrontLeft.GetPointCloud2DSlice(frontLeft, bearing, start, end), fromFrontRight.GetPointCloud2DSlice(frontRight, bearing, start, end));
-			return path;
-		}
-
 	}
 }

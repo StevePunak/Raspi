@@ -15,13 +15,14 @@ using KanoopCommon.Serialization;
 using KanoopCommon.TCP;
 using KanoopCommon.Threading;
 using MQTT;
+using RaspiCommon.Devices.Chassis;
 using RaspiCommon.Devices.Compass;
 using RaspiCommon.Lidar;
 using RaspiCommon.Lidar.Environs;
 using RaspiCommon.Spatial;
 using RaspiCommon.Spatial.Imaging;
 
-namespace RaspiCommon.Server
+namespace RaspiCommon.Network
 {
 	public class TelemetryServer : ThreadBase
 	{
@@ -152,6 +153,7 @@ namespace RaspiCommon.Server
 
 		private void SendFuzzyPath()
 		{
+			Log.LogText(LogLevel.DEBUG, "Sending Fuzzy Path");
 			byte[] output = _fuzzyPath.Serizalize();
 			Client.Publish(MqttTypes.CurrentPathTopic, output, true);
 			_fuzzyPathChanged = false;
@@ -159,6 +161,7 @@ namespace RaspiCommon.Server
 
 		private void SendBearingAndRange()
 		{
+//			Log.LogText(LogLevel.DEBUG, "Sending Bearing and Range3");
 			byte[] output = BinarySerializer.Serialize(_environmentInfo);
 			Client.Publish(MqttTypes.DistanceAndBearingTopic, output, true);
 			_distancesChanged = false;
@@ -166,16 +169,16 @@ namespace RaspiCommon.Server
 
 		private void SendLandmarks()
 		{
+//			Log.LogText(LogLevel.DEBUG, "Sending Landmarks");
 			byte[] output = _landmarks.Serialize();
-			Log.LogText(LogLevel.DEBUG, "Sending {0} bytes of {1} landmarks", output.Length, _landmarks.Count);
 			Client.Publish(MqttTypes.LandmarksTopic, output, true);
 			_landmarksChanged = false;
 		}
 
 		private void SendBarriers()
 		{
+//			Log.LogText(LogLevel.DEBUG, "Sending Barriers");
 			byte[] output = _barriers.Serialize();
-			Log.LogText(LogLevel.DEBUG, "Sending {0} bytes of {1} barriers", output.Length, _barriers.Count);
 			Client.Publish(MqttTypes.BarriersTopic, output, true);
 			_barriersChanged = false;
 		}
@@ -199,10 +202,19 @@ namespace RaspiCommon.Server
 			};
 			output = KVPSerializer.Serialize(imageMetrics);
 			Client.Publish(MqttTypes.LandscapeMetricsTopic, output, true);
+
+			ChassisMetrics chassisMetrics = new ChassisMetrics()
+			{
+				Length = Widgets.Chassis.Length,
+				Width = Widgets.Chassis.Width,
+				LidarPosition = Widgets.Chassis.LidarPosition
+			};
+			Client.Publish(MqttTypes.ChassisMetricsTopic, chassisMetrics.Serialize(), true);
 		}
 
 		void SendRangeData()
 		{
+//			Log.LogText(LogLevel.DEBUG, "Sending Range Data");
 			byte[] output = Widgets.ImageEnvironment.MakeRangeBlob();
 			Client.Publish(MqttTypes.RangeBlobTopic, output);
 		}
@@ -215,16 +227,12 @@ namespace RaspiCommon.Server
 
 		private void OnEnvironment_LandmarksChanged(ImageVectorList landmarks)
 		{
-			Log.LogText(LogLevel.DEBUG, "Landmarks changed");
-
 			_landmarks = landmarks.Clone();
 			_landmarksChanged = true;
 		}
 
 		private void OnEnvironment_BarriersChanged(BarrierList barriers)
 		{
-			Log.LogText(LogLevel.DEBUG, "{0} Barriers changed", barriers.Count);
-
 			_barriers = barriers.Clone();
 			_barriersChanged = true;
 		}

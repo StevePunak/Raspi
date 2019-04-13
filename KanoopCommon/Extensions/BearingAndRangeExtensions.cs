@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using KanoopCommon.Geometry;
+using KanoopCommon.Logging;
 
 namespace KanoopCommon.Extensions
 {
@@ -56,6 +57,24 @@ namespace KanoopCommon.Extensions
 			}
 
 			return output;
+		}
+
+		public static Double ShortestRangeBetween(this BearingAndRange[] pointCloud, Double a1, Double a2)
+		{
+			Double vectorSize = (Double)360 / (Double)pointCloud.Length;
+			int startOffset = (int)((Double)a1 / vectorSize);
+			int endOffset = (int)((Double)a2 / vectorSize);
+
+			Double shortest = 0;
+
+			for(int offset = startOffset;offset != endOffset;offset = offset + 1 == pointCloud.Length ? 0 : offset + 1)
+			{
+				if(pointCloud[offset].Range != 0 && (shortest == 0 || pointCloud[offset].Range < shortest))
+				{
+					shortest = pointCloud[offset].Range;
+				}
+			}
+			return shortest;
 		}
 
 	}

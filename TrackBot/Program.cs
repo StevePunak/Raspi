@@ -62,6 +62,7 @@ namespace TrackBot
 				Program.Config.TracksRightA2Pin = GpioPin.Pin13;
 				Program.Config.TracksRightEnaPin = GpioPin.Pin04;
 				Program.Config.TracksHardwarePWM = false;
+				Program.Config.PathsToGet = 4;
 				Program.Config.Save();
 				//DRV8825StepperControl motor = new DRV8825StepperControl(GpioPin.Pin12, GpioPin.Pin13, GpioPin.Pin19);
 				//motor.Speed = 20;

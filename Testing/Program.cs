@@ -23,8 +23,9 @@ using RaspiCommon.Devices.Spatial;
 using RaspiCommon.Extensions;
 using RaspiCommon.Lidar;
 using RaspiCommon.Lidar.Environs;
-using RaspiCommon.Server;
+using RaspiCommon.Network;
 using RaspiCommon.Spatial;
+using RaspiCommon.Spatial.Imaging;
 
 namespace Testing
 {
@@ -32,6 +33,8 @@ namespace Testing
 	class Program
 	{
 		public static Log Log { get; private set; }
+
+		static PointCloud2D PointCloud { get; set; }
 
 		static void Main(string[] args)
 		{
@@ -45,27 +48,47 @@ namespace Testing
 
 		private static void PointCloudTest()
 		{
+			Double PixelsPerMeter = 50;
+			Double Scale = 1 / PixelsPerMeter;
+
 			Chassis chassis = new XiaorTankTracks();
-			chassis.Points.Add(ChassisParts.Lidar, new PointD(chassis.Points[ChassisParts.RearLeft].X + 150, chassis.Points[ChassisParts.CenterPoint].Y + 140));
+			chassis.Points.Add(ChassisParts.Lidar, new PointD(chassis.Points[ChassisParts.FrontRight].X - .070, chassis.Points[ChassisParts.FrontRight].Y + .220));
 			chassis.Points.Add(ChassisParts.FrontRangeFinder, new PointD(chassis.Width / 2, 0));
 			chassis.Points.Add(ChassisParts.RearRangeFinder, new PointD(chassis.Width / 2, chassis.Length));
 
 			BearingAndRange toFrontLeft = chassis.GetBearingAndRange(ChassisParts.Lidar, ChassisParts.FrontLeft, 0);
 			BearingAndRange toFrontRight = chassis.GetBearingAndRange(ChassisParts.Lidar, ChassisParts.FrontRight, 0);
-			Mat input = new Mat(@"f:\tmp\1.png");
+			Mat input = new Mat(@"c:\pub\tmp\image1.png");
 
-			PointCloud2D cloud = input.ToPointCloud(.25);
+			PointCloud = input.ToPointCloud(.25, 1 / PixelsPerMeter);
+			PointCloud2D frontLeft, frontRight;
+			FuzzyPath path = LidarEnvironment.MakeFuzzyPath(PointCloud, 30, chassis.FrontLeftLidarVector, chassis.FrontRightLidarVector, 30, out frontLeft, out frontRight);
+			double shortest = path.ShortestRange;
+			path.Serizalize();
 
-			Mat output = cloud.ToBitmap(new Size(500, 500), Color.Blue);
-			output.Save(@"f:\tmp\output.png");
+			Mat bitmap = new Mat(input.Size, DepthType.Cv8U, 3);
+			FuzzyRangeAtBearing(bitmap, PixelsPerMeter, PointCloud,
+				chassis.GetBearingAndRange(ChassisParts.Lidar, ChassisParts.FrontLeft),
+				chassis.GetBearingAndRange(ChassisParts.Lidar, ChassisParts.FrontRight),
+				90, 45, out frontLeft, out frontRight);
 
-			PointCloud2D cloud2 = cloud.Move(new BearingAndRange(45, 10));
+			Mat output = PointCloud.ToBitmap(new Size(500, 500), Color.Blue);
+			output.Save(@"c:\pub\tmp\output1.png");
+
+			PointCloud2D cloud2 = PointCloud.Move(new BearingAndRange(45, 10));
 			cloud2.PlaceOnBitmap(output, output.Center(), Color.Green);
-			output.Save(@"f:\tmp\output1.png");
+			output.Save(@"c:\pub\tmp\output2.png");
 
 		}
 
-		public Double FuzzyRangeAtBearing(Mat bitmap, PointCloud2D vectorsFromLidar, BearingAndRange frontLeftWheelOffset, BearingAndRange frontRightWheelOffset, Double bearingStraightAhead, Double angularWidth, out PointCloud2D fromFrontLeft, out PointCloud2D fromFrontRight)
+		public static Double FuzzyRangeAtBearing(
+			Mat bitmap,
+			Double pixelsPerMeter,
+			PointCloud2D vectorsFromLidar, 
+			BearingAndRange frontLeftWheelOffset, BearingAndRange frontRightWheelOffset, 
+			Double bearingStraightAhead, 
+			Double angularWidth, 
+			out PointCloud2D frontLeftCloud, out PointCloud2D frontRightCloud)
 		{
 			PointD center = bitmap.Center();
 			bitmap.DrawCross(center, 5, Color.White);
@@ -75,32 +98,29 @@ namespace Testing
 				angularWidth = 25;
 			}
 
+			frontLeftWheelOffset = frontLeftWheelOffset.Rotate(bearingStraightAhead);
+			frontRightWheelOffset = frontRightWheelOffset.Rotate(bearingStraightAhead);
+
+			bitmap.DrawCircleCross(center.GetPointAt(frontLeftWheelOffset.Scale(pixelsPerMeter)), 8, Color.Green);
+			bitmap.DrawCircleCross(center.GetPointAt(frontRightWheelOffset.Scale(pixelsPerMeter)), 8, Color.Yellow);
+
 			Log.SysLogText(LogLevel.DEBUG, "Getting vectors from lidar");
 
-			fromFrontLeft = vectorsFromLidar.Move(frontLeftWheelOffset);
-			fromFrontRight = vectorsFromLidar.Move(frontRightWheelOffset);
+			frontLeftCloud = vectorsFromLidar.Move(frontLeftWheelOffset);
+			frontRightCloud = vectorsFromLidar.Move(frontRightWheelOffset);
 
-			Log.SysLogText(LogLevel.DEBUG, "FL: {0} FR: {1}", fromFrontLeft, fromFrontRight);
+			PointD frontLeftLocation = center.GetPointAt(frontLeftWheelOffset);
+			PointD frontRightLocation = center.GetPointAt(frontRightWheelOffset);
 
-			Double start = bearingStraightAhead.SubtractDegrees(angularWidth / 2);
-			Double end = bearingStraightAhead.AddDegrees((angularWidth / 2) + 1);
+			PointCloud2DSlice frontLeftSlice = new PointCloud2DSlice(bearingStraightAhead, frontLeftCloud, angularWidth);
+			PointCloud2DSlice frontRightSlice = new PointCloud2DSlice(bearingStraightAhead, frontRightCloud, angularWidth);
 
-			List<Double> allDistances = new List<double>();
-			Double angle = start;
-			while(angle.IsWithinDegressOf(end, Lidar.VectorSize) == false)
-			{
-				Double d1 = fromFrontLeft.GetRangeAtBearing(angle);
-				Double d2 = fromFrontRight.GetRangeAtBearing(angle);
-				Log.SysLogText(LogLevel.DEBUG, "At {0:0.000}° range is {1:0.000}  and  {2:0.000}", angle, d1, d2);
-				if(d1 != 0)
-					allDistances.Add(d1);
-				if(d2 != 0)
-					allDistances.Add(d1);
+			bitmap.DrawVectorLines(frontLeftSlice, center.GetPointAt(frontLeftWheelOffset.Scale(pixelsPerMeter)), pixelsPerMeter, Color.LightGreen);
+			bitmap.DrawVectorLines(frontRightSlice, center.GetPointAt(frontRightWheelOffset.Scale(pixelsPerMeter)), pixelsPerMeter, Color.LightYellow);
 
-				angle = angle.AddDegrees(Lidar.VectorSize);
-			}
+			bitmap.Save(@"c:\pub\tmp\temp.png");
 
-			return allDistances.Count > 0 ? allDistances.Average() : 0;
+			return Math.Min(frontLeftSlice.MinimumRange, frontRightSlice.MinimumRange);
 		}
 
 		private static void EMGUTest()

@@ -43,11 +43,11 @@ namespace RaspiCommon.Spatial.Imaging
 		Double GetRangeAtBearing(Double bearing);
 		Double FuzzyRangeAtBearing(Chassis chassis, Double bearingStraightAhead, Double angularWidth);
 		Double FuzzyRangeAtBearing(Chassis chassis, Double bearingStraightAhead, Double angularWidth, out PointCloud2D fromFrontLeft, out PointCloud2D fromFrontRight);
-		Double FuzzyRangeAtBearing(BearingAndRange offset1, BearingAndRange offset2, Double bearing, Double fuzz, out PointCloud2D fromFrontLeft, out PointCloud2D fromFrontRight);
+		Double FuzzyRangeAtBearing(Double bearing, BearingAndRange frontLeftWheelOffset, BearingAndRange frontRightWheelOffset, Double angularWidth, out PointCloud2D frontLeftCloud, out PointCloud2D frontRightCloud);
 		Double ShortestRangeAtBearing(Double bearing, Double fuzz);
 		DateTime GetLastSampleTimeAtBearing(Double bearing);
 		Mat PointsToBitmap();
-		FuzzyPath FindGoodDestination(Double requireClearUpTo);
+		FuzzyPathList FindGoodDestinations(Double requireClearUpTo);
 		ImageVectorList Landmarks { get; }
 
 		void Reset();

@@ -11,6 +11,7 @@ using KanoopCommon.Logging;
 using KanoopCommon.Queueing;
 using KanoopCommon.TCP.Clients;
 using KanoopCommon.Threading;
+using KanoopCommon.Crypto;
 using MQTT.Packets;
 
 namespace MQTT
@@ -42,6 +43,7 @@ namespace MQTT
 
 		#endregion
 
+		#region Sub Classes
 		class ClientEvent
 		{
 			public enum EventType
@@ -54,6 +56,8 @@ namespace MQTT
 			public MqqtPacket Packet { get; set; }
 			public byte[] Data { get; set; }
 		}
+
+		#endregion
 
 		#region Public Properties and Backing Variables
 
@@ -604,6 +608,11 @@ namespace MQTT
 		#endregion
 
 		#region Utility
+
+		public static String MakeRandomID(String prefix)
+		{
+			return String.Format("{0}-{1}", prefix, MD5.HashAsString(DateTime.UtcNow.Ticks.ToString()));
+		}
 
 		public override string ToString()
 		{

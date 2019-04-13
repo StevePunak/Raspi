@@ -64,45 +64,9 @@ namespace TrackBot.Spatial
 			Log.SysLogText(LogLevel.DEBUG, "LIDAR stopped");
 		}
 
-		public FuzzyPath FindGoodDestination(Double requireClearUpTo)
+		public FuzzyPathList FindGoodDestinations(Double requireClearUpTo)
 		{
-			Console.WriteLine("Finding a destination");
-
-			FuzzyPath longestPath = null;
-
-			Double startBearing = Widgets.Instance.GyMag.Bearing;
-			PointD currentCenterPoint = new PointD(0, 0);
-			PointD lidarLocation = new PointD(0, 0);
-			BearingAndRange toFrontLeftAtZero = Widgets.Instance.Chassis.GetBearingAndRange(ChassisParts.Lidar, ChassisParts.FrontLeft);
-			BearingAndRange toFrontRightAtZero = Widgets.Instance.Chassis.GetBearingAndRange(ChassisParts.Lidar, ChassisParts.FrontRight);
-			for(double angle = 0;angle < 360;angle ++)
-			{
-				BearingAndRange frontLeft = new BearingAndRange(toFrontLeftAtZero.Bearing.AddDegrees(angle), toFrontLeftAtZero.Range);
-				BearingAndRange frontRight = new BearingAndRange(toFrontRightAtZero.Bearing.AddDegrees(angle), toFrontRightAtZero.Range);
-				PointD frontLeftPoint = lidarLocation.GetPointAt(frontLeft);
-				PointD frontRightPoint = lidarLocation.GetPointAt(frontRight);
-
-				PointCloud2D fromFrontLeft, fromFrontRight;
-				Double range = FuzzyRangeAtBearing(frontLeft, frontRight, angle, RangeFuzz, out fromFrontLeft, out fromFrontRight);
-//				Log.SysLogText(LogLevel.DEBUG, "Range at {0}° is {1:0.000}m", angle, range);
-				if(range != 0)
-				{
-					if(longestPath == null || range > longestPath.ShortestRange)
-					{
-						Double shortRangeClearance = longestPath.ShortestRange;
-//						Log.SysLogText(LogLevel.DEBUG, "Shortest Range at {0}° is {1:0.000}m", angle, shortRangeClearance);
-						if(shortRangeClearance >= requireClearUpTo)
-						{
-//							Log.SysLogText(LogLevel.DEBUG, "This is the longest line!");
-							longestPath = MakeFuzzyPath(angle, RangeFuzz, frontLeftPoint, fromFrontLeft, frontRightPoint, fromFrontRight);
-						}
-					}
-				}
-			}
-
-			Log.SysLogText(LogLevel.DEBUG, "Longest line {0}", longestPath == null ? "NULL" : longestPath.ToString());
-			return longestPath;
-
+			return LidarEnvironment.FindGoodDestinations(Lidar.Vectors.ToPointCloud2D(), Widgets.Instance.Chassis, RangeFuzz, Program.Config.PathsToGet, requireClearUpTo);
 		}
 
 		public Mat PointsToBitmap()

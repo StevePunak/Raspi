@@ -255,7 +255,7 @@ namespace KanoopCommon.Logging
 			}
 		}
 
-		public void LogText(LogLevel logLevel, String text, params object[] parms)
+		public void LogText(LogLevel logLevel, String format, params object[] parms)
 		{
 			uint flags = _logFlags;
 
@@ -264,10 +264,10 @@ namespace KanoopCommon.Logging
 				flags &= ~(OpenFlags.CONTENT_TIMESTAMP | OpenFlags.CONTENT_DATESTAMP | OpenFlags.CONTENT_PRINT_LEVEL);
 			}
 
-			LogText(flags, logLevel, text, parms);
+			LogText(flags, logLevel, format, parms);
 		}
 
-		private void LogText(uint logFlags, LogLevel logLevel, String text, params object[] parms)
+		private void LogText(uint logFlags, LogLevel logLevel, String format, params object[] parms)
 		{
 			Exception reThrow = null;
 
@@ -327,11 +327,15 @@ namespace KanoopCommon.Logging
 							leading += ' ';
 						}
 
-						String strOut = parms.Length == 0
-							? leading + text
-							: leading + String.Format(text, parms);
+						String output = parms.Length == 0
+							? leading + format
+							: leading + String.Format(format, parms);
 
-						LogToDevices(logLevel, strOut);
+						LogToDevices(logLevel, output);
+					}
+					catch(FormatException e)
+					{
+						Console.WriteLine("Illegal format '{0}'   {1}", format, e.Message);
 					}
 					catch(Exception e)
 					{
@@ -347,15 +351,15 @@ namespace KanoopCommon.Logging
 			}
 		}
 
-		public static void SysLogText(LogLevel logLevel, String strInText, params object[] parms)
+		public static void SysLogText(LogLevel logLevel, String text, params object[] parms)
 		{
 			if(_systemLog != null)
 			{
-				_systemLog.LogText(logLevel, strInText, parms);
+				_systemLog.LogText(logLevel, text, parms);
 			}
 			else
 			{
-				String output = String.Format(strInText, parms);
+				String output = String.Format(text, parms);
 				output = String.Format("SYSTEMLOG: {0} {1} {2}", DateTime.UtcNow.ToString("HH:mm:ss.fff "), logLevel.ToString(), output);
 #if USE_EVENT_LOG
 				Debug.WriteLine(strOut);

@@ -10,7 +10,7 @@ namespace RaspiCommon.Devices.Chassis
 	public class XiaorTankTracks : Chassis
 	{
 		public XiaorTankTracks()
-			: base(340, 225)
+			: base(.340, .225)
 		{
 		}
 	}

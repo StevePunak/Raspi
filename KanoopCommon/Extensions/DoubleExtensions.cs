@@ -472,6 +472,34 @@ namespace KanoopCommon.Extensions
 		}
 
 		/// <summary>
+		/// Format double as an angle
+		/// </summary>
+		/// <param name="value"></param>
+		/// <param name="precision"></param>
+		/// <returns></returns>
+		public static String ToAngleString(this Double value, int precision = 3)
+		{
+			String format = precision > 0
+				? String.Format("{{0:0.{0}}}°", String.Empty.PadRight(precision, '0'))
+				: "{0:0}°";
+			return String.Format(format, value);
+		}
+
+		/// <summary>
+		/// Format double to meters
+		/// </summary>
+		/// <param name="value"></param>
+		/// <param name="precision"></param>
+		/// <returns></returns>
+		public static String ToMetersString(this Double value, int precision = 3)
+		{
+			String format = precision > 0
+				? String.Format("{{0:0.{0}}}m", String.Empty.PadRight(precision, '0'))
+				: "{0:0}m";
+			return String.Format(format, value);
+		}
+
+		/// <summary>
 		/// Is this angle within 'degrees' of the 'from' value?
 		/// </summary>
 		/// <param name="value">this Double</param>

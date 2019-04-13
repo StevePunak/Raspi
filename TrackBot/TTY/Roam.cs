@@ -15,7 +15,7 @@ namespace TrackBot.TTY
 
 		public override bool Execute(List<string> commandParts)
 		{
-			Activity.StartActivity(ActivityType.TravelLongestPath);
+			Activity.StartActivity(ActivityType.TravelLongestPath, true);
 
 			return true;
 		}

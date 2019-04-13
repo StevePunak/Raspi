@@ -13,12 +13,13 @@ using KanoopCommon.Threading;
 using MQTT;
 using MQTT.Examples;
 using MQTT.Packets;
+using RaspiCommon.Devices.Chassis;
 using RaspiCommon.Lidar;
 using RaspiCommon.Lidar.Environs;
 using RaspiCommon.Spatial;
 using RaspiCommon.Spatial.Imaging;
 
-namespace RaspiCommon.Server
+namespace RaspiCommon.Network
 {
 	public class TelemetryClient : SubscribeThread
 	{
@@ -28,6 +29,7 @@ namespace RaspiCommon.Server
 		public event RangeBlobReceivedHandler RangeBlobReceived;
 		public event LandscapeMetricsReceivedHandler LandscapeMetricsReceived;
 		public event ImageMetricsReceivedHandler ImageMetricsReceived;
+		public event ChassisMetricsReceivedHandler ChassisMetricsReceived;
 		public event EnvironmentInfoReceivedHandler EnvironmentInfoReceived;
 		public event CommandReceivedHandler CommandReceived;
 
@@ -38,6 +40,7 @@ namespace RaspiCommon.Server
 		public ImageVectorList ImageLandmarks { get; private set; }
 		public ImageVectorList LandscapeVectors { get; private set; }
 		public Double Bearing { get; private set; }
+		public ChassisMetrics ChassisMetrics { get; private set; }
 
 		public ImageMetrics ImageMetrics { get; private set; }
 		public LandscapeMetrics LandscapeMetrics { get; private set; }
@@ -69,6 +72,7 @@ namespace RaspiCommon.Server
 			ImageMetricsReceived += delegate {};
 			EnvironmentInfoReceived += delegate {};
 			CommandReceived += delegate {};
+			ChassisMetricsReceived += delegate {};
 		}
 
 		private void OnLidarClientInboundSubscribedMessage(MqttClient client, PublishMessage packet)
@@ -105,6 +109,11 @@ namespace RaspiCommon.Server
 					ImageMetrics = KVPSerializer.Deserialize<ImageMetrics>(ASCIIEncoding.UTF8.GetString(packet.Message));
 					ScaleLandmarks();
 					ImageMetricsReceived(ImageMetrics);
+				}
+				else if(packet.Topic == MqttTypes.ChassisMetricsTopic)
+				{
+					ChassisMetrics = new ChassisMetrics(packet.Message);
+					ChassisMetricsReceived(ChassisMetrics);
 				}
 				else if(packet.Topic == MqttTypes.LandscapeMetricsTopic)
 				{

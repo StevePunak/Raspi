@@ -197,6 +197,11 @@ namespace TrackBot.Tracks
 			Widgets.Instance.Tracks.Stop();
 		}
 
+		/// <summary>
+		/// Go backwards for the given time
+		/// </summary>
+		/// <param name="time"></param>
+		/// <param name="motorSpeed"></param>
 		public void BackwardTime(TimeSpan time, int motorSpeed)
 		{
 			Widgets.Instance.Tracks.Speed = -75;
@@ -240,6 +245,9 @@ namespace TrackBot.Tracks
 				}
 
 				Double range = direction == Direction.Forward ? forwardRange : backwardRange;
+
+				Log.SysLogText(LogLevel.DEBUG, "There is {0:0.000}m left at {1}", range, direction);
+
 				DistanceLeft(range);
 
 				Double distanceTraveled = startDistance - range;
@@ -350,7 +358,7 @@ namespace TrackBot.Tracks
 				direction = Utility.GetClosestSpinDirection(from, to);
 			}
 
-			Log.SysLogText(LogLevel.DEBUG, "Will turn {0} to from {1} to {2}", direction, from, to);
+			Log.SysLogText(LogLevel.DEBUG, "Will turn {0} to from {1} to {2}", direction, from.ToAngleString(), to.ToAngleString());
 
 			Widgets.Instance.Tracks.Spin(direction, Widgets.Instance.Tracks.Fast);
 

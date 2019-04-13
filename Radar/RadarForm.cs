@@ -10,6 +10,8 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using Emgu.CV;
+using Emgu.CV.CvEnum;
+using Emgu.CV.Structure;
 using KanoopCommon.Addresses;
 using KanoopCommon.CommonObjects;
 using KanoopCommon.Database;
@@ -19,12 +21,17 @@ using KanoopCommon.Logging;
 using KanoopCommon.TCP.Clients;
 using KanoopCommon.Threading;
 using KanoopControls.SimpleTextSelection;
+using MQTT;
+using Ookii.Dialogs;
 using Radar.Properties;
+using RaspiCommon;
 using RaspiCommon.Data.DataSource;
 using RaspiCommon.Data.Entities;
+using RaspiCommon.Devices.Chassis;
+using RaspiCommon.Extensions;
 using RaspiCommon.Lidar;
 using RaspiCommon.Lidar.Environs;
-using RaspiCommon.Server;
+using RaspiCommon.Network;
 using RaspiCommon.Spatial;
 using RaspiCommon.Spatial.Imaging;
 using TrackBotCommon.Environs;
@@ -55,15 +62,16 @@ namespace Radar
 		}
 
 		TelemetryClient _client;
+		RadarController _mqqtController;
 		String Host { get; set; }
+
+		Chassis Chassis { get; set; }
 
 		Timer _drawTimer;
 
 		Bitmap _radarBitmap;
 		Mat _workBitmap;
 		Mat _sharpened;
-
-		Double _lastAngle;
 
 		Image _tank;
 
@@ -100,7 +108,7 @@ namespace Radar
 				_drawTimer.Tick += OnDrawTimer;
 				_drawTimer.Start();
 
-				_tank = Resources.tank.Resize(6, 10);
+				_tank = Radar.Properties.Resources.tank.Resize(6, 10);
 				Log.SysLogText(LogLevel.DEBUG, "Started draw timer");
 
 				if(Program.Config.LastRadarWindowSize.Height > 200)
@@ -113,6 +121,8 @@ namespace Radar
 				LoadLandscape();
 
 				flowBitmap.Height = 40;
+
+				textCommand.Select();
 
 				_layoutComplete = true;
 			}
@@ -182,7 +192,33 @@ namespace Radar
 			if(_client == null || _client.Connected == false)
 				return;
 
-			Image bitmap = new Bitmap(_radarBitmap);
+			PointCloud2D cloud = _client.Vectors.ToPointCloud2D();
+
+#if true
+			// draw all the dots
+			Mat bitmap = cloud.ToBitmap(_radarBitmap.Height, Color.Red, PixelsPerMeterImage);
+			PointD origin = bitmap.Center();
+
+			// draw fuzzy path
+			if(_client.FuzzyPath != null && _client.ChassisMetrics != null)
+			{
+				BearingAndRange leftBar = PointD.Empty.BearingAndRangeTo(_client.FuzzyPath.FrontLeft.Origin).Scale(PixelsPerMeterImage);
+				BearingAndRange rightBar = PointD.Empty.BearingAndRangeTo(_client.FuzzyPath.FrontRight.Origin).Scale(PixelsPerMeterImage);
+				PointD leftFront = origin.GetPointAt(leftBar);
+				PointD rightFront = origin.GetPointAt(rightBar);
+				//				PointD frontLeft = origin.GetPointAt(_client.FuzzyPath.FrontLeft.Origin.Scale(PixelsPerMeterImage));
+				bitmap.DrawVectorLines(_client.FuzzyPath.FrontLeft, leftFront, PixelsPerMeterImage, Color.DarkGreen);
+				bitmap.DrawVectorLines(_client.FuzzyPath.FrontRight, rightFront, PixelsPerMeterImage, Color.DarkGray);
+			}
+
+			Image<Bgr, Byte> imageCV = new Image<Bgr, byte>(Properties.Resources.tank);
+			Mat tank = imageCV.Mat;
+			tank = tank.Rotate(_client.Bearing);
+			bitmap.DrawCenteredImage(tank, new PointD(250, 250));
+			picLidar.BackgroundImage = bitmap.Bitmap;
+#else
+			
+			Bitmap bitmap = new Bitmap(_radarBitmap);
 			using(Graphics g = Graphics.FromImage(bitmap))
 			{
 				Pen redPen = new Pen(Color.Red);
@@ -249,35 +285,27 @@ namespace Radar
 
 			//_bitmap.Save(@"c:\tmp\output.png");
 			picLidar.BackgroundImage = bitmap;
+#endif
 
 			RefreshMetrics();
 		}
 
 		void RefreshMetrics()
 		{
-			textBearing.Text = String.Format("{0:0.0}°", EnvironmentInfo.Bearing);
-			textDestinationBearing.Text = String.Format("{0}°", EnvironmentInfo.DestinationBearing);
-			textForwardRange.Text = String.Format("{0:0.00}m", EnvironmentInfo.ForwardPrimaryRange);
-			textBackwardRange.Text = String.Format("{0:0.00}m", EnvironmentInfo.BackwardPrimaryRange);
-			textForwardSecondary.Text = String.Format("{0:0.00}m", EnvironmentInfo.ForwardSecondaryRange);
-			textBackwardSecondary.Text = String.Format("{0:0.00}m", EnvironmentInfo.BackwardSecondaryRange);
+			if(EnvironmentInfo != null)
+			{
+				textBearing.Text = String.Format("{0:0.0}°", EnvironmentInfo.Bearing);
+				textDestinationBearing.Text = String.Format("{0}°", EnvironmentInfo.DestinationBearing);
+				textForwardRange.Text = String.Format("{0:0.00}m", EnvironmentInfo.ForwardPrimaryRange);
+				textBackwardRange.Text = String.Format("{0:0.00}m", EnvironmentInfo.BackwardPrimaryRange);
+				textForwardSecondary.Text = String.Format("{0:0.00}m", EnvironmentInfo.ForwardSecondaryRange);
+				textBackwardSecondary.Text = String.Format("{0:0.00}m", EnvironmentInfo.BackwardSecondaryRange);
+			}
 		}
 
 		void GetConnected()
 		{
-#if zero
-			ChooseBotForm dlg = new ChooseBotForm()
-			{
-				Host = Program.Config.RadarHost
-			};
-			if(dlg.ShowDialog() != DialogResult.OK)
-			{
-				throw new CommonException("No host selected");
-			}
-			Program.Config.RadarHost = dlg.Host;
-			Program.Config.Save();
-#endif
-			_client = new TelemetryClient(Program.Config.RadarHost, "radarform",
+			_client = new TelemetryClient(Program.Config.RadarHost, MqttClient.MakeRandomID(Text),
 				new List<string>()
 				{
 					MqttTypes.CurrentPathTopic,
@@ -286,14 +314,24 @@ namespace Radar
 					MqttTypes.LandmarksTopic,
 					MqttTypes.BearingTopic,
 					MqttTypes.ImageMetricsTopic,
-					MqttTypes.DistanceAndBearingTopic
+					MqttTypes.DistanceAndBearingTopic,
+					MqttTypes.ChassisMetricsTopic,
 				});
 			_client.LandscapeMetricsReceived += OnLandscapeMetricsReceived;
 			_client.ImageMetricsReceived += OnImageMetricsReceived;
 			_client.EnvironmentInfoReceived += OnEnvironmentInfoReceived;
+			_client.ChassisMetricsReceived += OnChassisMetricsReceived;
 			_client.Start();
 
-			_lastAngle = 0;
+			_mqqtController = new RadarController(Program.Config.RadarHost, MqttClient.MakeRandomID(Text));
+		}
+
+		private void OnChassisMetricsReceived(ChassisMetrics metrics)
+		{
+			Chassis = new Chassis(metrics.Length, metrics.Width);
+			Chassis.Points.Add(ChassisParts.Lidar, metrics.LidarPosition);
+			//Chassis.Points.Add(ChassisParts.FrontRangeFinder, new PointD(chassis.Width / 2, 0));
+			//Chassis.Points.Add(ChassisParts.RearRangeFinder, new PointD(chassis.Width / 2, chassis.Length));
 		}
 
 		private void OnEnvironmentInfoReceived(EnvironmentInfo metrics)
@@ -493,16 +531,101 @@ namespace Radar
 
 		private void OnAnalyzeClicked(object sender, EventArgs e)
 		{
-			LidarEnvironment env = new LidarEnvironment(ImageMetrics.MetersSquare, AnalysisPixelsPerMeter)
+			String file = @"c:\pub\tmp\blob.bin";
+			byte[] bytes = File.ReadAllBytes(file);
+			PointCloud2D cloud = new PointCloud2D(bytes);
+
+			FuzzyPathList paths = LidarEnvironment.FindGoodDestinations(cloud, Chassis, 30, 4, .5);
+
+			// draw all the dots
+			Mat bitmap = cloud.ToBitmap(_radarBitmap.Height, Color.Red, PixelsPerMeterImage);
+			PointD origin = bitmap.Center();
+
+			// draw fuzzy path
+			if(paths.Count > 0 && _client.ChassisMetrics != null)
 			{
-				ProcessingMetrics = Program.Config.ProcessingMetrics
-			};
+				foreach(FuzzyPath path in paths)
+				{
+					BearingAndRange leftBar = PointD.Empty.BearingAndRangeTo(path.FrontLeft.Origin).Scale(PixelsPerMeterImage);
+					BearingAndRange rightBar = PointD.Empty.BearingAndRangeTo(path.FrontRight.Origin).Scale(PixelsPerMeterImage);
+					PointD leftFront = origin.GetPointAt(leftBar);
+					PointD rightFront = origin.GetPointAt(rightBar);
+					//				PointD frontLeft = origin.GetPointAt(_client.FuzzyPath.FrontLeft.Origin.Scale(PixelsPerMeterImage));
+					bitmap.DrawMinMaxLines(path.FrontLeft, leftFront, PixelsPerMeterImage, Color.DarkGreen);
+					bitmap.DrawMinMaxLines(path.FrontRight, rightFront, PixelsPerMeterImage, Color.DarkGray);
+				}
+			}
 
-			env.Location = picWorkBitmap.BackgroundImage.Center();
-			env.ProcessImage(_sharpened, 0, AnalysisPixelsPerMeter);
+			picWorkBitmap.BackgroundImage = bitmap.Bitmap;
 
-			Mat output = env.CreateImage(SpatialObjects.Everything);
-			picWorkBitmap.Image = output.Bitmap;
+			//LidarEnvironment env = new LidarEnvironment(ImageMetrics.MetersSquare, AnalysisPixelsPerMeter)
+			//{
+			//	ProcessingMetrics = Program.Config.ProcessingMetrics
+			//};
+
+			//env.Location = picWorkBitmap.BackgroundImage.Center();
+			//env.ProcessImage(_sharpened, 0, AnalysisPixelsPerMeter);
+
+			//Mat output = env.CreateImage(SpatialObjects.Everything);
+			//picWorkBitmap.Image = output.Bitmap;
+		}
+
+		private void OnSavePointCloudClicked(object sender, EventArgs args)
+		{
+			try
+			{
+				VistaSaveFileDialog dlg = new VistaSaveFileDialog()
+				{
+					Title = "Enter File Name",
+					Filter = @"Binary files (*.bin)|*.bin|All files (*.*)|*.*",
+					DefaultExt = ".bin",
+					RestoreDirectory = true,
+				};
+				if(dlg.ShowDialog() == DialogResult.OK)
+				{
+					PointCloud2D cloud = _client.Vectors.ToPointCloud2D();
+					byte[] serialized = cloud.Serialize();
+					File.WriteAllBytes(dlg.FileName, serialized);
+				}
+			}
+			catch(Exception e)
+			{
+				MessageBox.Show(e.Message);
+			}
+		}
+
+		private void OnSaveBitmapClicked(object sender, EventArgs args)
+		{
+			try
+			{
+				VistaSaveFileDialog dlg = new VistaSaveFileDialog()
+				{
+					Title = "Enter File Name",
+					Filter = @"Binary files (*.png)|*.png|All files (*.*)|*.*",
+					DefaultExt = ".png",
+					RestoreDirectory = true,
+				};
+				if(dlg.ShowDialog() == DialogResult.OK)
+				{
+					Mat bitmap = _client.Vectors.ToPointCloud2D(0, _client.ImageMetrics.PixelsPerMeter).ToBitmap((int)(_client.ImageMetrics.MetersSquare * _client.ImageMetrics.PixelsPerMeter), Color.Red);
+					bitmap.Save(dlg.FileName);
+				}
+			}
+			catch(Exception e)
+			{
+				MessageBox.Show(e.Message);
+			}
+		}
+
+		private void OnCommandButtonClicked(object sender, EventArgs e)
+		{
+			if(textCommand.Text.Length > 0)
+			{
+				_mqqtController.SendCommand(textCommand.Text);
+				textCommand.Text = String.Empty;
+				textCommand.Select();
+			}
+
 		}
 	}
 }

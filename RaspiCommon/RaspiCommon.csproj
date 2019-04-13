@@ -95,6 +95,8 @@
     <Compile Include="Devices\Locomotion\L298N_DC_TankTracks.cs" />
     <Compile Include="Devices\MotorControl\L298N_DC_MotorControl.cs" />
     <Compile Include="IWidgetCollection.cs" />
+    <Compile Include="Network\RadarController.cs" />
+    <Compile Include="System\Performance.cs" />
     <Compile Include="Utility.cs" />
     <Compile Include="Spatial\Drawing.cs" />
     <Compile Include="Spatial\EnvironmentInfo.cs" />
@@ -110,11 +112,6 @@
     <Compile Include="Lidar\LidarResponse.cs" />
     <Compile Include="Lidar\ExpressScanResponse.cs" />
     <Compile Include="Lidar\LidarVector.cs" />
-    <Compile Include="Resources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>Resources.resx</DependentUpon>
-    </Compile>
     <Compile Include="Devices\Spatial\RPLidar.cs" />
     <Compile Include="Lidar\ScanResponse.cs" />
     <Compile Include="Devices\Compass\LSM9D51CompassAccelerometer.cs" />
@@ -130,9 +127,9 @@
     <Compile Include="Spatial\Imaging\ProcessingMetrics.cs" />
     <Compile Include="Spatial\Imaging\Types.cs" />
     <Compile Include="Spatial\LandscapeMetrics.cs" />
-    <Compile Include="Server\MqttTypes.cs" />
-    <Compile Include="Server\TelemetryClient.cs" />
-    <Compile Include="Server\TelemetryServer.cs" />
+    <Compile Include="Network\MqttTypes.cs" />
+    <Compile Include="Network\TelemetryClient.cs" />
+    <Compile Include="Network\TelemetryServer.cs" />
     <Compile Include="Devices\Servos\Servo.cs" />
     <Compile Include="Spatial\Imaging\IImageEnvironment.cs" />
     <Compile Include="Spatial\Types.cs" />
@@ -156,12 +153,6 @@
     <None Include="Resources\tank.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="Resources.resx">
-      <Generator>PublicResXFileCodeGenerator</Generator>
-      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
-    </EmbeddedResource>
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

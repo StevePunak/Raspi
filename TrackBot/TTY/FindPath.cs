@@ -17,10 +17,14 @@ namespace TrackBot.TTY
 
 		public override bool Execute(List<string> commandParts)
 		{
-			FuzzyPath path = Widgets.Instance.ImageEnvironment.FindGoodDestination(Program.Config.ShortRangeClearance);
-			if(path != null)
+			FuzzyPathList paths = Widgets.Instance.ImageEnvironment.FindGoodDestinations(Program.Config.ShortRangeClearance);
+			if(paths.Count > 0)
 			{
-				Widgets.Instance.ImageEnvironment.FuzzyPath = path;
+				Widgets.Instance.ImageEnvironment.FuzzyPath = paths.Longest;
+			}
+			else
+			{
+				Console.WriteLine("No path found");
 			}
 
 			return true;
@@ -28,8 +32,8 @@ namespace TrackBot.TTY
 		
 		public override void Usage(out String commandSyntax, out String description)
 		{
-			commandSyntax = "cg";
-			description = "Clear Grid";
+			commandSyntax = "fp";
+			description = "Find fuzzy path";
 		}
 
 	}

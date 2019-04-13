@@ -58,6 +58,8 @@
   <ItemGroup>
     <Compile Include="ForkLift\Lift.cs" />
     <Compile Include="Network\CommandServer.cs" />
+    <Compile Include="Network\RadarController.cs" />
+    <Compile Include="System\Performance.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SaveImageThread.cs" />
@@ -66,7 +68,6 @@
     <Compile Include="Spatial\Area.cs" />
     <Compile Include="Spatial\GoToDestination.cs" />
     <Compile Include="Spatial\Grid.cs" />
-    <Compile Include="Spatial\RoamAndSeek.cs" />
     <Compile Include="Spatial\SpatialPoll.cs" />
     <Compile Include="Spatial\TrackLidar.cs" />
     <Compile Include="Spatial\TravelLongestPath.cs" />
@@ -88,6 +89,7 @@
     <Compile Include="TTY\GoCommand.cs" />
     <Compile Include="TTY\LandmarkCommand.cs" />
     <Compile Include="TTY\LiftMove.cs" />
+    <Compile Include="TTY\NextCommand.cs" />
     <Compile Include="TTY\Pins.cs" />
     <Compile Include="TTY\Render.cs" />
     <Compile Include="TTY\Roam.cs" />
@@ -135,8 +137,7 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>
-    </PostBuildEvent>
+    <PostBuildEvent>%25windir%25\sysnative\bash.exe -c "`echo '$(ProjectDir)synctopi.sh' | sed -re 's/\\\\/\//g; s/([A-Z]):/\/mnt\/\L\1\E/i;'`"</PostBuildEvent>
   </PropertyGroup>
   <Import Project="..\packages\EMGU.CV.3.4.3.3016\build\EMGU.CV.targets" Condition="Exists('..\packages\EMGU.CV.3.4.3.3016\build\EMGU.CV.targets')" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

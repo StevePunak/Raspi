@@ -18,6 +18,7 @@ namespace RaspiCommon.Extensions
 			PointD center = bitmap.Center();
 
 			PointCloud2D cloud = new PointCloud2D(360 / vectorSize);
+			int fullPixels = 0;
 			unsafe
 			{
 				IntPtr startPtr = bitmap.DataPointer;
@@ -32,6 +33,7 @@ namespace RaspiCommon.Extensions
 						byte r = ptr[2];
 						if(r != 0 || g != 0 || b != 0)
 						{
+							fullPixels++;
 							if(x != (int)center.X && y != (int)center.Y)
 							{
 								BearingAndRange bar = center.BearingAndRangeTo(new PointD(x, y));
@@ -60,6 +62,11 @@ namespace RaspiCommon.Extensions
 			}
 		}
 
+		public static Mat ToBitmap(this PointCloud2D cloud, int squarePixels, Color dotColor, Double scale = 1)
+		{
+			return cloud.ToBitmap(new Size(squarePixels, squarePixels), dotColor, scale);
+		}
+
 		public static Mat ToBitmap(this PointCloud2D cloud, Size size, Color dotColor, Double scale = 1)
 		{
 			Double vectorSize = cloud.VectorSize;
@@ -72,7 +79,10 @@ namespace RaspiCommon.Extensions
 				if(bar.Range != 0)
 				{
 					PointD point = center.GetPointAt(angle, bar.Range * scale);
-					mat.SetPixel(point, dotColor);
+					if(point.X >= 0 && point.Y < size.Width && point.Y >= 0 && point.Y <= size.Height)
+					{
+						mat.SetPixel(point, dotColor);
+					}
 				}
 			}
 
@@ -102,6 +112,10 @@ namespace RaspiCommon.Extensions
 			}
 			return lines;
 		}
+		public static MCvScalar ToMCvScalar(this Color color)
+		{
+			return new Bgr(color).MCvScalar;
+		}
 
 		public static Point ToPoint(this PointF from)
 		{
@@ -111,6 +125,69 @@ namespace RaspiCommon.Extensions
 		public static PointD Center(this Mat bitmap)
 		{
 			return new PointD(bitmap.Width / 2, bitmap.Height / 2);
+		}
+
+		public static void DrawImage(this Mat dest, Mat source, PointD where)
+		{
+			Rectangle rect = new Rectangle(where.ToPoint(), source.Size);
+			Mat destRoi = new Mat(dest, rect);
+			source.CopyTo(destRoi);
+		}
+
+		public static void DrawCenteredImage(this Mat dest, Mat source, PointD where)
+		{
+			PointD adjusted = new PointD(where.X - source.Width / 2, where.Y - source.Height / 2);
+			Rectangle rect = new Rectangle(adjusted.ToPoint(), source.Size);
+			Mat destRoi = new Mat(dest, rect);
+			source.CopyTo(destRoi);
+		}
+
+		public static Mat Rotate(this Mat source, Double degrees, Double scale = 1)
+		{
+			Mat dest = new Mat(source.Size, source.Depth, source.NumberOfChannels);
+
+			Mat rotationMatrix = new Mat();
+			CvInvoke.GetRotationMatrix2D(source.Center().ToPoint(), 360 - degrees, scale, rotationMatrix);
+
+			CvInvoke.WarpAffine(source, dest, rotationMatrix, dest.Size);
+			// dest.Save(@"c:\pub\tmp\image.png");
+			return dest;
+		}
+
+		public static void DrawVectorLines(this Mat image, BearingAndRangeList vectors, PointD where, Double scale, Color color, int lineWidth = 1)
+		{
+			foreach(BearingAndRange bar in vectors)
+			{
+				Line line = new Line(where, where.GetPointAt(bar.Scale(scale)));
+				image.DrawLine(line, color, lineWidth);
+			}
+		}
+
+		public static void DrawMinMaxLines(this Mat image, BearingAndRangeList vectors, PointD where, Double scale, Color color, int lineWidth = 1)
+		{
+			if(vectors.Count > 0)
+			{
+				{
+					BearingAndRange bar = vectors.First();
+					Line line = new Line(where, where.GetPointAt(bar.Scale(scale)));
+					image.DrawLine(line, color, lineWidth);
+				}
+				{
+					BearingAndRange bar = vectors.Last();
+					Line line = new Line(where, where.GetPointAt(bar.Scale(scale)));
+					image.DrawLine(line, color, lineWidth);
+				}
+			}
+		}
+
+		public static void DrawCircle(this Mat image, Circle circle, Color color, int lineWidth = 1)
+		{
+			image.DrawCircle(circle.Center, (int)circle.Radius, color, lineWidth);
+		}
+
+		public static void DrawCircle(this Mat image, Circle circle, MCvScalar color, int lineWidth = 1)
+		{
+			image.DrawCircle(circle.Center, (int)circle.Radius, color, lineWidth);
 		}
 
 		public static void DrawCircle(this Mat image, PointD where, int radius, Color color, int lineWidth = 1)
@@ -146,5 +223,14 @@ namespace RaspiCommon.Extensions
 			image.DrawCircle(where, size / 2, color);
 		}
 
+		public static void DrawLine(this Mat image, Line line, Color color, int lineWidth = 1)
+		{
+			image.DrawLine(line, color.ToMCvScalar(), lineWidth);
+		}
+
+		public static void DrawLine(this Mat image, Line line, MCvScalar color, int lineWidth = 1)
+		{
+			CvInvoke.Line(image, line.P1.ToPoint(), line.P2.ToPoint(), color, lineWidth);
+		}
 	}
 }

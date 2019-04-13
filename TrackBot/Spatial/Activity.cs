@@ -1,3 +1,4 @@
+#undef LOG_STATE_CHANGES
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -33,25 +34,34 @@ namespace TrackBot.Spatial
 			Idle,
 			FindDestination,
 			TravelToDest,
+			RotateToNewBearing,
 			Stuck
 		}
 
 		public ActivityStates ActivityState { get; protected set; }
 
+		public bool WaitForStateChange { get; private set; }
+
+		public bool QuitRequest { get; set; }
+
 		protected DateTime EnterStateTime { get; set; }
+
+		static MutexEvent _changeStateEvent;
 
 		static Activity()
 		{
 			RunningActivityType = ActivityType.None;
+			_changeStateEvent = new MutexEvent();
 		}
 
 		protected Activity(ActivityType type)
 			: base(type.ToString())
 		{
 			ActivityType = type;
+			QuitRequest = false;
 		}
 
-		public static void StartActivity(ActivityType activityType)
+		public static void StartActivity(ActivityType activityType, bool waitForStateChange)
 		{
 			try
 			{
@@ -59,11 +69,6 @@ namespace TrackBot.Spatial
 
 				switch(activityType)
 				{
-					case ActivityType.RoamAndSeek:
-						RunningActivity = new RoamAndSeek();
-						RunningActivity.Start();
-						RunningActivityType = ActivityType.RoamAndSeek;
-						break;
 					case ActivityType.GoToDestination:
 						RunningActivity = new GoToDestination();
 						RunningActivity.Start();
@@ -74,6 +79,11 @@ namespace TrackBot.Spatial
 						RunningActivity.Start();
 						RunningActivityType = ActivityType.TravelLongestPath;
 						break;
+				}
+
+				if(RunningActivity != null)
+				{
+					RunningActivity.WaitForStateChange = waitForStateChange;
 				}
 			}
 			catch(Exception e)
@@ -106,6 +116,9 @@ namespace TrackBot.Spatial
 					break;
 				case ActivityStates.FindDestination:
 					RunFindDestinationState();
+					break;
+				case ActivityStates.RotateToNewBearing:
+					RunRotateToNewBearingState();
 					break;
 				case ActivityStates.TravelToDest:
 					RunTravelToDestState();
@@ -141,17 +154,27 @@ namespace TrackBot.Spatial
 			MethodInfo method;
 			bool result;
 
-			Console.WriteLine("{0} Switching state from {1} to {2}", Name, ActivityState, state);
-
 			try
 			{
+				Log.LogText(LogLevel.DEBUG, "{0} Switching state from {1} to {2}", Name, ActivityState, state);
+				if(WaitForStateChange)
+				{
+					_changeStateEvent.Wait();
+					if(QuitRequest)
+					{
+						throw new TrackBotException("Terminating activity");
+					}
+				}
+
 				String methodName;
 
 				// deinit last state
 				method = GetStateMethod(StateTransition.Stop, ActivityState, out methodName);
 				if(method != null)
 				{
-//					Log.LogText(LogLevel.DEBUG, "Invoking '{0}'", methodName);
+#if  LOG_STATE_CHANGES
+					Log.LogText(LogLevel.DEBUG, "Invoking '{0}'", methodName);
+#endif
 					if((result = (bool)method.Invoke(this, null)) == false)
 					{
 						throw new TrackBotException("Method {0} return false", method);
@@ -159,7 +182,9 @@ namespace TrackBot.Spatial
 				}
 				else
 				{
-//					Log.LogText(LogLevel.DEBUG, "No method exists called '{0}'... continuing", methodName);
+#if LOG_STATE_CHANGES
+					Log.LogText(LogLevel.DEBUG, "No method exists called '{0}'... continuing", methodName);
+#endif
 				}
 
 				ActivityState = state;
@@ -169,7 +194,9 @@ namespace TrackBot.Spatial
 				method = GetStateMethod(StateTransition.Init, ActivityState, out methodName);
 				if(method != null)
 				{
-//					Log.LogText(LogLevel.DEBUG, "Invoking '{0}'... continuing", methodName);
+#if LOG_STATE_CHANGES
+					Log.LogText(LogLevel.DEBUG, "Invoking '{0}'... continuing", methodName);
+#endif
 					if((result = (bool)method.Invoke(this, null)) == false)
 					{
 						throw new TrackBotException("Method {0} return false", method);
@@ -177,7 +204,9 @@ namespace TrackBot.Spatial
 				}
 				else
 				{
-//					Log.LogText(LogLevel.DEBUG, "No method exists called '{0}'... continuing", methodName);
+#if LOG_STATE_CHANGES
+					Log.LogText(LogLevel.DEBUG, "No method exists called '{0}'... continuing", methodName);
+#endif
 				}
 			}
 			catch(Exception e)
@@ -187,8 +216,15 @@ namespace TrackBot.Spatial
 			}
 		}
 
+		public static void ChangeState()
+		{
+			Log.SysLogText(LogLevel.DEBUG, "Change state request (Quit = {0})", RunningActivity.QuitRequest);
+			_changeStateEvent.Set();
+		}
+
 		virtual protected bool RunInitState() { return false; }
 		virtual protected bool RunFindDestinationState() { return false; }
+		virtual protected bool RunRotateToNewBearingState() { return false; }
 		virtual protected bool RunIdleState() { return false; }
 		virtual protected bool RunTravelToDestState() { return false; }
 		virtual protected bool RunStuckState() { return false; }

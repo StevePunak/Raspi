@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO.Ports;
 using System.Linq;
 using System.Net;
@@ -17,7 +18,7 @@ using RaspiCommon.Devices.Chassis;
 using RaspiCommon.Devices.Compass;
 using RaspiCommon.Devices.Spatial;
 using RaspiCommon.Lidar.Environs;
-using RaspiCommon.Server;
+using RaspiCommon.Network;
 using RaspiCommon.Spatial;
 using RaspiCommon.Spatial.Imaging;
 using TrackBot.ForkLift;
@@ -127,9 +128,9 @@ namespace TrackBot
 		private void StartChassis()
 		{
 			Chassis = new XiaorTankTracks();
-			Chassis.Points.Add(ChassisParts.Lidar, new PointD(Chassis.Points[ChassisParts.RearLeft].X + 150, Chassis.Points[ChassisParts.CenterPoint].Y + 140));
+			Chassis.Points.Add(ChassisParts.Lidar, new PointD(Chassis.Points[ChassisParts.RearLeft].X + .115, Chassis.Points[ChassisParts.FrontRight].Y + .120));
 			Chassis.Points.Add(ChassisParts.FrontRangeFinder, new PointD(Chassis.Width / 2, 0));
-			Chassis.Points.Add(ChassisParts.RearRangeFinder,  new PointD(Chassis.Width / 2, Chassis.Length));
+			Chassis.Points.Add(ChassisParts.RearRangeFinder, new PointD(Chassis.Width / 2, Chassis.Length));
 		}
 
 		private void StopChassis()
@@ -139,6 +140,7 @@ namespace TrackBot
 
 		private void StartCommandServer()
 		{
+			Console.WriteLine("Starting Mqqt Command Client");
 			CommandServer = new CommandServer(String.Format("raspi.{0}", Environment.MachineName));
 			CommandServer.Start();
 		}
@@ -388,8 +390,8 @@ namespace TrackBot
 			if(direction == Direction.Backward)
 			{
 				bearing = bearing.AddDegrees(180);
-
 			}
+
 			Double range = Widgets.Instance.ImageEnvironment.FuzzyRangeAtBearing(Widgets.Instance.Chassis, bearing, Widgets.Instance.ImageEnvironment.RangeFuzz);
 
 			HCSR04_RangeFinder rangeFinder;

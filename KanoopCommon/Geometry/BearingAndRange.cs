@@ -48,9 +48,14 @@ namespace KanoopCommon.Geometry
 		/// Roteate the bearing around the origin
 		/// </summary>
 		/// <param name="degrees"></param>
-		public void Rotate(Double degrees)
+		public BearingAndRange Rotate(Double degrees)
 		{
-			Bearing = Bearing.AddDegrees(degrees);
+			return new BearingAndRange(Bearing.AddDegrees(degrees), Range);
+		}
+
+		public BearingAndRange Scale(Double scale)
+		{
+			return new BearingAndRange(Bearing, Range * scale);
 		}
 
 		public byte[] Serialize()
@@ -77,6 +82,13 @@ namespace KanoopCommon.Geometry
 
 	public class BearingAndRangeList : List<BearingAndRange>
 	{
+		public virtual int ByteArraySize { get { return sizeof(Int32) + (Count * BearingAndRange.ByteArraySize); } }
+
+		public Double AverageRange { get { return this.Average(bar => bar.Range); } }
+		public Double AverageBearing { get { return this.Average(bar => bar.Bearing); } }
+
+		public object Tag { get; set; }
+
 		public BearingAndRangeList()
 			: base() { }
 
@@ -85,6 +97,18 @@ namespace KanoopCommon.Geometry
 			for(int x = 0;x < size;x++)
 			{
 				Add(new BearingAndRange());
+			}
+		}
+
+		/// <summary>
+		/// Round all ranges to the given precision
+		/// </summary>
+		/// <param name="precision"></param>
+		public void RoundRanges(int precision)
+		{
+			foreach(BearingAndRange bar in this)
+			{
+				bar.Range = Math.Round(bar.Range, precision);
 			}
 		}
 
@@ -99,7 +123,7 @@ namespace KanoopCommon.Geometry
 
 		public virtual byte[] Serialize()
 		{
-			byte[] serialized = new byte[sizeof(Int32) + (Count * BearingAndRange.ByteArraySize)];
+			byte[] serialized = new byte[ByteArraySize];
 			using(BinaryWriter bw = new BinaryWriter(new MemoryStream(serialized)))
 			{
 				bw.Write(Count);
@@ -111,6 +135,15 @@ namespace KanoopCommon.Geometry
 			return serialized;
 		}
 
+		protected virtual void Serialize(BinaryWriter bw)
+		{
+			bw.Write(Count);
+			foreach(BearingAndRange bar in this)
+			{
+				bw.Write(bar.Serialize());
+			}
+		}
+
 		public BearingAndRangeList Clone()
 		{
 			BearingAndRangeList list = new BearingAndRangeList();
@@ -120,5 +153,14 @@ namespace KanoopCommon.Geometry
 			}
 			return list;
 		}
+
+		public class BearingAndRangeListRangeComprarer : IComparer<BearingAndRangeList>
+		{
+			public int Compare(BearingAndRangeList x, BearingAndRangeList y)
+			{
+				return x.AverageRange.CompareTo(y.AverageRange);
+			}
+		}
+
 	}
 }

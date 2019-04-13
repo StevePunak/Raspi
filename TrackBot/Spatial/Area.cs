@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Emgu.CV;
 using KanoopCommon.Extensions;
 using KanoopCommon.Geometry;
+using KanoopCommon.Performance;
 
 namespace TrackBot.Spatial
 {
@@ -75,6 +76,7 @@ namespace TrackBot.Spatial
 
 		public PointD FindGoodDestination()
 		{
+			PerformanceTimer timer = new PerformanceTimer("FindGood");
 			Console.WriteLine("Finding a destination");
 
 			Line longestLine = null;
