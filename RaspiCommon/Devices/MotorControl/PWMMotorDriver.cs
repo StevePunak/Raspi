@@ -40,7 +40,7 @@ namespace RaspiCommon.Devices.MotorControl
 			{ MotorSpeed.FullSpeed,    1   },
 		};
 
-		GpioPin A1, A2, B1, B2;
+		protected GpioPin A1, A2, B1, B2;
 
 		MotorSpeed _speed;
 		public MotorSpeed Speed

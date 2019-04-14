@@ -15,5 +15,15 @@ namespace KanoopCommon.Extensions
 				list[x] = list[x].Terminate();
 			}
 		}
+
+		public static String GetString(this List<String> list)
+		{
+			StringBuilder sb = new StringBuilder();
+			foreach(String s in  list)
+			{
+				sb.AppendFormat("  {0}\n", s);
+			}
+			return sb.ToString();
+		}
 	}
 }

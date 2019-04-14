@@ -87,6 +87,7 @@
     <Compile Include="Devices\Locomotion\IMotorizedChassis.cs" />
     <Compile Include="Devices\MotorControl\DRV8825StepperControl.cs" />
     <Compile Include="Devices\MotorControl\ESC.cs" />
+    <Compile Include="Devices\Optics\Camera.cs" />
     <Compile Include="Extensions\GraphicsExtensions.cs" />
     <Compile Include="Extensions\LidarVectorExtensions.cs" />
     <Compile Include="GpioSharp.cs" />

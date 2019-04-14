@@ -43,6 +43,16 @@ namespace KanoopCommon.Geometry
 			return points.ToArray();
 		}
 
+		public PointF[] ToPointFArray()
+		{
+			List<PointF> points = new List<PointF>();
+			foreach(PointD point in this)
+			{
+				points.Add(point.ToPointF());
+			}
+			return points.ToArray();
+		}
+
 		public LineList ToLineList()
 		{
 			LineList list = new LineList();

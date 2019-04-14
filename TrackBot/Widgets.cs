@@ -16,6 +16,7 @@ using RaspiCommon.Data.DataSource;
 using RaspiCommon.Data.Entities;
 using RaspiCommon.Devices.Chassis;
 using RaspiCommon.Devices.Compass;
+using RaspiCommon.Devices.Optics;
 using RaspiCommon.Devices.Spatial;
 using RaspiCommon.Lidar.Environs;
 using RaspiCommon.Network;
@@ -63,6 +64,8 @@ namespace TrackBot
 
 		public Chassis Chassis { get; private set; }
 
+		public Camera Camera { get; private set; }
+
 		static Widgets _instance;
 		public static Widgets Instance
 		{
@@ -93,6 +96,7 @@ namespace TrackBot
 
 		public void StartWidgets()
 		{
+			StartCamera();
 			StartChassis();
 			StartDatabase();
 			StartRangeFinders();
@@ -107,6 +111,7 @@ namespace TrackBot
 
 		public void StopWidgets()
 		{
+			StopCamera();
 			StopCommandServer();
 			StopSpatialPolling();
 			StopLift();
@@ -123,6 +128,18 @@ namespace TrackBot
 			{
 				Log.SysLogText(LogLevel.DEBUG, "Remaining: {0}", thread);
 			}
+		}
+
+		private void StartCamera()
+		{
+			Camera = new Camera();
+			Camera.Start();
+		}
+
+		private void StopCamera()
+		{
+			Camera.Stop();
+			Camera = null;
 		}
 
 		private void StartChassis()

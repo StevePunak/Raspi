@@ -61,6 +61,10 @@ namespace TrackBot
 				Program.Config.TracksRightA1Pin = GpioPin.Pin11;
 				Program.Config.TracksRightA2Pin = GpioPin.Pin13;
 				Program.Config.TracksRightEnaPin = GpioPin.Pin04;
+				Program.Config.LiftInputPin1 = GpioPin.Pin12;
+				Program.Config.LiftInputPin2 = GpioPin.Pin16;
+				Program.Config.LiftInputPin3 = GpioPin.Pin20;
+				Program.Config.LiftInputPin4 = GpioPin.Pin21;
 				Program.Config.TracksHardwarePWM = false;
 				Program.Config.PathsToGet = 4;
 				Program.Config.Save();

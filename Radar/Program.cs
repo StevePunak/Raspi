@@ -44,6 +44,8 @@ namespace Radar
 
 		static void Test()
 		{
+			List<String> files = new List<String>(Directory.GetFiles(@"c:\pub\tmp", "*.png"));
+
 			Chassis Chassis = new XiaorTankTracks();
 			Chassis.Points.Add(ChassisParts.Lidar, new PointD(Chassis.Points[ChassisParts.RearLeft].X + 115, Chassis.Points[ChassisParts.FrontRight].Y + 120));
 			Chassis.Points.Add(ChassisParts.FrontRangeFinder, new PointD(Chassis.Width / 2, 0));

@@ -7,6 +7,8 @@ using System.Threading.Tasks;
 using Emgu.CV;
 using Emgu.CV.CvEnum;
 using Emgu.CV.Structure;
+using Emgu.CV.Util;
+using KanoopCommon.Extensions;
 using KanoopCommon.Geometry;
 
 namespace RaspiCommon.Extensions
@@ -127,6 +129,36 @@ namespace RaspiCommon.Extensions
 			return new PointD(bitmap.Width / 2, bitmap.Height / 2);
 		}
 
+		public static void DrawFilledPolygon(this Mat dest, PointDList polygon, Color color)
+		{
+			PointF[] poly = polygon.ToPointFArray();
+			Point[] points = Array.ConvertAll<PointF, Point>(poly, Point.Round);
+
+			using(VectorOfPoint vp = new VectorOfPoint(points))
+			using(VectorOfVectorOfPoint vvp = new VectorOfVectorOfPoint(vp))
+			{
+				CvInvoke.FillPoly(dest, vvp, color.ToMCvScalar());
+			}
+		}
+
+		public static void DrawText(this Mat dest, String text, FontFace fontFace, Color color, PointD where, int thickness = 1)
+		{
+			Double scale = 1;
+
+			CvInvoke.PutText(dest, text, where.ToPoint(), fontFace, scale, color.ToMCvScalar(), thickness);
+		}
+
+		public static void DrawCenteredText(this Mat dest, String text, FontFace fontFace, Color color, PointD where, int thickness = 1, Double scale = 1)
+		{
+			int baseLine = 0;
+			Size size = CvInvoke.GetTextSize(text, fontFace, scale, thickness, ref baseLine);
+
+			PointD newPoint = new PointD(where.X - size.Width / 2, where.Y + size.Height / 2);
+			CvInvoke.PutText(dest, text, newPoint.ToPoint(), fontFace, scale, color.ToMCvScalar(), thickness);
+
+			dest.DrawCross(where, 4, Color.White);
+		}
+
 		public static void DrawImage(this Mat dest, Mat source, PointD where)
 		{
 			Rectangle rect = new Rectangle(where.ToPoint(), source.Size);
@@ -140,6 +172,22 @@ namespace RaspiCommon.Extensions
 			Rectangle rect = new Rectangle(adjusted.ToPoint(), source.Size);
 			Mat destRoi = new Mat(dest, rect);
 			source.CopyTo(destRoi);
+		}
+
+		public static void DrawEllipse(this Mat bitmap, PointD center, Size size, Double startAngle, Double endAngle, Color color, int thickness = 1)
+		{
+			Double angle = startAngle.SubtractDegrees(90);
+			Double start = 0;
+			Double end = endAngle.SubtractDegrees(startAngle);
+			CvInvoke.Ellipse(bitmap, center.ToPoint(), size, angle, start, end, color.ToMCvScalar(), thickness);
+		}
+
+		public static Mat Scale(this Mat source, Double scale)
+		{
+			Size newSize = source.Size.Scale(scale);
+			Mat dest = new Mat(newSize, source.Depth, source.NumberOfChannels);
+			CvInvoke.Resize(source, dest, newSize);
+			return dest;
 		}
 
 		public static Mat Rotate(this Mat source, Double degrees, Double scale = 1)

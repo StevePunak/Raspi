@@ -91,6 +91,10 @@ namespace Radar
 			_client = null;
 			Host = String.IsNullOrEmpty(Program.Config.RadarHost) ? "raspi" : Program.Config.RadarHost;
 			InitializeComponent();
+
+			Image < Bgr, Byte > imageCV = new Image<Bgr, byte>(Properties.Resources.tank);
+			botDash.TankBitmap = imageCV.Mat;
+
 		}
 
 		private void OnFormLoad(object sender, EventArgs args)
@@ -216,6 +220,7 @@ namespace Radar
 			tank = tank.Rotate(_client.Bearing);
 			bitmap.DrawCenteredImage(tank, new PointD(250, 250));
 			picLidar.BackgroundImage = bitmap.Bitmap;
+
 #else
 			
 			Bitmap bitmap = new Bitmap(_radarBitmap);
@@ -294,12 +299,14 @@ namespace Radar
 		{
 			if(EnvironmentInfo != null)
 			{
-				textBearing.Text = String.Format("{0:0.0}°", EnvironmentInfo.Bearing);
-				textDestinationBearing.Text = String.Format("{0}°", EnvironmentInfo.DestinationBearing);
-				textForwardRange.Text = String.Format("{0:0.00}m", EnvironmentInfo.ForwardPrimaryRange);
-				textBackwardRange.Text = String.Format("{0:0.00}m", EnvironmentInfo.BackwardPrimaryRange);
-				textForwardSecondary.Text = String.Format("{0:0.00}m", EnvironmentInfo.ForwardSecondaryRange);
-				textBackwardSecondary.Text = String.Format("{0:0.00}m", EnvironmentInfo.BackwardSecondaryRange);
+				botDash.Bearing = EnvironmentInfo.Bearing;
+				botDash.DestinationBearing = EnvironmentInfo.DestinationBearing;
+				botDash.FrontPrimaryRange = EnvironmentInfo.ForwardPrimaryRange;
+				botDash.FrontSecondaryRange = EnvironmentInfo.ForwardSecondaryRange;
+				botDash.RearPrimaryRange = EnvironmentInfo.BackwardPrimaryRange;
+				botDash.RearSecondaryRange = EnvironmentInfo.BackwardSecondaryRange;
+
+				botDash.Redraw();
 			}
 		}
 
@@ -531,6 +538,9 @@ namespace Radar
 
 		private void OnAnalyzeClicked(object sender, EventArgs e)
 		{
+			String pic = @"c:\pub\tmp\0208-snap.jpg";
+			Mat mat = new Mat(pic);
+
 			String file = @"c:\pub\tmp\blob.bin";
 			byte[] bytes = File.ReadAllBytes(file);
 			PointCloud2D cloud = new PointCloud2D(bytes);
