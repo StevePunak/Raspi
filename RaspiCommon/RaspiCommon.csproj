@@ -97,6 +97,11 @@
     <Compile Include="Devices\MotorControl\L298N_DC_MotorControl.cs" />
     <Compile Include="IWidgetCollection.cs" />
     <Compile Include="Network\RadarController.cs" />
+    <Compile Include="Spatial\DeadReckoning\DeadReckoningEnvironment.cs" />
+    <Compile Include="Spatial\DeadReckoning\DRGrid.cs" />
+    <Compile Include="Spatial\DeadReckoning\DRMatrix.cs" />
+    <Compile Include="Spatial\DeadReckoning\GridCell.cs" />
+    <Compile Include="Spatial\DeadReckoning\Types.cs" />
     <Compile Include="System\Performance.cs" />
     <Compile Include="Utility.cs" />
     <Compile Include="Spatial\Drawing.cs" />

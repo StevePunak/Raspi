@@ -1,9 +1,15 @@
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using Emgu.CV;
+using Emgu.CV.CvEnum;
+using Emgu.CV.Structure;
+using Emgu.CV.Util;
 using KanoopCommon.Database;
 using KanoopCommon.Geometry;
 using KanoopCommon.Logging;
@@ -15,6 +21,7 @@ using RaspiCommon.Data.Entities;
 using RaspiCommon.Devices.Chassis;
 using RaspiCommon.Network;
 using RaspiCommon.Spatial;
+using RaspiCommon.Spatial.DeadReckoning;
 using RaspiCommon.Spatial.Imaging;
 using TrackBotCommon.Environs;
 
@@ -44,15 +51,41 @@ namespace Radar
 
 		static void Test()
 		{
-			List<String> files = new List<String>(Directory.GetFiles(@"c:\pub\tmp", "*.png"));
+			DeadReckoningEnvironment env;
+			TrackDataSource tds = DataSourceFactory.Create<TrackDataSource>(Config.DBCredentials);
 
-			Chassis Chassis = new XiaorTankTracks();
-			Chassis.Points.Add(ChassisParts.Lidar, new PointD(Chassis.Points[ChassisParts.RearLeft].X + 115, Chassis.Points[ChassisParts.FrontRight].Y + 120));
-			Chassis.Points.Add(ChassisParts.FrontRangeFinder, new PointD(Chassis.Width / 2, 0));
-			Chassis.Points.Add(ChassisParts.RearRangeFinder, new PointD(Chassis.Width / 2, Chassis.Length));
+			//env = new DeadReckoningEnvironment("ManCave", 10, 10, .1, 0, new PointD(8, 8));
+			//tds.DeleteDREnvironment("ManCave");
+			//tds.CreateDREnvironment(env);
+			//tds.GetDREnvironment("ManCave", out env);
+		}
 
-			BearingAndRange toFrontLeft = Chassis.GetBearingAndRange(ChassisParts.Lidar, ChassisParts.FrontLeft, 0);
-			BearingAndRange toFrontRight = Chassis.GetBearingAndRange(ChassisParts.Lidar, ChassisParts.FrontRight, 0);
+
+		static void TestImage()
+		{
+			int resx = 3280;
+			int resy = 2464;
+//			int resx = 800;
+//			int resy = 600;
+
+			int cols = ((resx + 31) / 32) * 32;
+			int rows = ((resy + 15) / 16) * 16;
+
+			String file = @"\\raspi\pi\tmp\image.bgr";
+			byte[] data = File.ReadAllBytes(file);
+			Mat image = new Mat(new Size(cols, rows), DepthType.Cv8U, 3);
+			unsafe
+			{
+				IntPtr ptr = image.DataPointer;
+				Marshal.Copy(data, 0, ptr, (rows * cols * 3));
+			}
+
+			MCvScalar lowRange = new MCvScalar(50, 0, 0);
+			MCvScalar topRange = new MCvScalar(60, 0, 0);
+			Mat outputImage = new Mat(new Size(cols, rows), DepthType.Cv8U, 3);
+			CvInvoke.InRange(image, new ScalarArray(lowRange), new ScalarArray(topRange), outputImage);
+			image.Save(@"c:\pub\tmp\output.bmp");
+			outputImage.Save(@"c:\pub\tmp\masked.bmp");
 		}
 
 		private static void OpenConfig()

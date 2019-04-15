@@ -33,6 +33,7 @@ using RaspiCommon.Lidar;
 using RaspiCommon.Lidar.Environs;
 using RaspiCommon.Network;
 using RaspiCommon.Spatial;
+using RaspiCommon.Spatial.DeadReckoning;
 using RaspiCommon.Spatial.Imaging;
 using TrackBotCommon.Environs;
 
@@ -61,6 +62,11 @@ namespace Radar
 			get { return 50; }
 		}
 
+		Double PixelsPerMeterDR
+		{
+			get { return 100; }
+		}
+
 		TelemetryClient _client;
 		RadarController _mqqtController;
 		String Host { get; set; }
@@ -85,6 +91,8 @@ namespace Radar
 		public EnvironmentInfo EnvironmentInfo { get; set; }
 
 		public int AnalysisPixelsPerMeter { get { return 100; } }
+
+		public DeadReckoningEnvironment DREnvironment { get; set; }
 
 		public RadarForm()
 		{
@@ -494,27 +502,16 @@ namespace Radar
 			}
 		}
 
-		const String PULL_LOCATION = @"\\raspi\pi\tmp\rangeblob.bin";
 		private void OnPullClicked(object sender, EventArgs args)
 		{
 			try
 			{
-				if(File.Exists(PULL_LOCATION))
+				DeadReckoningEnvironment env;
+				TrackDataSource tds = DataSourceFactory.Create<TrackDataSource>(Program.Config.DBCredentials);
+				if(tds.GetDREnvironment("ManCave", out env).ResultCode == DBResult.Result.Success)
 				{
-					byte[] blob = File.ReadAllBytes(PULL_LOCATION);
-					LidarVector[] vectors = new LidarVector[blob.Length / sizeof(Double)];
-					LidarVector.LoadFromRangeBlob(vectors, blob);
-
-					Size bitmapSize = new Size((int)(_client.ImageMetrics.MetersSquare * AnalysisPixelsPerMeter), (int)(_client.ImageMetrics.MetersSquare * AnalysisPixelsPerMeter));
-					_workBitmap = LidarVector.MakeBitmap(vectors, bitmapSize, AnalysisPixelsPerMeter, Color.White);
-					picWorkBitmap.BackgroundImage = _workBitmap.Bitmap;
-					picWorkBitmap.Size = bitmapSize;
-					picWorkBitmap.BackgroundImage.Save(@"c:\pub\tmp\output.png");
-
-					_sharpened = new Mat();
-					CvInvoke.GaussianBlur(_workBitmap, _sharpened, new Size(0, 0), 1);
-					_sharpened.Save(@"c:\pub\tmp\sharpened.png");
-					CvInvoke.AddWeighted(_workBitmap, 1.5, _sharpened, -0.5, 0, _sharpened);
+					DREnvironment = env;
+					DrawDREnvironment();
 				}
 			}
 			catch(Exception e)
@@ -533,6 +530,24 @@ namespace Radar
 			{
 				Program.Config.ProcessingMetrics = dlg.ProcessingMetrics;
 				Program.Config.Save();
+			}
+		}
+
+		private void DrawDREnvironment()
+		{
+			int pixelHeight = (int)(DREnvironment.Height * PixelsPerMeterDR);
+			int pixelWidth = (int)(DREnvironment.Width * PixelsPerMeterDR);
+			Mat bitmap = new Mat(pixelWidth, pixelHeight, DepthType.Cv8U, 3);
+
+			Size squareSize = new Size((pixelWidth / DREnvironment.Height) - 2, pixelHeight - 2);
+			for(int x = 0;x < DREnvironment.Grid.Matrix.Width;x++)
+			{
+				for(int y = 0;y < DREnvironment.Grid.Matrix.Height;y++)
+				{
+					PointD point = new PointD(x  * pixelWidth + 1, y * pixelHeight + 1);
+					Rectangle rect = new Rectangle(point.ToPoint(), squareSize);
+					bitmap.DrawRectangle(rect, Color.AliceBlue);
+				}
 			}
 		}
 

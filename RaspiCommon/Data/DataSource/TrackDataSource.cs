@@ -5,7 +5,9 @@ using System.Text;
 using System.Threading.Tasks;
 using KanoopCommon.Conversions;
 using KanoopCommon.Database;
+using KanoopCommon.Geometry;
 using RaspiCommon.Data.Entities;
+using RaspiCommon.Spatial.DeadReckoning;
 
 namespace RaspiCommon.Data.DataSource
 {
@@ -14,6 +16,132 @@ namespace RaspiCommon.Data.DataSource
 	{
 		public TrackDataSource(SqlDBCredentials credentials)
 			: base(credentials) {}
+
+		#region Dead Reckoning
+
+		public virtual DBResult CreateDREnvironment(DeadReckoningEnvironment environment)
+		{
+			DBResult result = DBResult.InsertionFailure;
+
+			DB.DefaultTimeout = 60;
+			QueryString sql = DB.Format(
+				"INSERT into dr_grids (name, scale, angular_offset, width, height, origin_x, origin_y) \n" +
+				"VALUES ('{0}', {1}, {2}, {3}, {4}, {5}, {6})",
+				environment.Name, environment.Scale, 
+				environment.AngularOffset, 
+				(Double)environment.Grid.Matrix.Width * environment.Scale, 
+				(Double)environment.Grid.Matrix.Height * environment.Scale, 
+				environment.Origin.X, environment.Origin.Y);
+			if((result = DB.Insert(sql)).ResultCode == DBResult.Result.Success)
+			{
+				UInt32 gridID = result.ItemID;
+
+				StringBuilder sb = new StringBuilder();
+				for(int row = 0;row < environment.Grid.Matrix.Height;row++)
+				{
+					for(int col = 0;col < environment.Grid.Matrix.Width;col++)
+					{
+						sb.AppendFormat(
+							"INSERT into grid_cells (grid_id, x, y, state) \n" +
+							"VALUES ({0}, {1}, {2}, {3});\n",
+							gridID, environment.Grid.Matrix.Cells[row, col].X, environment.Grid.Matrix.Cells[row, col].Y, (int)environment.Grid.Matrix.Cells[row, col].State);
+					}
+				}
+
+				sql = DB.Format("{0}", sb);
+				String s = sql.ToString();
+				result = DB.Insert(sql);
+			}
+			return result;
+		}
+
+		public virtual DBResult DeleteDREnvironment(String name)
+		{
+			DBResult result = DBResult.InsertionFailure;
+
+			if((result = GetEnvironemtID(name)).ResultCode == DBResult.Result.Success)
+			{
+				UInt32 gridID = result.ItemID;
+				QueryString sql = DB.Format(
+					"DELETE FROM grid_cells WHERE grid_id = {0}", gridID);
+				if((result = DB.Delete(sql)).ResultCode == DBResult.Result.Success)
+				{
+					sql = DB.Format(
+					"DELETE FROM dr_grids WHERE grid_id = {0}", gridID);
+					result = DB.Delete(sql);
+				}
+			}
+
+			return result;
+		}
+
+		public virtual DBResult GetDREnvironment(String name, out DeadReckoningEnvironment environment)
+		{
+			environment = null;
+			DBResult result = DBResult.NoData;
+
+			QueryString sql = DB.Format(
+				"SELECT * from dr_grids WHERE name = '{0}'", name);
+
+			DatabaseDataReader reader;
+			result = DB.Query(sql, out reader);
+			using(reader)
+			{
+				if(result.ResultCode == DBResult.Result.Success && reader.Read())
+				{
+					environment = new DeadReckoningEnvironment(
+						DBUtil.GetString(reader["name"]),
+						DBUtil.GetDouble(reader["width"]),
+						DBUtil.GetDouble(reader["width"]),
+						DBUtil.GetDouble(reader["scale"]),
+						DBUtil.GetDouble(reader["angular_offset"]),
+						new PointD(DBUtil.GetDouble(reader["origin_x"]), DBUtil.GetDouble(reader["origin_y"])));
+					environment.ID = DBUtil.GetUInt32(reader["grid_id"]);
+				}
+			}
+
+			if(environment != null)
+			{
+				sql = DB.Format("SELECT * from grid_cells WHERE grid_id = {0}", environment.ID);
+				result = DB.Query(sql, out reader);
+				using(reader)
+				{
+					if(result.ResultCode == DBResult.Result.Success)
+					{
+						while(reader.Read())
+						{
+							GridCell cell = DataReaderConverter.CreateClassFromDataReader<GridCell>(reader);
+							environment.Grid.Matrix.Cells[cell.X, cell.Y] = cell;
+						}
+					}
+				}
+			}
+
+			return result;
+		}
+
+		DBResult GetEnvironemtID(String name)
+		{
+			DBResult result = DBResult.NoData;
+
+			QueryString sql = DB.Format(
+				"SELECT * from dr_grids WHERE name = '{0}'", name);
+
+			DatabaseDataReader reader;
+			result = DB.Query(sql, out reader);
+			using(reader)
+			{
+				if(result.ResultCode == DBResult.Result.Success && reader.Read())
+				{
+					result.ItemID = DBUtil.GetUInt32(reader["grid_id"]);
+				}
+			}
+			return result;
+		}
+
+		#endregion
+
+		#region Image Landscapes
 
 		public virtual DBResult LandscapeGet<T>(String name, out T landscape) where T: new()
 		{
@@ -145,5 +273,7 @@ namespace RaspiCommon.Data.DataSource
 			}
 			return retVal;
 		}
+
+		#endregion
 	}
 }

@@ -61,7 +61,7 @@ namespace KanoopCommon.Database
 			String connectString;
 			if(String.IsNullOrEmpty(credentials.Charset))
 			{
-				connectString = String.Format("Database={0};Data Source={1};User Id={2};Password=\x22{3}\x22;allow user variables=true;allow Zero Datetime=true;Port={4};{5}",
+				connectString = String.Format("Database={0};Data Source={1};User Id={2};Password=\x22{3}\x22;allow user variables=true;allow Zero Datetime=true;Port={4};{5};default command timeout=60",
 											credentials.Schema,
 											host,
 											credentials.UserName,

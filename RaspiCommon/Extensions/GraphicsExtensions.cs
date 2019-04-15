@@ -243,6 +243,11 @@ namespace RaspiCommon.Extensions
 			image.DrawCircle(where, radius, new Bgr(color).MCvScalar, lineWidth);
 		}
 
+		public static void DrawRectangle(this Mat image, Rectangle rectangle, Color color, int lineWidth = 1)
+		{
+			CvInvoke.Rectangle(image, rectangle, color.ToMCvScalar(), lineWidth);
+		}
+
 		public static void DrawCircle(this Mat image, PointD where, int radius, MCvScalar color, int lineWidth = 1)
 		{
 			CvInvoke.Circle(image, where.ToPoint(), radius, color, lineWidth);
