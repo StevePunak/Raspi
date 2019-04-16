@@ -5,6 +5,7 @@ using System.Linq;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
+using KanoopCommon.Encoding;
 
 namespace MQTT.Packets
 {
@@ -22,7 +23,7 @@ namespace MQTT.Packets
 
 		public override byte[] Serialize()
 		{
-			RemainingLength = sizeof(UInt16) + Utility.UTF8Length(Topics);	// topics + message id
+			RemainingLength = sizeof(UInt16) + UTF8.Length(Topics);	// topics + message id
 
 			byte[] fixedHeader = base.Serialize();
 			byte[] serialized = new byte[fixedHeader.Length + RemainingLength];
@@ -32,7 +33,7 @@ namespace MQTT.Packets
 			{
 				bw.Write(fixedHeader);
 				bw.Write((UInt16)(IPAddress.HostToNetworkOrder((Int16)MessageID)));
-				bw.Write(Utility.EncodeUTF8(Topics));
+				bw.Write(UTF8.Encode(Topics));
 			}
 
 			return serialized;

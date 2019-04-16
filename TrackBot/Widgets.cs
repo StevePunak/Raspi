@@ -21,6 +21,7 @@ using RaspiCommon.Devices.Spatial;
 using RaspiCommon.Lidar.Environs;
 using RaspiCommon.Network;
 using RaspiCommon.Spatial;
+using RaspiCommon.Spatial.DeadReckoning;
 using RaspiCommon.Spatial.Imaging;
 using TrackBot.ForkLift;
 using TrackBot.Network;
@@ -43,6 +44,7 @@ namespace TrackBot
 		public event FuzzyPathChangedHandler FuzzyPathChanged;
 		public event LandmarksChangedHandler LandmarksChanged;
 		public event BarriersChangedHandler BarriersChanged;
+		public event DeadReckoningEnvironmentReceivedHandler DeadReckoningEnvironmentReceived;
 
 		public BotTracks Tracks { get; private set; }
 		public Dictionary<RFDir, HCSR04_RangeFinder> RangeFinders { get; private set; }
@@ -55,6 +57,8 @@ namespace TrackBot
 
 		public SaveImageThread SaveImageThread { get; set; }
 		public TelemetryServer Server { get; private set; }
+
+		public DeadReckoningEnvironment DeadReckoningEnvironment { get; private set; }
 
 		public TrackDataSource DataSource { get; private set; }
 
@@ -92,6 +96,7 @@ namespace TrackBot
 			FuzzyPathChanged += delegate {};
 			LandmarksChanged += delegate {};
 			BarriersChanged += delegate {};
+			DeadReckoningEnvironmentReceived += delegate {};
 		}
 
 		public void StartWidgets()
@@ -107,10 +112,12 @@ namespace TrackBot
 			StartSaveImageThread();
 			StartSpatialPolling();
 			StartCommandServer();
+			StartDeadReckoningEnvironment();
 		}
 
 		public void StopWidgets()
 		{
+			StopDeadReckoningEnvironment();
 			StopCamera();
 			StopCommandServer();
 			StopSpatialPolling();
@@ -128,6 +135,29 @@ namespace TrackBot
 			{
 				Log.SysLogText(LogLevel.DEBUG, "Remaining: {0}", thread);
 			}
+		}
+
+		private void StartDeadReckoningEnvironment()
+		{
+			TrackDataSource ds = DataSourceFactory.Create<TrackDataSource>(Program.Config.DBCredentials);
+			DeadReckoningEnvironment environment;
+			if(ds.GetDREnvironment(Program.Config.DeadReckoningEnvironmentName, out environment).ResultCode == DBResult.Result.Success)
+			{
+				Log.SysLogText(LogLevel.DEBUG, "Got DR Environment {0}", DeadReckoningEnvironment);
+				DeadReckoningEnvironment = environment;
+				DeadReckoningEnvironmentReceived(DeadReckoningEnvironment);
+
+				DeadReckoningEnvironment.EnvironmentChanged += OnDeadReckoningEnvironmentChanged;
+			}
+			else
+			{
+				Log.SysLogText(LogLevel.DEBUG, "Could not get DR Environment");
+			}
+		}
+
+		private void StopDeadReckoningEnvironment()
+		{
+			DeadReckoningEnvironment = null;
 		}
 
 		private void StartCamera()
@@ -399,6 +429,11 @@ namespace TrackBot
 		private void OnImageEnvironment_BarriersChanged(BarrierList barriers)
 		{
 			BarriersChanged(barriers);
+		}
+
+		private void OnDeadReckoningEnvironmentChanged(DeadReckoningEnvironment environment)
+		{
+			DeadReckoningEnvironmentReceived(environment);
 		}
 
 		public Double GetRangeAtDirection(Direction direction)

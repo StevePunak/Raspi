@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using RaspiCommon.Devices.Chassis;
 using RaspiCommon.Devices.Compass;
+using RaspiCommon.Network;
 using RaspiCommon.Spatial;
 using RaspiCommon.Spatial.Imaging;
 
@@ -23,6 +24,7 @@ namespace RaspiCommon
 		event FuzzyPathChangedHandler FuzzyPathChanged;
 		event LandmarksChangedHandler LandmarksChanged;
 		event BarriersChangedHandler BarriersChanged;
+		event DeadReckoningEnvironmentReceivedHandler DeadReckoningEnvironmentReceived;
 
 		ICompass Compass { get; }
 		IImageEnvironment ImageEnvironment { get; }

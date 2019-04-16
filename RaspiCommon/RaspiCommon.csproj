@@ -79,6 +79,7 @@
     <Compile Include="Data\DataSource\TrackDataSource.cs" />
     <Compile Include="Data\Entities\Landscape.cs" />
     <Compile Include="Data\Entities\Landmark.cs" />
+    <Compile Include="Data\Entities\DRGridLocation.cs" />
     <Compile Include="Data\Entities\PointMarker.cs" />
     <Compile Include="Devices\Chassis\Chassis.cs" />
     <Compile Include="Devices\Chassis\ChassisMetrics.cs" />

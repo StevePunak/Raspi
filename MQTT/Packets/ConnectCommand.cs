@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Text;
+using KanoopCommon.Encoding;
 
 namespace MQTT.Packets
 {
@@ -69,15 +70,15 @@ namespace MQTT.Packets
 		public override byte[] Serialize()
 		{
 			RemainingLength =
-				Utility.UTF8Length(PROTOCOL_NAME) +             // 6
+				UTF8.Length(PROTOCOL_NAME) +             // 6
 				sizeof(byte) +                                  // 1 for protocol level
 				sizeof(byte) +                                  // 1 for connect flags
 				sizeof(UInt16) +                                // 2 for keep-alive time
-				Utility.UTF8Length(ClientID) +
-				Utility.UTF8Length(WillTopic) +
-				Utility.UTF8Length(WillMessage) +
-				Utility.UTF8Length(UserName) +
-				Utility.UTF8Length(Password);
+				UTF8.Length(ClientID) +
+				UTF8.Length(WillTopic) +
+				UTF8.Length(WillMessage) +
+				UTF8.Length(UserName) +
+				UTF8.Length(Password);
 
 			byte[] fixedHeader = base.Serialize();
 			byte[] serialized = new byte[fixedHeader.Length + RemainingLength];
@@ -86,7 +87,7 @@ namespace MQTT.Packets
 			using(BinaryWriter bw = new BinaryWriter(ms))
 			{
 				bw.Write(fixedHeader);
-				bw.Write(Utility.EncodeUTF8(PROTOCOL_NAME));
+				bw.Write(UTF8.Encode(PROTOCOL_NAME));
 				bw.Write((byte)PROTOCOL_VERSION);
 				bw.Write((byte)MakeConnectFlags());
 				UInt16 keepAlive = (UInt16)IPAddress.HostToNetworkOrder((Int16)KeepAliveInterval.TotalSeconds);
@@ -96,16 +97,16 @@ namespace MQTT.Packets
 				{
 					throw new MqttException("Client ID must be specified in connect");
 				}
-				bw.Write(Utility.EncodeUTF8(ClientID));
+				bw.Write(UTF8.Encode(ClientID));
 
 				if(String.IsNullOrEmpty(WillTopic) == false)
-					bw.Write(Utility.EncodeUTF8(WillTopic));
+					bw.Write(UTF8.Encode(WillTopic));
 				if(String.IsNullOrEmpty(WillMessage) == false)
-					bw.Write(Utility.EncodeUTF8(WillMessage));
+					bw.Write(UTF8.Encode(WillMessage));
 				if(String.IsNullOrEmpty(UserName) == false)
-					bw.Write(Utility.EncodeUTF8(UserName));
+					bw.Write(UTF8.Encode(UserName));
 				if(String.IsNullOrEmpty(Password) == false)
-					bw.Write(Utility.EncodeUTF8(Password));
+					bw.Write(UTF8.Encode(Password));
 			}
 
 			return serialized;

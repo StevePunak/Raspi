@@ -46,6 +46,8 @@ namespace Radar
 		const String COL_RANGE = "Range";
 		const String COL_BEARING = "Bearing";
 
+		const String DR_NAME = "ManCave";
+
 		const Double METERS_SQUARE = 10;
 		Double PixelsPerMeterImage
 		{
@@ -64,7 +66,7 @@ namespace Radar
 
 		Double PixelsPerMeterDR
 		{
-			get { return 100; }
+			get { return 50; }
 		}
 
 		TelemetryClient _client;
@@ -76,8 +78,6 @@ namespace Radar
 		Timer _drawTimer;
 
 		Bitmap _radarBitmap;
-		Mat _workBitmap;
-		Mat _sharpened;
 
 		Image _tank;
 
@@ -92,6 +92,7 @@ namespace Radar
 
 		public int AnalysisPixelsPerMeter { get { return 100; } }
 
+		bool _redrawDR;
 		public DeadReckoningEnvironment DREnvironment { get; set; }
 
 		public RadarForm()
@@ -206,7 +207,6 @@ namespace Radar
 
 			PointCloud2D cloud = _client.Vectors.ToPointCloud2D();
 
-#if true
 			// draw all the dots
 			Mat bitmap = cloud.ToBitmap(_radarBitmap.Height, Color.Red, PixelsPerMeterImage);
 			PointD origin = bitmap.Center();
@@ -229,76 +229,11 @@ namespace Radar
 			bitmap.DrawCenteredImage(tank, new PointD(250, 250));
 			picLidar.BackgroundImage = bitmap.Bitmap;
 
-#else
-			
-			Bitmap bitmap = new Bitmap(_radarBitmap);
-			using(Graphics g = Graphics.FromImage(bitmap))
+			if(_redrawDR)
 			{
-				Pen redPen = new Pen(Color.Red);
-				Pen barrierPen = new Pen(Color.Firebrick);
-				Pen landmarkPen = new Pen(Color.Blue);
-				PointD center = bitmap.Center();
-
-				// draw all the dots
-				for(Double angle = _lastAngle.AddDegrees(TelemetryClient.VectorSize);angle != _lastAngle;angle = angle.AddDegrees(TelemetryClient.VectorSize))
-				{
-					int offset = (int)(angle / TelemetryClient.VectorSize);
-					LidarVector vector = _client.Vectors[offset];
-					if(vector != null && vector.Range != 0)
-					{
-						PointD where = center.GetPointAt(vector.Bearing, vector.Range * PixelsPerMeterImage) as PointD;
-						Rectangle rect = new Rectangle(where.ToPoint(), new Size(1, 1));
-						g.DrawRectangle(redPen, rect);
-						//Log.SysLogText(LogLevel.DEBUG, "Drawing {0} at {1:0.00}°  {2}", vector, angle, where);
-					}
-				}
-
-				// draw fuzzy path
-				if(_client.FuzzyPath != null)
-				{
-					FuzzyPath path = _client.FuzzyPath.Clone();
-					Pen brownPen = new Pen(Color.RosyBrown);
-					if(path.FrontLeft.Count > 1)
-					{
-						PointD p1 = center.GetPointAt(path.FrontLeft.First().Bearing, path.FrontLeft.First().Range * PixelsPerMeterImage);
-						g.DrawLine(brownPen, center.ToPoint(), p1.ToPoint());
-						PointD p2 = center.GetPointAt(path.FrontLeft.Last().Bearing, path.FrontLeft.Last().Range * PixelsPerMeterImage);
-						g.DrawLine(brownPen, center.ToPoint(), p2.ToPoint());
-					}
-				}
-
-				if(_client.ImageBarriers != null)
-				{
-					BarrierList barriers = _client.ImageBarriers.Clone();
-					Pen orangePen = new Pen(Color.Orange);
-					foreach(ImageBarrier barrier in barriers)
-					{
-						Line line = barrier.GetLine();
-						g.DrawLine(orangePen, line.P1.ToPoint(), line.P2.ToPoint());
-					}
-				}
-
-				if(_client.ImageLandmarks != null)
-				{
-					ImageVectorList landmarks = _client.ImageLandmarks.Clone();
-					Pen bluePen = new Pen(Color.Blue, 2);
-					foreach(ImageVector landmark in landmarks)
-					{
-						RectangleD rectangle = RectangleD.InflatedFromPoint(landmark.GetPoint(), 6);
-						g.DrawEllipse(bluePen, rectangle.ToRectangle());
-					}
-				}
-
-				Image tank = new Bitmap(Resources.tank).Rotate(_client.Bearing);
-//				tank.Save(@"c:\tmp\output.png");
-
-				PointD tankPoint = PointD.UpperLeftFromCenter(center, tank.Size);
-				g.DrawImage(tank, tankPoint.ToPoint());
+				DrawDREnvironment();
+				_redrawDR = false;
 			}
-
-			//_bitmap.Save(@"c:\tmp\output.png");
-			picLidar.BackgroundImage = bitmap;
-#endif
 
 			RefreshMetrics();
 		}
@@ -331,14 +266,22 @@ namespace Radar
 					MqttTypes.ImageMetricsTopic,
 					MqttTypes.DistanceAndBearingTopic,
 					MqttTypes.ChassisMetricsTopic,
+					MqttTypes.DeadReckoningCompleteLandscapeTopic,
 				});
 			_client.LandscapeMetricsReceived += OnLandscapeMetricsReceived;
 			_client.ImageMetricsReceived += OnImageMetricsReceived;
 			_client.EnvironmentInfoReceived += OnEnvironmentInfoReceived;
 			_client.ChassisMetricsReceived += OnChassisMetricsReceived;
+			_client.DeadReckoningEnvironmentReceived += OnDeadReckoningEnvironmentReceived;
 			_client.Start();
 
 			_mqqtController = new RadarController(Program.Config.RadarHost, MqttClient.MakeRandomID(Text));
+		}
+
+		private void OnDeadReckoningEnvironmentReceived(DeadReckoningEnvironment environment)
+		{
+			DREnvironment = environment;
+			_redrawDR = true;
 		}
 
 		private void OnChassisMetricsReceived(ChassisMetrics metrics)
@@ -506,11 +449,21 @@ namespace Radar
 		{
 			try
 			{
-				DeadReckoningEnvironment env;
-				TrackDataSource tds = DataSourceFactory.Create<TrackDataSource>(Program.Config.DBCredentials);
-				if(tds.GetDREnvironment("ManCave", out env).ResultCode == DBResult.Result.Success)
+				if(DREnvironment == null)
 				{
-					DREnvironment = env;
+					DeadReckoningEnvironment env;
+					TrackDataSource tds = DataSourceFactory.Create<TrackDataSource>(Program.Config.DBCredentials);
+					if(tds.GetDREnvironment(DR_NAME, out env).ResultCode == DBResult.Result.Success)
+					{
+						DREnvironment = env;
+					}
+					DREnvironment.SetCurrentLocation(DREnvironment.Origin);
+					tds.SetGridLocation(DR_NAME, LocationType.Current, DREnvironment.Origin);
+				}
+				if(DREnvironment != null)
+				{
+					//PointCloud2D slice = _client.Vectors.ToPointCloud2D(360);
+					//DREnvironment.ProcessEnvironment(slice);
 					DrawDREnvironment();
 				}
 			}
@@ -539,16 +492,32 @@ namespace Radar
 			int pixelWidth = (int)(DREnvironment.Width * PixelsPerMeterDR);
 			Mat bitmap = new Mat(pixelWidth, pixelHeight, DepthType.Cv8U, 3);
 
-			Size squareSize = new Size((pixelWidth / DREnvironment.Height) - 2, pixelHeight - 2);
+			Size frameSize = new Size((int)(pixelWidth / DREnvironment.Width * DREnvironment.Scale), (int)(pixelHeight / DREnvironment.Height * DREnvironment.Scale));
+			Size squareSize = frameSize.Shrink(2);
 			for(int x = 0;x < DREnvironment.Grid.Matrix.Width;x++)
 			{
 				for(int y = 0;y < DREnvironment.Grid.Matrix.Height;y++)
 				{
-					PointD point = new PointD(x  * pixelWidth + 1, y * pixelHeight + 1);
+					GridCell cell = DREnvironment.Grid.Matrix.Cells[x, y];
+					Color cellColor = Color.AliceBlue;
+					switch(cell.State)
+					{
+						case CellState.Occupied:
+							cellColor = Color.Red;
+							break;
+
+						case CellState.Unoccupied:
+							cellColor = Color.Blue;
+							break;
+					}
+					PointD point = new PointD(x  * frameSize.Width, y * frameSize.Height);
 					Rectangle rect = new Rectangle(point.ToPoint(), squareSize);
-					bitmap.DrawRectangle(rect, Color.AliceBlue);
+					bitmap.DrawRectangle(rect, cellColor);
 				}
 			}
+			picDeadReckoning.BackgroundImage = bitmap.Bitmap;
+			picDeadReckoning.Location = new Point(0, 0);
+			picDeadReckoning.Size = bitmap.Size;
 		}
 
 		private void OnAnalyzeClicked(object sender, EventArgs e)

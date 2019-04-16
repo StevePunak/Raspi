@@ -6,11 +6,11 @@ using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MQTT.Packets
+namespace KanoopCommon.Encoding
 {
-	class Utility
+	public class UTF8
 	{
-		public static byte[] EncodeUTF8(String value)
+		public static byte[] Encode(String value)
 		{
 			byte[] buffer = new byte[value.Length + 2];
 			using(BinaryWriter bw = new BinaryWriter(new MemoryStream(buffer)))
@@ -21,9 +21,9 @@ namespace MQTT.Packets
 			return buffer;
 		}
 
-		public static byte[] EncodeUTF8(List<String> values)
+		public static byte[] Encode(List<String> values)
 		{
-			byte[] buffer = new byte[UTF8Length(values)];
+			byte[] buffer = new byte[Length(values)];
 			using(BinaryWriter bw = new BinaryWriter(new MemoryStream(buffer)))
 			{
 				foreach(String value in values)
@@ -35,14 +35,14 @@ namespace MQTT.Packets
 			return buffer;
 		}
 
-		public static String ReadUTF8Encoded(BinaryReader br)
+		public static String ReadEncoded(BinaryReader br)
 		{
 			int length = IPAddress.NetworkToHostOrder((Int16)br.ReadUInt16());
 			String value = ASCIIEncoding.UTF8.GetString(br.ReadBytes(length));
 			return value;
 		}
 
-		public static int UTF8Length(String value)
+		public static int Length(String value)
 		{
 			if(value == null)
 				return 0;
@@ -50,7 +50,7 @@ namespace MQTT.Packets
 				return 2 + value.Length;
 		}
 
-		public static int UTF8Length(List<String> values)
+		public static int Length(List<String> values)
 		{
 			int length = values.Sum(v => v.Length) + (values.Count * 2);
 			return length;

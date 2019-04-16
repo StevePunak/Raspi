@@ -45,7 +45,7 @@ namespace KanoopCommon.Extensions
 
 		public static bool TryGetAsciiLineStartingWith(this byte[] self, String startString, out string line)
 		{
-			byte[] candidate = Encoding.ASCII.GetBytes(startString);
+			byte[] candidate = ASCIIEncoding.UTF8.GetBytes(startString);
 
 			bool retVal = false;
 			line = null;
@@ -55,7 +55,7 @@ namespace KanoopCommon.Extensions
 				int lineEnd = IndexOf(self, new byte[]{0x0d},idx);
 				if (lineEnd< 0)
 					lineEnd = self.Length;
-				line = Encoding.ASCII.GetString(GetChunk(self, idx, lineEnd - idx));
+				line = ASCIIEncoding.UTF8.GetString(GetChunk(self, idx, lineEnd - idx));
 				retVal = true;
 			}
 			return retVal;

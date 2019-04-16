@@ -385,10 +385,10 @@ namespace KanoopCommon.Geometry
 			return retVal;
 		}
 
-		public string ToSQLString()
+		public Unescaped ToSQLString()
 		{
 			//return String.Format("GeomFromText('POINT({0:0.000000} {1:0.000000})')", m_X, m_Y);
-			return String.Format("PointFromText('POINT({0} {1})')", _X, _Y);
+			return Unescaped.String(String.Format("PointFromText('POINT({0} {1})')", _X, _Y));
 		}
 
 		public Double BearingTo(PointD other)

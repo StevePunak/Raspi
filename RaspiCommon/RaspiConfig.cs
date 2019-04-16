@@ -224,6 +224,8 @@ namespace RaspiCommon
 			set { _processingMetrics = value; }
 		}
 
+		public String DeadReckoningEnvironmentName { get; set; }
+
 		public static String GetDefaultConfigFileName()
 		{
 			return Environment.OSVersion.Platform == PlatformID.Unix

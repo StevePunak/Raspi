@@ -4,12 +4,13 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using KanoopCommon.Encoding;
 
 namespace RaspiCommon.Spatial.DeadReckoning
 {
 	public class DRGrid
 	{
-		public int ByteArraySize { get { return sizeof(Double) + Matrix.ByteArraySize + Name.Length; } }
+		public int ByteArraySize { get { return sizeof(Double) + Matrix.ByteArraySize + UTF8.Length(Name); } }
 
 		public String Name { get; set; }
 		public DRMatrix Matrix { get; set; }
@@ -31,7 +32,7 @@ namespace RaspiCommon.Spatial.DeadReckoning
 		{
 			Scale = br.ReadDouble();
 			Matrix = new DRMatrix(br);
-			Name = br.ReadString();
+			Name = UTF8.ReadEncoded(br);
 		}
 
 		public int ToScale(Double meters)
@@ -46,7 +47,7 @@ namespace RaspiCommon.Spatial.DeadReckoning
 			{
 				bw.Write(Scale);
 				bw.Write(Matrix.Serialize());
-				bw.Write(Name);
+				bw.Write(UTF8.Encode(Name));
 			}
 			return serialized;
 		}

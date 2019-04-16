@@ -21,5 +21,15 @@ namespace KanoopCommon.Extensions
 			Double height = (Double)size.Height * scale;
 			return new Size((int)Math.Round(width), (int)Math.Round(height));
 		}
+
+		public static Size Shrink(this Size size, int pixels)
+		{
+			return new Size(size.Width - pixels, size.Height - pixels);
+		}
+
+		public static Size Grow(this Size size, int pixels)
+		{
+			return new Size(size.Width + pixels, size.Height + pixels);
+		}
 	}
 }

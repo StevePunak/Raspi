@@ -8,6 +8,7 @@ using RaspiCommon.Devices.Chassis;
 using RaspiCommon.Lidar;
 using RaspiCommon.Lidar.Environs;
 using RaspiCommon.Spatial;
+using RaspiCommon.Spatial.DeadReckoning;
 using RaspiCommon.Spatial.Imaging;
 
 namespace RaspiCommon.Network
@@ -24,13 +25,18 @@ namespace RaspiCommon.Network
 	public delegate void PointCloudReceivedHandler(PointCloud2D pointCloud);
 	public delegate void FuzzyPathReceivedHandler(FuzzyPath path);
 
+	public delegate void DeadReckoningEnvironmentReceivedHandler(DeadReckoningEnvironment environment);
+
 	public delegate void CommandReceivedHandler(String command);
 
 	public class MqttTypes
 	{
-		// landscape
+		// physical landscape
 		public const String LandscapeMetricsTopic = "trackbot/landscape/metrics";
 		public const String DistanceAndBearingTopic = "trackbot/landscape/distances";
+
+		// physical landscape
+		public const String DeadReckoningCompleteLandscapeTopic = "trackbot/deadreckoning/fulllandscape";
 
 		// widgets
 		public const String BearingTopic = "trackbot/widgets/compass/bearing";

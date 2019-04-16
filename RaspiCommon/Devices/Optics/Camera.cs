@@ -15,7 +15,8 @@ namespace RaspiCommon.Devices.Optics
 	public class Camera : ThreadBase
 	{
 		const string SnapshotDirectory = "/var/robo";
-		const String SNAPSHOT_PROGRAM = "raspistill";
+		const String SNAPSHOT_PROGRAM = "raspiyuv";
+		const String SAVE_NAME_END = "snap.bgr";
 
 		const int COUNT_TO_KEEP = 10;
 
@@ -42,7 +43,7 @@ namespace RaspiCommon.Devices.Optics
 
 		protected override bool OnRun()
 		{
-			String args = String.Format("-vf -w 640 -h 480 -t 15 -o {0}/{1:0000}-snap.jpg", SnapshotDirectory, _snapshotCount);
+			String args = String.Format("-t 100 -w 800 -h 600 --bgr -vf -hf -o {0}/{1:0000}-{2}", SnapshotDirectory, _snapshotCount, SAVE_NAME_END);
 			ProcessStartInfo pinfo = new ProcessStartInfo(SNAPSHOT_PROGRAM, args)
 			{
 
@@ -63,7 +64,7 @@ namespace RaspiCommon.Devices.Optics
 
 		protected void CleanUp()
 		{
-			List<String> files = new List<String>(Directory.GetFiles(SnapshotDirectory, "*-snap.jpg"));
+			List<String> files = new List<String>(Directory.GetFiles(SnapshotDirectory, "*" + SAVE_NAME_END));
 			int num = 0;
 			foreach(String file in files)
 			{
@@ -82,7 +83,7 @@ namespace RaspiCommon.Devices.Optics
 		{
 			bool foundAny = false;
 			last = 0;
-			List<String> files = new List<String>(Directory.GetFiles(SnapshotDirectory, "*snap.jpg"));
+			List<String> files = new List<String>(Directory.GetFiles(SnapshotDirectory, "*" + SAVE_NAME_END));
 			Log.SysLogText(LogLevel.DEBUG, "Files are:\n{0}", files.GetString());
 			String name = null;
 			do

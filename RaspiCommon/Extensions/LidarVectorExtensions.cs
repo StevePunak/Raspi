@@ -18,7 +18,7 @@ namespace RaspiCommon.Extensions
 		/// <param name="size">the size in units of the return set (must be divisible by 360)</param>
 		/// <param name="scale"></param>
 		/// <returns>returns a scaled point cloud</returns>
-		public static PointCloud2D ToPointCloud2D(this LidarVector[] vectorSet, int size = 0, Double scale = 1)
+		public static PointCloud2D ToPointCloud2D(this IVector[] vectorSet, int size = 0, Double scale = 1)
 		{
 			Double step = 1;
 			if(size != 0)

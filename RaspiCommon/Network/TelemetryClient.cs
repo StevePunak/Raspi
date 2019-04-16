@@ -17,6 +17,7 @@ using RaspiCommon.Devices.Chassis;
 using RaspiCommon.Lidar;
 using RaspiCommon.Lidar.Environs;
 using RaspiCommon.Spatial;
+using RaspiCommon.Spatial.DeadReckoning;
 using RaspiCommon.Spatial.Imaging;
 
 namespace RaspiCommon.Network
@@ -32,6 +33,7 @@ namespace RaspiCommon.Network
 		public event ChassisMetricsReceivedHandler ChassisMetricsReceived;
 		public event EnvironmentInfoReceivedHandler EnvironmentInfoReceived;
 		public event CommandReceivedHandler CommandReceived;
+		public event DeadReckoningEnvironmentReceivedHandler DeadReckoningEnvironmentReceived;
 
 		public LidarVector[] Vectors;
 
@@ -73,6 +75,7 @@ namespace RaspiCommon.Network
 			EnvironmentInfoReceived += delegate {};
 			CommandReceived += delegate {};
 			ChassisMetricsReceived += delegate {};
+			DeadReckoningEnvironmentReceived += delegate {};
 		}
 
 		private void OnLidarClientInboundSubscribedMessage(MqttClient client, PublishMessage packet)
@@ -130,6 +133,11 @@ namespace RaspiCommon.Network
 				{
 					String command = ASCIIEncoding.UTF8.GetString(packet.Message);
 					CommandReceived(command);
+				}
+				else if(packet.Topic == MqttTypes.DeadReckoningCompleteLandscapeTopic)
+				{
+					DeadReckoningEnvironment environment = new DeadReckoningEnvironment(packet.Message);
+					DeadReckoningEnvironmentReceived(environment);
 				}
 			}
 		}

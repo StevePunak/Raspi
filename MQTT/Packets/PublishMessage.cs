@@ -5,6 +5,7 @@ using System.Linq;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
+using KanoopCommon.Encoding;
 
 namespace MQTT.Packets
 {
@@ -34,14 +35,14 @@ namespace MQTT.Packets
 				using(BinaryReader br = new BinaryReader(new MemoryStream(buffer)))
 				{
 					br.ReadBytes(index);        // burn the header
-					String topic = Utility.ReadUTF8Encoded(br);
+					String topic = UTF8.ReadEncoded(br);
 					UInt16 messageID = 0;
 					if(qos != QOSTypes.Qos0)
 					{
 						messageID = (UInt16)IPAddress.NetworkToHostOrder((Int16)br.ReadUInt16());
 					}
 
-					int messageLength = header.RemainingLength - Utility.UTF8Length(topic);
+					int messageLength = header.RemainingLength - UTF8.Length(topic);
 					if(qos != QOSTypes.Qos0)
 					{
 						messageLength -= sizeof(UInt16);
@@ -68,7 +69,7 @@ namespace MQTT.Packets
 		public override byte[] Serialize()
 		{
 			RemainingLength =
-				Utility.UTF8Length(Topic) +						// topic length
+				UTF8.Length(Topic) +						// topic length
 				(QOS != QOSTypes.Qos0 ? sizeof(UInt16) : 0) +	// 2 more bytes if QOS > 0
 				Message.Length;									// payload length
 			byte[] fixedHeader = base.Serialize();
@@ -78,7 +79,7 @@ namespace MQTT.Packets
 			using(BinaryWriter bw = new BinaryWriter(ms))
 			{
 				bw.Write(fixedHeader);
-				bw.Write(Utility.EncodeUTF8(Topic));
+				bw.Write(UTF8.Encode(Topic));
 				if(QOS != QOSTypes.Qos0)
 				{
 					bw.Write((UInt16)(IPAddress.HostToNetworkOrder((Int16)MessageID)));

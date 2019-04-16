@@ -35,6 +35,10 @@ namespace TrackBot.TTY
 			Double forwardRange = Widgets.Instance.ImageEnvironment.FuzzyRangeAtBearing(Widgets.Instance.Chassis, forwardBearing, Program.Config.BearingFuzz);
 			Double backwardRange = Widgets.Instance.ImageEnvironment.FuzzyRangeAtBearing(Widgets.Instance.Chassis, backwardBearing, Program.Config.BearingFuzz);
 			Console.WriteLine("Range at [Forward {0:0.00}° {1:0.00}m]   [Backward {2:0.00}° {3:0.00}m]", forwardBearing, forwardRange, backwardBearing, backwardRange);
+			if(Widgets.Instance.DeadReckoningEnvironment != null)
+			{
+				Console.WriteLine("DR Environs: {0}", Widgets.Instance.DeadReckoningEnvironment);
+			}
 
 			return true;
 		}

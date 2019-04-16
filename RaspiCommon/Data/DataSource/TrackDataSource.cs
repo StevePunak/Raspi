@@ -19,6 +19,62 @@ namespace RaspiCommon.Data.DataSource
 
 		#region Dead Reckoning
 
+		public virtual DBResult SetGridLocation(String gridName, LocationType type, PointD where)
+		{
+			DBResult result;
+			if((result = GetEnvironemtID(gridName)).ResultCode == DBResult.Result.Success)
+			{
+				UInt32 gridID = result.ItemID;
+				QueryString sql = DB.Format(
+					"SELECT * from dr_locations grids WHERE grid_id = {0} and location_type = {1}", gridID, (int)type);
+
+				DatabaseDataReader reader;
+				result = DB.Query(sql, out reader);
+				using(reader)
+				{
+					if(result.ResultCode == DBResult.Result.Success && reader.Read())
+					{
+						DRGridLocation location = DataReaderConverter.CreateClassFromDataReader<DRGridLocation>(reader);
+						sql = DB.Format(
+							"UPDATE dr_locations grids SET point = '{0}' WHERE location_id = {1}",
+							where.ToSQLString(), location.LocationID);
+						result = DB.Update(sql);
+					}
+					else if(result.ResultCode == DBResult.Result.NoData)
+					{
+						sql = DB.Format(
+							"INSERT INTO dr_locations (grid_id, point, location_type) VALUES ({0}, {1}, {2})",
+							gridID, where.ToSQLString(), (int)type);
+						result = DB.Insert(sql);
+					}
+				}
+			}
+			return result;
+		}
+
+		public virtual DBResult GetGridLocation(String gridName, LocationType type, out DRGridLocation location)
+		{
+			location = null;
+			DBResult result;
+			if((result = GetEnvironemtID(gridName)).ResultCode == DBResult.Result.Success)
+			{
+				UInt32 gridID = result.ItemID;
+				QueryString sql = DB.Format(
+					"SELECT * from dr_locations grids WHERE grid_id = {0} and location_type = {1}", gridID, (int)type);
+
+				DatabaseDataReader reader;
+				result = DB.Query(sql, out reader);
+				using(reader)
+				{
+					if(result.ResultCode == DBResult.Result.Success && reader.Read())
+					{
+						location = DataReaderConverter.CreateClassFromDataReader<DRGridLocation>(reader);
+					}
+				}
+			}
+			return result;
+		}
+
 		public virtual DBResult CreateDREnvironment(DeadReckoningEnvironment environment)
 		{
 			DBResult result = DBResult.InsertionFailure;
@@ -115,7 +171,15 @@ namespace RaspiCommon.Data.DataSource
 						}
 					}
 				}
+
+				DRGridLocation currentLoction;
+				if(GetGridLocation(environment.Name, LocationType.Current, out currentLoction).ResultCode == DBResult.Result.Success)
+				{
+					environment.SetCurrentLocation(currentLoction.Location);
+				}
 			}
+
+
 
 			return result;
 		}
@@ -222,7 +286,7 @@ namespace RaspiCommon.Data.DataSource
 				"INSERT into {0} (landscape_id, location, label) VALUES \n" +
 				"({1}, {2}, '{3}')",
 				table,
-				landmark.Landscape.LandscapeID, Unescaped.String(landmark.Location.ToSQLString()), landmark.Label);
+				landmark.Landscape.LandscapeID, landmark.Location.ToSQLString(), landmark.Label);
 			result = DB.Insert(sql);
 			return result;
 

@@ -138,6 +138,7 @@
     <Compile Include="Database\TableNames\v1_0\TableNames1_0.cs" />
     <Compile Include="Database\TrustedQueryString.cs" />
     <Compile Include="Database\Unescaped.cs" />
+    <Compile Include="Encoding\UTF8.cs" />
     <Compile Include="Extensions\AssemblyExtensions.cs" />
     <Compile Include="Extensions\BearingAndRangeExtensions.cs" />
     <Compile Include="Extensions\BitmapExtensions.cs" />

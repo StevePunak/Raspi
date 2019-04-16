@@ -51,22 +51,26 @@ namespace Radar
 
 		static void Test()
 		{
-			DeadReckoningEnvironment env;
-			TrackDataSource tds = DataSourceFactory.Create<TrackDataSource>(Config.DBCredentials);
+			//TestImage();
 
-			//env = new DeadReckoningEnvironment("ManCave", 10, 10, .1, 0, new PointD(8, 8));
-			//tds.DeleteDREnvironment("ManCave");
-			//tds.CreateDREnvironment(env);
-			//tds.GetDREnvironment("ManCave", out env);
+			TrackDataSource tds = DataSourceFactory.Create<TrackDataSource>(Config.DBCredentials);
+			DeadReckoningEnvironment env = new DeadReckoningEnvironment("ManCave", 10, 10, .1, 0, new PointD(8, 8));
+			////tds.DeleteDREnvironment("ManCave");
+			////tds.CreateDREnvironment(env);
+			tds.GetDREnvironment("ManCave", out env);
+			//byte[] serialized = env.Serialize();
+
+			PointD point = env.GetGridPoint(env.CurrentLocation, 180, 10);
+			//env = new DeadReckoningEnvironment(serialized);
 		}
 
 
 		static void TestImage()
 		{
-			int resx = 3280;
-			int resy = 2464;
-//			int resx = 800;
-//			int resy = 600;
+			//int resx = 3280;
+			//int resy = 2464;
+			int resx = 800;
+			int resy = 600;
 
 			int cols = ((resx + 31) / 32) * 32;
 			int rows = ((resy + 15) / 16) * 16;
@@ -78,14 +82,50 @@ namespace Radar
 			{
 				IntPtr ptr = image.DataPointer;
 				Marshal.Copy(data, 0, ptr, (rows * cols * 3));
+
+				int row, col;
+				for(col = 0;col < image.Cols;col++)
+				{
+					for(row = 0;row < image.Rows;row++)
+					{
+						// 282, 171
+						if(col == 282 && row == 171)
+						{
+							byte* b = (byte*)(ptr.ToPointer()) + ((row * resx) * 3) + (col * 3);
+							byte b1 = b[0];
+							byte b2 = b[1];
+							byte b3 = b[2];
+						}
+					}
+
+				}
 			}
 
-			MCvScalar lowRange = new MCvScalar(50, 0, 0);
-			MCvScalar topRange = new MCvScalar(60, 0, 0);
-			Mat outputImage = new Mat(new Size(cols, rows), DepthType.Cv8U, 3);
-			CvInvoke.InRange(image, new ScalarArray(lowRange), new ScalarArray(topRange), outputImage);
+			Mat[] colors = image.Split();
+			CvInvoke.Merge(new VectorOfMat(colors[2], colors[1], colors[0]), image);
 			image.Save(@"c:\pub\tmp\output.bmp");
-			outputImage.Save(@"c:\pub\tmp\masked.bmp");
+
+			{
+				MCvScalar lowRange = new MCvScalar(50, 0, 0);
+				MCvScalar topRange = new MCvScalar(256, 0, 0);
+				Mat outputImage = new Mat(new Size(cols, rows), DepthType.Cv8U, 3);
+				CvInvoke.InRange(image, new ScalarArray(lowRange), new ScalarArray(topRange), outputImage);
+				outputImage.Save(@"c:\pub\tmp\blue.bmp");
+			}
+			{
+				MCvScalar lowRange = new MCvScalar(0, 0, 50);
+				MCvScalar topRange = new MCvScalar(0, 0, 256);
+				Mat outputImage = new Mat(new Size(cols, rows), DepthType.Cv8U, 3);
+				CvInvoke.InRange(image, new ScalarArray(lowRange), new ScalarArray(topRange), outputImage);
+				outputImage.Save(@"c:\pub\tmp\red.bmp");
+			}
+			{
+				MCvScalar lowRange = new MCvScalar(0, 50, 0);
+				MCvScalar topRange = new MCvScalar(0, 256, 0);
+				Mat outputImage = new Mat(new Size(cols, rows), DepthType.Cv8U, 3);
+				CvInvoke.InRange(image, new ScalarArray(lowRange), new ScalarArray(topRange), outputImage);
+				outputImage.Save(@"c:\pub\tmp\green.bmp");
+			}
 		}
 
 		private static void OpenConfig()

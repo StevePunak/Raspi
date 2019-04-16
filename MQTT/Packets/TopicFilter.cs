@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using KanoopCommon.Encoding;
 
 namespace MQTT.Packets
 {
@@ -52,7 +53,7 @@ namespace MQTT.Packets
 			byte[] output = new byte[Topic.Length + 3];
 			using(BinaryWriter bw = new BinaryWriter(new MemoryStream(output)))
 			{
-				bw.Write(Utility.EncodeUTF8(Topic));
+				bw.Write(UTF8.Encode(Topic));
 				bw.Write((byte)QOS);
 			}
 			return output;

@@ -125,4 +125,10 @@ namespace RaspiCommon
 		VeryFast,
 		FullSpeed
 	}
+
+	public enum LocationType
+	{
+		Unknown = 0,
+		Current = 1,
+	}
 }

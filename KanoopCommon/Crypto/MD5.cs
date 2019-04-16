@@ -12,7 +12,7 @@ namespace KanoopCommon.Crypto
 
         public static string HashAsString(String data)
         {
-            byte[] dataBytes = Encoding.UTF8.GetBytes(data);
+            byte[] dataBytes = ASCIIEncoding.UTF8.GetBytes(data);
             return HashAsString(dataBytes);
         }
 

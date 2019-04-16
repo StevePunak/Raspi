@@ -20,6 +20,7 @@ using RaspiCommon.Devices.Compass;
 using RaspiCommon.Lidar;
 using RaspiCommon.Lidar.Environs;
 using RaspiCommon.Spatial;
+using RaspiCommon.Spatial.DeadReckoning;
 using RaspiCommon.Spatial.Imaging;
 
 namespace RaspiCommon.Network
@@ -39,14 +40,17 @@ namespace RaspiCommon.Network
 		public IPAddress Address { get; private set; }
 
 		private FuzzyPath _fuzzyPath;
-		private bool _fuzzyPathChanged;
+		private bool _sendFuzzyPath;
 
 		private ImageVectorList _landmarks;
 		private EnvironmentInfo _environmentInfo;
-		private bool _landmarksChanged;
+		private DeadReckoningEnvironment _deadReckoningEnvironment;
+
+		private bool _sendLandmarks;
 		private BarrierList _barriers;
-		private bool _barriersChanged;
+		private bool _sendBarriers;
 		private bool _distancesChanged;
+		private bool _sendDeadReckoningEnvironment;
 
 		public TelemetryServer(IWidgetCollection widgets, String mqqtBrokerAddress, String mqqtClientID)
 			: base(typeof(TelemetryServer).Name)
@@ -73,10 +77,12 @@ namespace RaspiCommon.Network
 			Widgets.NewDestinationBearing += OnWidgets_NewDestinationBearing;
 			Widgets.DistanceToTravel += OnWidgets_DistanceToTravel;
 			Widgets.DistanceLeft += OnWidgets_DistanceLeft;
+			Widgets.DeadReckoningEnvironmentReceived += OnDeadReckoningLandscapeReceived;
 			
-			_fuzzyPathChanged = false;
-			_barriersChanged = false;
-			_landmarksChanged = false;
+			_sendFuzzyPath = false;
+			_sendBarriers = false;
+			_sendLandmarks = false;
+			_sendDeadReckoningEnvironment = false;
 
 			_environmentInfo = new EnvironmentInfo();
 
@@ -103,21 +109,25 @@ namespace RaspiCommon.Network
 					SendRangeData();
 
 					SendBearing();
-					if(_fuzzyPathChanged)
+					if(_sendFuzzyPath)
 					{
 						SendFuzzyPath();
 					}
-					if(_barriersChanged)
+					if(_sendBarriers)
 					{
 						SendBarriers();
 					}
-					if(_landmarksChanged)
+					if(_sendLandmarks)
 					{
 						SendLandmarks();
 					}
 					if(_distancesChanged)
 					{
 						SendBearingAndRange();
+					}
+					if(_sendDeadReckoningEnvironment)
+					{
+						SendDeadReckoningEnvironment();
 					}
 				}
 
@@ -128,6 +138,14 @@ namespace RaspiCommon.Network
 				Interval = TimeSpan.FromSeconds(1);
 			}
 			return true;
+		}
+
+		private void SendDeadReckoningEnvironment()
+		{
+			Log.LogText(LogLevel.DEBUG, "Sending DR Environment");
+			byte[] serialized = _deadReckoningEnvironment.Serialize();
+			Client.Publish(MqttTypes.DeadReckoningCompleteLandscapeTopic, serialized, true);
+			_sendDeadReckoningEnvironment = false;
 		}
 
 		private void SendBearing()
@@ -156,7 +174,7 @@ namespace RaspiCommon.Network
 			Log.LogText(LogLevel.DEBUG, "Sending Fuzzy Path");
 			byte[] output = _fuzzyPath.Serizalize();
 			Client.Publish(MqttTypes.CurrentPathTopic, output, true);
-			_fuzzyPathChanged = false;
+			_sendFuzzyPath = false;
 		}
 
 		private void SendBearingAndRange()
@@ -172,7 +190,7 @@ namespace RaspiCommon.Network
 //			Log.LogText(LogLevel.DEBUG, "Sending Landmarks");
 			byte[] output = _landmarks.Serialize();
 			Client.Publish(MqttTypes.LandmarksTopic, output, true);
-			_landmarksChanged = false;
+			_sendLandmarks = false;
 		}
 
 		private void SendBarriers()
@@ -180,7 +198,7 @@ namespace RaspiCommon.Network
 //			Log.LogText(LogLevel.DEBUG, "Sending Barriers");
 			byte[] output = _barriers.Serialize();
 			Client.Publish(MqttTypes.BarriersTopic, output, true);
-			_barriersChanged = false;
+			_sendBarriers = false;
 		}
 
 		private void SendInitialData()
@@ -219,22 +237,28 @@ namespace RaspiCommon.Network
 			Client.Publish(MqttTypes.RangeBlobTopic, output);
 		}
 
+		private void OnDeadReckoningLandscapeReceived(DeadReckoningEnvironment environment)
+		{
+			_deadReckoningEnvironment = environment;
+			_sendDeadReckoningEnvironment = true;
+		}
+
 		private void OnEnvironment_FuzzyPathChanged(FuzzyPath path)
 		{
 			_fuzzyPath = path.Clone();
-			_fuzzyPathChanged = true;
+			_sendFuzzyPath = true;
 		}
 
 		private void OnEnvironment_LandmarksChanged(ImageVectorList landmarks)
 		{
 			_landmarks = landmarks.Clone();
-			_landmarksChanged = true;
+			_sendLandmarks = true;
 		}
 
 		private void OnEnvironment_BarriersChanged(BarrierList barriers)
 		{
 			_barriers = barriers.Clone();
-			_barriersChanged = true;
+			_sendBarriers = true;
 		}
 
 		private void OnWidgets_BearingChanged(double bearing)

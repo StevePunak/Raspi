@@ -226,6 +226,7 @@ namespace TrackBot.Tracks
 			DistanceToTravel(meters);
 
 			Double startDistance = Widgets.Instance.GetRangeAtDirection(direction);
+			Double travelBearing = direction == Direction.Forward ? Widgets.Instance.Compass.Bearing : Widgets.Instance.Compass.Bearing.AddDegrees(180);
 			Log.SysLogText(LogLevel.DEBUG, "Start move {0} meters at {1:0.00} distance from nearest obstacle", meters, startDistance);
 
 			DateTime startTime = DateTime.UtcNow;
@@ -258,13 +259,15 @@ namespace TrackBot.Tracks
 				}
 				else if(distanceTraveled >= meters)
 				{
-					Log.SysLogText(LogLevel.DEBUG, "Traveled our distance");
+					Log.SysLogText(LogLevel.DEBUG, "Traveled our distance (actually went {0})", distanceTraveled.ToMetersString());
+					Widgets.Instance.DeadReckoningEnvironment.Move(travelBearing, distanceTraveled);
 					result = true;
 					break;
 				}
 				else if(range < StoppingDistance)
 				{
-					Log.SysLogText(LogLevel.DEBUG, "Ran out of space");
+					Log.SysLogText(LogLevel.DEBUG, "Ran out of space (actually went {0})", distanceTraveled.ToMetersString());
+					Widgets.Instance.DeadReckoningEnvironment.Move(travelBearing, distanceTraveled);
 					break;
 				}				
 				GpioSharp.Sleep(100);
