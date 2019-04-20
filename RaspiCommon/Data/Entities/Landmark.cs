@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using KanoopCommon.Database;
 using KanoopCommon.Geometry;
 using RaspiCommon.Lidar.Environs;
-using RaspiCommon.Spatial.Imaging;
+using RaspiCommon.Spatial.LidarImaging;
 
 namespace RaspiCommon.Data.Entities
 {

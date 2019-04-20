@@ -16,7 +16,7 @@ using RaspiCommon.Data.Entities;
 using RaspiCommon.Extensions;
 using RaspiCommon.Lidar.Environs;
 using RaspiCommon.Spatial;
-using RaspiCommon.Spatial.Imaging;
+using RaspiCommon.Spatial.LidarImaging;
 
 namespace TrackBotCommon.Environs
 {

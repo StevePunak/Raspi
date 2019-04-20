@@ -14,6 +14,7 @@ using RaspiCommon;
 using RaspiCommon.Data.DataSource;
 using RaspiCommon.Data.Entities;
 using RaspiCommon.Devices.MotorControl;
+using RaspiCommon.Devices.Optics;
 using TrackBot.Spatial;
 using TrackBot.Tracks;
 using TrackBot.TTY;
@@ -54,36 +55,11 @@ namespace TrackBot
 		{
 			try
 			{
-				//Testing.TestRangeFinders();
-				Program.Config.DeadReckoningEnvironmentName = "ManCave";
+				Program.Config.RemoteImageDirectory = "/home/pi/images";
+				Program.Config.LedLowThreshold = 50;
+				Program.Config.LedHighThreshold = 120;
+				Program.Config.CameraBearingOffset = 1;
 				Program.Config.Save();
-				//DRV8825StepperControl motor = new DRV8825StepperControl(GpioPin.Pin12, GpioPin.Pin13, GpioPin.Pin19);
-				//motor.Speed = 20;
-				//GpioSharp.Sleep(TimeSpan.FromSeconds(2));
-				//motor.Speed = 60;
-				//GpioSharp.Sleep(TimeSpan.FromSeconds(2));
-				//motor.Speed = 100;
-				//GpioSharp.Sleep(TimeSpan.FromSeconds(2));
-				//motor.Speed = 60;
-				//GpioSharp.Sleep(TimeSpan.FromSeconds(2));
-				//motor.Speed = 20;
-				//GpioSharp.Sleep(TimeSpan.FromSeconds(2));
-				//motor.Stop();
-				//GpioSharp.Sleep(TimeSpan.FromSeconds(5));
-				//motor.Speed = -20;
-				//GpioSharp.Sleep(TimeSpan.FromSeconds(2));
-				//motor.Speed = -60;
-				//GpioSharp.Sleep(TimeSpan.FromSeconds(2));
-				//motor.Speed = -100;
-				//GpioSharp.Sleep(TimeSpan.FromSeconds(2));
-				//motor.Speed = -60;
-				//GpioSharp.Sleep(TimeSpan.FromSeconds(2));
-				//motor.Speed = -20;
-				//GpioSharp.Sleep(TimeSpan.FromSeconds(2));
-				//motor.Stop();
-
-				//Console.WriteLine("Done....");
-				//Console.ReadKey();
 			}
 			catch(Exception e)
 			{

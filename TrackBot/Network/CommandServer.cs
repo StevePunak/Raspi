@@ -14,6 +14,7 @@ namespace TrackBot.Network
 																			MqttTypes.CommandsTopic,
 																		  })
 		{
+			
 		}
 
 	}

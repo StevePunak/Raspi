@@ -7,7 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using RaspiCommon.Spatial.Imaging;
+using RaspiCommon.Spatial.LidarImaging;
 
 namespace Radar
 {

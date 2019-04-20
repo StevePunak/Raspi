@@ -30,7 +30,7 @@ namespace TrackBot.Spatial
 
 		#region Init State
 
-		protected override bool RunInitState()
+		protected bool RunInitState()
 		{
 			Widgets.Instance.Tracks.Stop();
 			if(Widgets.Instance.ImageEnvironment.FuzzyPath != null)
@@ -53,7 +53,7 @@ namespace TrackBot.Spatial
 			return true;
 		}
 
-		protected override bool RunIdleState()
+		protected bool RunIdleState()
 		{
 			return true;
 		}
@@ -75,7 +75,7 @@ namespace TrackBot.Spatial
 			return true;
 		}
 
-		override protected bool RunTravelToDestState()
+		protected bool RunTravelToDestState()
 		{
 			bool result = true;
 
@@ -91,7 +91,7 @@ namespace TrackBot.Spatial
 
 		#region Stuck State
 
-		protected override bool RunStuckState()
+		protected bool RunStuckState()
 		{
 			return true;
 		}

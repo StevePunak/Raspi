@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -24,6 +25,16 @@ namespace KanoopCommon.Extensions
 				sb.AppendFormat("  {0}\n", s);
 			}
 			return sb.ToString();
+		}
+
+		public static List<String> GetFileNames(this List<String> fullPaths)
+		{
+			List<String> filenames = new List<string>();
+			foreach(String filename in fullPaths)
+			{
+				filenames.Add(Path.GetFileName(filename));
+			}
+			return filenames;
 		}
 	}
 }

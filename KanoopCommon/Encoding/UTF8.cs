@@ -10,6 +10,33 @@ namespace KanoopCommon.Encoding
 {
 	public class UTF8
 	{
+		public static String Decode(byte[] buffer)
+		{
+			String value = String.Empty;
+			using(BinaryReader br = new BinaryReader(new MemoryStream(buffer)))
+			{
+				UInt16 length = br.ReadUInt16();
+				value = ASCIIEncoding.UTF8.GetString(br.ReadBytes(length));
+			}
+			return value;
+		}
+
+		public static List<String> DecodeStrings(byte[] buffer)
+		{
+			List<String> values = new List<string>();
+			using(BinaryReader br = new BinaryReader(new MemoryStream(buffer)))
+			{
+				do
+				{
+					UInt16 length = (UInt16)IPAddress.NetworkToHostOrder((Int16)br.ReadUInt16());
+					String value = ASCIIEncoding.UTF8.GetString(br.ReadBytes(length));
+					values.Add(value);
+				} while(br.BaseStream.Position < br.BaseStream.Length);
+
+			}
+			return values;
+		}
+
 		public static byte[] Encode(String value)
 		{
 			byte[] buffer = new byte[value.Length + 2];

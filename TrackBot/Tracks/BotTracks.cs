@@ -209,17 +209,17 @@ namespace TrackBot.Tracks
 			Widgets.Instance.Tracks.Stop();
 		}
 
-		public bool ForwardMeters(Double meters, int motorSpeed)
+		public bool ForwardMeters(Double meters, int motorSpeed, bool stagger = false, bool ignoreCollision = false)
 		{
-			return MoveMeters(Direction.Forward, meters, motorSpeed);
+			return MoveMeters(Direction.Forward, meters, motorSpeed, stagger, ignoreCollision);
 		}
 
-		public bool BackwardMeters(Double meters, int motorSpeed)
+		public bool BackwardMeters(Double meters, int motorSpeed, bool stagger = false, bool ignoreCollision = false)
 		{
-			return MoveMeters(Direction.Backward, meters, motorSpeed);
+			return MoveMeters(Direction.Backward, meters, motorSpeed, stagger, ignoreCollision);
 		}
 
-		public bool MoveMeters(Direction direction, Double meters, int motorSpeed)
+		public bool MoveMeters(Direction direction, Double meters, int motorSpeed, bool stagger = false, bool ignoreCollision = false)
 		{
 			bool result = false;
 
@@ -230,7 +230,8 @@ namespace TrackBot.Tracks
 			Log.SysLogText(LogLevel.DEBUG, "Start move {0} meters at {1:0.00} distance from nearest obstacle", meters, startDistance);
 
 			DateTime startTime = DateTime.UtcNow;
-			Widgets.Instance.Tracks.Speed = direction == Direction.Forward ? motorSpeed : -motorSpeed;
+			int trackSpeed = direction == Direction.Forward ? motorSpeed : -motorSpeed;
+			Widgets.Instance.Tracks.Speed = trackSpeed;
 			while(true)
 			{
 				Double forwardRange = Widgets.Instance.GetRangeAtDirection(Direction.Forward);
@@ -252,7 +253,7 @@ namespace TrackBot.Tracks
 				DistanceLeft(range);
 
 				Double distanceTraveled = startDistance - range;
-				if(DateTime.UtcNow > startTime + MAX_TIME_TO_RUN)
+				if(stagger == false && DateTime.UtcNow > startTime + MAX_TIME_TO_RUN)
 				{
 					Log.SysLogText(LogLevel.DEBUG, "Ran out of time");
 					break;
@@ -264,13 +265,24 @@ namespace TrackBot.Tracks
 					result = true;
 					break;
 				}
-				else if(range < StoppingDistance)
+				else if(ignoreCollision == false && range < StoppingDistance)
 				{
 					Log.SysLogText(LogLevel.DEBUG, "Ran out of space (actually went {0})", distanceTraveled.ToMetersString());
 					Widgets.Instance.DeadReckoningEnvironment.Move(travelBearing, distanceTraveled);
 					break;
-				}				
-				GpioSharp.Sleep(100);
+				}
+				if(stagger)
+				{
+					GpioSharp.Sleep(250);	// go for 250ms
+					Stop();
+					GpioSharp.Sleep(1500);  // stop and settle down
+
+					Widgets.Instance.Tracks.Speed = trackSpeed;		// go again
+				}
+				else
+				{
+					GpioSharp.Sleep(100);
+				}
 			}
 			Widgets.Instance.Tracks.Stop();
 

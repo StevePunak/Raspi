@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using KanoopCommon.Addresses;
 using KanoopCommon.CommonObjects;
+using KanoopCommon.Encoding;
 using KanoopCommon.Logging;
 using KanoopCommon.Serialization;
 using KanoopCommon.TCP.Clients;
@@ -14,11 +15,12 @@ using MQTT;
 using MQTT.Examples;
 using MQTT.Packets;
 using RaspiCommon.Devices.Chassis;
+using RaspiCommon.Devices.Optics;
 using RaspiCommon.Lidar;
 using RaspiCommon.Lidar.Environs;
 using RaspiCommon.Spatial;
 using RaspiCommon.Spatial.DeadReckoning;
-using RaspiCommon.Spatial.Imaging;
+using RaspiCommon.Spatial.LidarImaging;
 
 namespace RaspiCommon.Network
 {
@@ -34,6 +36,8 @@ namespace RaspiCommon.Network
 		public event EnvironmentInfoReceivedHandler EnvironmentInfoReceived;
 		public event CommandReceivedHandler CommandReceived;
 		public event DeadReckoningEnvironmentReceivedHandler DeadReckoningEnvironmentReceived;
+		public event CameraImageReceivedHandler CameraImageReceived;
+		public event CameraImagesAnalyzedHandler CameraImageAnalyzed;
 
 		public LidarVector[] Vectors;
 
@@ -76,6 +80,8 @@ namespace RaspiCommon.Network
 			CommandReceived += delegate {};
 			ChassisMetricsReceived += delegate {};
 			DeadReckoningEnvironmentReceived += delegate {};
+			CameraImageReceived += delegate {};
+			CameraImageAnalyzed += delegate {};
 		}
 
 		private void OnLidarClientInboundSubscribedMessage(MqttClient client, PublishMessage packet)
@@ -139,7 +145,21 @@ namespace RaspiCommon.Network
 					DeadReckoningEnvironment environment = new DeadReckoningEnvironment(packet.Message);
 					DeadReckoningEnvironmentReceived(environment);
 				}
+				else if(packet.Topic == MqttTypes.CameraLastImageTopic)
+				{
+					CameraImageReceived(UTF8.DecodeStrings(packet.Message));
+				}
+				else if(packet.Topic == MqttTypes.CameraLastAnalysisTopic)
+				{
+					CameraImageAnalyzed(new ImageAnalysis(packet.Message));
+				}
 			}
+		}
+
+		public void PublishImage(String filename)
+		{
+			byte[] fileBytes = File.ReadAllBytes(filename);
+			Client.Publish(MqttTypes.CameraLastImageTopic, fileBytes);
 		}
 
 		void ScaleLandmarks()

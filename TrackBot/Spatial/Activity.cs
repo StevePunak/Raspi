@@ -1,4 +1,4 @@
-#undef LOG_STATE_CHANGES
+#define LOG_STATE_CHANGES
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -33,9 +33,11 @@ namespace TrackBot.Spatial
 			Init,
 			Idle,
 			FindDestination,
+			FindSecondaryPoint,
 			TravelToDest,
 			RotateToNewBearing,
-			Stuck
+			Stuck,
+			FindInImage
 		}
 
 		public ActivityStates ActivityState { get; protected set; }
@@ -79,6 +81,14 @@ namespace TrackBot.Spatial
 						RunningActivity.Start();
 						RunningActivityType = ActivityType.TravelLongestPath;
 						break;
+					case ActivityType.FindTwoLEDs:
+						RunningActivity = new FindTwoLEDs();
+						RunningActivity.Start();
+						RunningActivityType = ActivityType.FindTwoLEDs;
+						break;
+					default:
+						Log.SysLogText(LogLevel.WARNING, "Unkown activity {0}", activityType);
+						break;
 				}
 
 				if(RunningActivity != null)
@@ -106,30 +116,19 @@ namespace TrackBot.Spatial
 
 		protected override bool OnRun()
 		{
-			switch(ActivityState)
+			bool result = false;
+
+			Log.LogText(LogLevel.DEBUG, "OnRun {0} in state: {1}", this, ActivityState);
+			String runMethodName;
+			MethodInfo method = GetStateMethod(StateTransition.Run, ActivityState, out runMethodName);
+			if(method != null)
 			{
-				case ActivityStates.Init:
-					RunInitState();
-					break;
-				case ActivityStates.Idle:
-					RunIdleState();
-					break;
-				case ActivityStates.FindDestination:
-					RunFindDestinationState();
-					break;
-				case ActivityStates.RotateToNewBearing:
-					RunRotateToNewBearingState();
-					break;
-				case ActivityStates.TravelToDest:
-					RunTravelToDestState();
-					break;
-				case ActivityStates.Stuck:
-					RunStuckState();
-					break;
-				default:
-					break;
+				if((result = (bool)method.Invoke(this, null)) == false)
+				{
+					Log.LogText(LogLevel.DEBUG, "Run method {0} returned false", runMethodName);
+				}
 			}
-			return true;
+			return result;
 		}
 
 		protected MethodInfo GetStateMethod(StateTransition transition, Enum state, out String methodName)
@@ -159,6 +158,7 @@ namespace TrackBot.Spatial
 				Log.LogText(LogLevel.DEBUG, "{0} Switching state from {1} to {2}", Name, ActivityState, state);
 				if(WaitForStateChange)
 				{
+					Log.LogText(LogLevel.DEBUG, "Waiting for input to switch state");
 					_changeStateEvent.Wait();
 					if(QuitRequest)
 					{
@@ -221,12 +221,5 @@ namespace TrackBot.Spatial
 			Log.SysLogText(LogLevel.DEBUG, "Change state request (Quit = {0})", RunningActivity.QuitRequest);
 			_changeStateEvent.Set();
 		}
-
-		virtual protected bool RunInitState() { return false; }
-		virtual protected bool RunFindDestinationState() { return false; }
-		virtual protected bool RunRotateToNewBearingState() { return false; }
-		virtual protected bool RunIdleState() { return false; }
-		virtual protected bool RunTravelToDestState() { return false; }
-		virtual protected bool RunStuckState() { return false; }
 	}
 }

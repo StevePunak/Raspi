@@ -28,13 +28,14 @@ using RaspiCommon;
 using RaspiCommon.Data.DataSource;
 using RaspiCommon.Data.Entities;
 using RaspiCommon.Devices.Chassis;
+using RaspiCommon.Devices.Optics;
 using RaspiCommon.Extensions;
 using RaspiCommon.Lidar;
 using RaspiCommon.Lidar.Environs;
 using RaspiCommon.Network;
 using RaspiCommon.Spatial;
 using RaspiCommon.Spatial.DeadReckoning;
-using RaspiCommon.Spatial.Imaging;
+using RaspiCommon.Spatial.LidarImaging;
 using TrackBotCommon.Environs;
 
 namespace Radar
@@ -45,6 +46,11 @@ namespace Radar
 		const String COL_POSITION = "Position";
 		const String COL_RANGE = "Range";
 		const String COL_BEARING = "Bearing";
+
+		const String TAB_FULL_IMAGE = "Full Image";
+		const String TAB_BLUE = "Blue";
+		const String TAB_GREEN = "Green";
+		const String TAB_RED = "Red";
 
 		const String DR_NAME = "ManCave";
 
@@ -95,6 +101,11 @@ namespace Radar
 		bool _redrawDR;
 		public DeadReckoningEnvironment DREnvironment { get; set; }
 
+		public String FullImage { get; set; }
+		public String BlueImage { get; set; }
+		public String GreenImage { get; set; }
+		public String RedImage { get; set; }
+
 		public RadarForm()
 		{
 			_client = null;
@@ -136,6 +147,11 @@ namespace Radar
 				flowBitmap.Height = 40;
 
 				textCommand.Select();
+				tabAnalysis.SelectedIndex = Program.Config.LastAnalyticsTabIndex;
+				picWorkBitmap.Size = tabPageAnalysis.Size;
+				picWorkBitmap.Location = Point.Empty;
+
+				SetupImageTabs();
 
 				_layoutComplete = true;
 			}
@@ -202,7 +218,7 @@ namespace Radar
 
 		private void OnDrawTimer(object sender, EventArgs e)
 		{
-			if(_client == null || _client.Connected == false)
+			if(_client == null || _client.Connected == false || _client.Connected == true)
 				return;
 
 			PointCloud2D cloud = _client.Vectors.ToPointCloud2D();
@@ -267,15 +283,123 @@ namespace Radar
 					MqttTypes.DistanceAndBearingTopic,
 					MqttTypes.ChassisMetricsTopic,
 					MqttTypes.DeadReckoningCompleteLandscapeTopic,
+					MqttTypes.CameraLastImageTopic,
+					MqttTypes.CameraLastAnalysisTopic,
 				});
 			_client.LandscapeMetricsReceived += OnLandscapeMetricsReceived;
 			_client.ImageMetricsReceived += OnImageMetricsReceived;
 			_client.EnvironmentInfoReceived += OnEnvironmentInfoReceived;
 			_client.ChassisMetricsReceived += OnChassisMetricsReceived;
 			_client.DeadReckoningEnvironmentReceived += OnDeadReckoningEnvironmentReceived;
+			_client.CameraImageReceived += OnCameraImageReceived;
+			_client.CameraImageAnalyzed += OnCameraImageAnalyzed;
 			_client.Start();
 
 			_mqqtController = new RadarController(Program.Config.RadarHost, MqttClient.MakeRandomID(Text));
+		}
+
+		private void OnCameraImageAnalyzed(ImageAnalysis analysis)
+		{
+			BeginInvoke(new MethodInvoker(delegate ()
+			{
+				DrawImages(analysis);
+
+				TabPage tabPage = tabCameraImages.TabPages[TAB_FULL_IMAGE];
+				if(tabPage.Tag is Mat && analysis.LEDs.Count > 0)
+				{
+					Mat image = tabPage.Tag as Mat;
+					foreach(LEDPosition led in analysis.LEDs)
+					{
+						image.DrawCircleCross(led.Location, 6, led.Color);
+
+					}
+				}
+				
+			}));
+		}
+
+		void DrawImages(ImageAnalysis analysis)
+		{
+			foreach(String filename in analysis.FileNames)
+			{
+				String file = Path.Combine(Program.Config.RemoteImageDirectory, filename);
+				Mat bitmap = new Mat(file);
+
+				String tabPageName = String.Empty;
+
+				if(filename.Contains("blue"))
+				{
+					tabPageName = TAB_BLUE;
+					BlueImage = file;
+				}
+				else if(filename.Contains("red"))
+				{
+					tabPageName = TAB_RED;
+					RedImage = file;
+				}
+				else if(filename.Contains("green"))
+				{
+					tabPageName = TAB_GREEN;
+					GreenImage = file;
+				}
+				else
+				{
+					tabPageName = TAB_FULL_IMAGE;
+					FullImage = file;
+				}
+
+				SetImage(bitmap, tabPageName);
+			}
+		}
+
+		void SetImage(Mat image, String name)
+		{
+			if(tabCameraImages.TabPages.ContainsKey(name))
+			{
+				TabPage page = tabCameraImages.TabPages[name];
+				Control[] controls = page.Controls.Find(name, false);
+				if(controls.Length > 0)
+				{
+					PictureBox pic = controls[0] as PictureBox;
+					Bitmap bitmap  = new Bitmap(image.Bitmap.Clone() as Image);
+					pic.BackgroundImage = bitmap;
+					pic.Tag = page.Tag = image.Clone();
+					pic.Size = image.Size;
+				}
+			}
+		}
+
+		void SetupImageTabs()
+		{
+			tabCameraImages.TabPages.Clear();
+
+			List<String> pageNames = new List<String>() { TAB_FULL_IMAGE, TAB_BLUE, TAB_GREEN, TAB_RED, };
+			foreach(String name in pageNames)
+			{
+				TabPage page = new TabPage()
+				{
+					AutoScroll = true,
+					Text = name,
+					Name = name,
+				};
+
+				PictureBox pic = new PictureBox()
+				{
+					BackgroundImageLayout = ImageLayout.None,
+					Dock = DockStyle.Fill,
+					Location = Point.Empty,
+					Name = name,
+				};
+				page.Controls.Add(pic);
+				tabCameraImages.TabPages.Add(page);
+			}
+		}
+
+		private void OnCameraImageReceived(List<String> filenames)
+		{
+			BeginInvoke(new MethodInvoker(delegate()
+			{
+			}));
 		}
 
 		private void OnDeadReckoningEnvironmentReceived(DeadReckoningEnvironment environment)
@@ -374,16 +498,8 @@ namespace Radar
 			picFullEnvironment.Size = output.Size;
 		}
 
-		private void OnSavePointMarkersClicked(object sender, EventArgs e)
+		private void OnFetchImageClicked(object sender, EventArgs e)
 		{
-			_ds.PointMarkersClear(Landscape);
-
-			LandmarkList landmarks = Landscape.CreateLandmarksFromImageVectors(Landscape.Center, _client.ImageMetrics.Scale, _client.ImageLandmarks);
-			foreach(Landmark landmark in landmarks)
-			{
-				_ds.PointMarkerInsert(landmark);
-			}
-
 		}
 
 		private void OnRunAnalysisClicked(object sender, EventArgs e)
@@ -522,6 +638,23 @@ namespace Radar
 
 		private void OnAnalyzeClicked(object sender, EventArgs e)
 		{
+			if( String.IsNullOrEmpty(BlueImage) == false &&
+				String.IsNullOrEmpty(GreenImage) == false &&
+				String.IsNullOrEmpty(RedImage) == false &&
+				String.IsNullOrEmpty(FullImage) == false)
+			{
+				Mat blue = new Mat(BlueImage);
+				Mat green = new Mat(GreenImage);
+				Mat red = new Mat(RedImage);
+
+				List<LEDPosition> leds = LEDImageAnalysis.FindLEDs(blue, green, red);
+
+			}
+
+		}
+
+		private void DrawDeadReckoningPaths()
+		{
 			String pic = @"c:\pub\tmp\0208-snap.jpg";
 			Mat mat = new Mat(pic);
 
@@ -620,6 +753,12 @@ namespace Radar
 				textCommand.Select();
 			}
 
+		}
+
+		private void OnAnalysisTabChanged(object sender, EventArgs e)
+		{
+			Program.Config.LastAnalyticsTabIndex = tabAnalysis.TabIndex;
+			Program.Config.Save();
 		}
 	}
 }

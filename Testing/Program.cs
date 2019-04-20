@@ -25,7 +25,7 @@ using RaspiCommon.Lidar;
 using RaspiCommon.Lidar.Environs;
 using RaspiCommon.Network;
 using RaspiCommon.Spatial;
-using RaspiCommon.Spatial.Imaging;
+using RaspiCommon.Spatial.LidarImaging;
 
 namespace Testing
 {
@@ -163,7 +163,6 @@ namespace Testing
 				}
 			}
 		
-			Log.LogText(LogLevel.DEBUG, "Done");
 		}
 
 		private static void TestImage()

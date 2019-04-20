@@ -89,8 +89,13 @@
     <Compile Include="Devices\MotorControl\DRV8825StepperControl.cs" />
     <Compile Include="Devices\MotorControl\ESC.cs" />
     <Compile Include="Devices\Optics\Camera.cs" />
+    <Compile Include="Devices\Optics\ImageAnalysis.cs" />
+    <Compile Include="Devices\Optics\LEDImageAnalysis.cs" />
+    <Compile Include="Devices\Optics\LEDPosition.cs" />
+    <Compile Include="Devices\Optics\Types.cs" />
     <Compile Include="Extensions\GraphicsExtensions.cs" />
     <Compile Include="Extensions\LidarVectorExtensions.cs" />
+    <Compile Include="Extensions\OpenCvExtensions.cs" />
     <Compile Include="GpioSharp.cs" />
     <Compile Include="Devices\Spatial\HCSR04_RangeFinder.cs" />
     <Compile Include="Devices\Compass\ICompass.cs" />
@@ -107,9 +112,9 @@
     <Compile Include="Utility.cs" />
     <Compile Include="Spatial\Drawing.cs" />
     <Compile Include="Spatial\EnvironmentInfo.cs" />
-    <Compile Include="Spatial\Imaging\ImageBarrier.cs" />
-    <Compile Include="Spatial\Imaging\FuzzyPath.cs" />
-    <Compile Include="Spatial\Imaging\ImageVector.cs" />
+    <Compile Include="Spatial\LidarImaging\ImageBarrier.cs" />
+    <Compile Include="Spatial\LidarImaging\FuzzyPath.cs" />
+    <Compile Include="Spatial\LidarImaging\ImageVector.cs" />
     <Compile Include="Lidar\Environs\LidarEnvironment.cs" />
     <Compile Include="Lidar\Environs\LinePair.cs" />
     <Compile Include="Lidar\LidarSample.cs" />
@@ -130,15 +135,15 @@
     <Compile Include="RaspiConfig.cs" />
     <Compile Include="RaspiException.cs" />
     <Compile Include="Spatial\ILandscape.cs" />
-    <Compile Include="Spatial\Imaging\ImageMetrics.cs" />
-    <Compile Include="Spatial\Imaging\ProcessingMetrics.cs" />
-    <Compile Include="Spatial\Imaging\Types.cs" />
+    <Compile Include="Spatial\LidarImaging\ImageMetrics.cs" />
+    <Compile Include="Spatial\LidarImaging\ProcessingMetrics.cs" />
+    <Compile Include="Spatial\LidarImaging\Types.cs" />
     <Compile Include="Spatial\LandscapeMetrics.cs" />
     <Compile Include="Network\MqttTypes.cs" />
     <Compile Include="Network\TelemetryClient.cs" />
     <Compile Include="Network\TelemetryServer.cs" />
     <Compile Include="Devices\Servos\Servo.cs" />
-    <Compile Include="Spatial\Imaging\IImageEnvironment.cs" />
+    <Compile Include="Spatial\LidarImaging\IImageEnvironment.cs" />
     <Compile Include="Spatial\Types.cs" />
     <Compile Include="Types.cs" />
   </ItemGroup>

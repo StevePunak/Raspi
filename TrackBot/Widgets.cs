@@ -22,7 +22,7 @@ using RaspiCommon.Lidar.Environs;
 using RaspiCommon.Network;
 using RaspiCommon.Spatial;
 using RaspiCommon.Spatial.DeadReckoning;
-using RaspiCommon.Spatial.Imaging;
+using RaspiCommon.Spatial.LidarImaging;
 using TrackBot.ForkLift;
 using TrackBot.Network;
 using TrackBot.Spatial;
@@ -45,6 +45,7 @@ namespace TrackBot
 		public event LandmarksChangedHandler LandmarksChanged;
 		public event BarriersChangedHandler BarriersChanged;
 		public event DeadReckoningEnvironmentReceivedHandler DeadReckoningEnvironmentReceived;
+		public event CameraImagesAnalyzedHandler CameraImagesAnalyzed;
 
 		public BotTracks Tracks { get; private set; }
 		public Dictionary<RFDir, HCSR04_RangeFinder> RangeFinders { get; private set; }
@@ -69,6 +70,7 @@ namespace TrackBot
 		public Chassis Chassis { get; private set; }
 
 		public Camera Camera { get; private set; }
+		public LEDImageAnalysis LEDImageAnalysis { get; private set; }
 
 		static Widgets _instance;
 		public static Widgets Instance
@@ -97,6 +99,7 @@ namespace TrackBot
 			LandmarksChanged += delegate {};
 			BarriersChanged += delegate {};
 			DeadReckoningEnvironmentReceived += delegate {};
+			CameraImagesAnalyzed += delegate {};
 		}
 
 		public void StartWidgets()
@@ -162,7 +165,19 @@ namespace TrackBot
 
 		private void StartCamera()
 		{
-			Camera = new Camera();
+			Camera = new Camera()
+			{
+				ConvertTo = ImageType.Bitmap
+			};
+			LEDImageAnalysis = new LEDImageAnalysis(Camera)
+			{
+				BearingOffset = Program.Config.CameraBearingOffset
+			};
+			LEDImageAnalysis.LedLowThreshold = Program.Config.LedLowThreshold;
+			LEDImageAnalysis.LedHighThreshold = Program.Config.LedHighThreshold;
+			LEDImageAnalysis.CameraImagesAnalyzed += OnCameraImagesAnalyzed;
+			Log.SysLogText(LogLevel.DEBUG, "Setting dir to '{0}'", Program.Config.RemoteImageDirectory);
+			LEDImageAnalysis.ImageAnalysisDirectory = Program.Config.RemoteImageDirectory;
 			Camera.Start();
 		}
 
@@ -221,7 +236,10 @@ namespace TrackBot
 
 		private void StartTelemetryServer()
 		{
-			Server = new TelemetryServer(this, Program.Config.RadarHost, "trackbot-lidar");
+			Server = new TelemetryServer(this, Program.Config.RadarHost, "trackbot-lidar")
+			{
+				ImageDirectory = "/home/pi/images"
+			};
 			Server.Start();
 		}
 
@@ -459,7 +477,10 @@ namespace TrackBot
 			return range;
 		}
 
-
+		private void OnCameraImagesAnalyzed(ImageAnalysis analysis)
+		{
+			CameraImagesAnalyzed(analysis);
+		}
 
 	}
 }

@@ -5,11 +5,12 @@ using System.Text;
 using System.Threading.Tasks;
 using KanoopCommon.Geometry;
 using RaspiCommon.Devices.Chassis;
+using RaspiCommon.Devices.Optics;
 using RaspiCommon.Lidar;
 using RaspiCommon.Lidar.Environs;
 using RaspiCommon.Spatial;
 using RaspiCommon.Spatial.DeadReckoning;
-using RaspiCommon.Spatial.Imaging;
+using RaspiCommon.Spatial.LidarImaging;
 
 namespace RaspiCommon.Network
 {
@@ -24,6 +25,8 @@ namespace RaspiCommon.Network
 	public delegate void EnvironmentInfoReceivedHandler(EnvironmentInfo metrics);
 	public delegate void PointCloudReceivedHandler(PointCloud2D pointCloud);
 	public delegate void FuzzyPathReceivedHandler(FuzzyPath path);
+	public delegate void CameraImageReceivedHandler(List<String> imageFiles);
+	public delegate void CameraImagesAnalyzedHandler(ImageAnalysis analysis);
 
 	public delegate void DeadReckoningEnvironmentReceivedHandler(DeadReckoningEnvironment environment);
 
@@ -35,7 +38,7 @@ namespace RaspiCommon.Network
 		public const String LandscapeMetricsTopic = "trackbot/landscape/metrics";
 		public const String DistanceAndBearingTopic = "trackbot/landscape/distances";
 
-		// physical landscape
+		// dead reckoning landscape
 		public const String DeadReckoningCompleteLandscapeTopic = "trackbot/deadreckoning/fulllandscape";
 
 		// widgets
@@ -52,5 +55,9 @@ namespace RaspiCommon.Network
 
 		// control
 		public const String CommandsTopic = "trackbot/control/commands";
+
+		// optical camera
+		public const String CameraLastImageTopic = "trackbot/camera/lastimage";
+		public const String CameraLastAnalysisTopic = "trackbot/camera/analysiscomplete";
 	}
 }

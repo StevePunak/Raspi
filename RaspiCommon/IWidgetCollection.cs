@@ -5,9 +5,10 @@ using System.Text;
 using System.Threading.Tasks;
 using RaspiCommon.Devices.Chassis;
 using RaspiCommon.Devices.Compass;
+using RaspiCommon.Devices.Optics;
 using RaspiCommon.Network;
 using RaspiCommon.Spatial;
-using RaspiCommon.Spatial.Imaging;
+using RaspiCommon.Spatial.LidarImaging;
 
 namespace RaspiCommon
 {
@@ -25,10 +26,12 @@ namespace RaspiCommon
 		event LandmarksChangedHandler LandmarksChanged;
 		event BarriersChangedHandler BarriersChanged;
 		event DeadReckoningEnvironmentReceivedHandler DeadReckoningEnvironmentReceived;
+		event CameraImagesAnalyzedHandler CameraImagesAnalyzed;
 
 		ICompass Compass { get; }
 		IImageEnvironment ImageEnvironment { get; }
 		ILandscape Landscape { get; }
 		Chassis Chassis { get; }
+		Camera Camera { get; }
 	}
 }

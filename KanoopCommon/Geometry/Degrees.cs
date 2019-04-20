@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using KanoopCommon.Extensions;
 
 namespace KanoopCommon.Geometry
 {
@@ -18,6 +19,21 @@ namespace KanoopCommon.Geometry
 			Double diff = bearing2 - bearing1;
 
 			return diff;
+		}
+
+		public static Double BearingBetween(Double bearing1, Double bearing2)
+		{
+			Double diff = bearing1.AngularDifference(bearing2) / 2;
+			Double bearing = 0;
+			if(CounterClockwiseDifference(bearing1, bearing2) > ClockwiseDifference(bearing1, bearing2))
+			{
+				bearing = bearing1.AddDegrees(diff);
+			}
+			else
+			{
+				bearing = bearing1.SubtractDegrees(diff);
+			}
+			return bearing;
 		}
 
 		public static Double CounterClockwiseDifference(Double bearing1, Double bearing2)

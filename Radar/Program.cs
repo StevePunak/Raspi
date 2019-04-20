@@ -19,10 +19,11 @@ using RaspiCommon;
 using RaspiCommon.Data.DataSource;
 using RaspiCommon.Data.Entities;
 using RaspiCommon.Devices.Chassis;
+using RaspiCommon.Devices.Optics;
 using RaspiCommon.Network;
 using RaspiCommon.Spatial;
 using RaspiCommon.Spatial.DeadReckoning;
-using RaspiCommon.Spatial.Imaging;
+using RaspiCommon.Spatial.LidarImaging;
 using TrackBotCommon.Environs;
 
 namespace Radar
@@ -51,22 +52,63 @@ namespace Radar
 
 		static void Test()
 		{
-			//TestImage();
+			TestImage();
 
-			TrackDataSource tds = DataSourceFactory.Create<TrackDataSource>(Config.DBCredentials);
-			DeadReckoningEnvironment env = new DeadReckoningEnvironment("ManCave", 10, 10, .1, 0, new PointD(8, 8));
-			////tds.DeleteDREnvironment("ManCave");
-			////tds.CreateDREnvironment(env);
-			tds.GetDREnvironment("ManCave", out env);
-			//byte[] serialized = env.Serialize();
+			//Program.Config.RemoteImageDirectory = @"\\raspi\pi\images";
+			//Program.Config.Save();
 
-			PointD point = env.GetGridPoint(env.CurrentLocation, 180, 10);
-			//env = new DeadReckoningEnvironment(serialized);
+			//TrackDataSource tds = DataSourceFactory.Create<TrackDataSource>(Config.DBCredentials);
+			//DeadReckoningEnvironment env = new DeadReckoningEnvironment("ManCave", 10, 10, .1, 0, new PointD(8, 8));
+			//////tds.DeleteDREnvironment("ManCave");
+			//////tds.CreateDREnvironment(env);
+			//tds.GetDREnvironment("ManCave", out env);
+			////byte[] serialized = env.Serialize();
+
+			//PointD point = env.GetGridPoint(env.CurrentLocation, 180, 10);
+			////env = new DeadReckoningEnvironment(serialized);
 		}
 
 
 		static void TestImage()
 		{
+			LEDImageAnalysis.Width = 800;
+			LEDImageAnalysis.Height = 600;
+			//LEDImageAnalysis.Width = 1024;
+			//LEDImageAnalysis.Height = 768;
+
+			String sourceDir = @"\\raspi\pi\images";
+			String workDir = @"c:\pub\tmp\junk";
+			Camera.ImageDirectory = sourceDir;
+
+			Camera camera = new Camera();
+			LEDImageAnalysis ledAnalysis = new LEDImageAnalysis(camera);
+
+			String inputFile = Path.Combine(sourceDir, "fullimage.bmp");
+//		Camera.ConvertImage(outputFile, new Size(LEDImageAnalysis.Width, LEDImageAnalysis.Height), ImageType.RawRGB, ImageType.Bitmap, 0, out outputFile);
+
+			List <String> files;
+			LEDPositionList leds;
+			LEDImageAnalysis.AnalyzeImage(inputFile, workDir, 30, 120, out files, out leds);
+
+			ledAnalysis.LEDs = leds;
+
+			Mat red = new Mat(Path.Combine(workDir, "red.bmp"), ImreadModes.Unchanged);
+			Mat green = new Mat(Path.Combine(workDir, "green.bmp"), ImreadModes.Unchanged);
+			Mat blue = new Mat(Path.Combine(workDir, "blue.bmp"), ImreadModes.Unchanged);
+
+			if(ledAnalysis.HasGreen)
+			{
+				LEDPosition g = ledAnalysis.GreenLED;
+
+				Double width = LEDImageAnalysis.Width;
+				Double x = g.Location.X;
+				Double pixelsPerDegree = width / camera.FieldOfViewHorizontal;
+				Double degreesFromCenter = (x - (width / 2)) / pixelsPerDegree;
+			}
+
+			leds = LEDImageAnalysis.FindLEDs(blue, red, green);
+
+
 			//int resx = 3280;
 			//int resy = 2464;
 			int resx = 800;

@@ -8,7 +8,7 @@ using Emgu.CV;
 using KanoopCommon.Geometry;
 using RaspiCommon.Devices.Chassis;
 
-namespace RaspiCommon.Spatial.Imaging
+namespace RaspiCommon.Spatial.LidarImaging
 {
 	public interface IImageEnvironment
 	{

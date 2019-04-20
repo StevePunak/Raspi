@@ -9,7 +9,7 @@ using KanoopCommon.Geometry;
 using RaspiCommon.Devices.Chassis;
 using RaspiCommon.Lidar.Environs;
 using RaspiCommon.Spatial;
-using RaspiCommon.Spatial.Imaging;
+using RaspiCommon.Spatial.LidarImaging;
 
 namespace TrackBot.Spatial
 {
@@ -57,6 +57,10 @@ namespace TrackBot.Spatial
 			FuzzyPathChanged += delegate {};
 			LandmarksChanged += delegate {};
 			BarriersChanged += delegate {};
+
+			FuzzyPathChanged(new FuzzyPath());
+			LandmarksChanged(new ImageVectorList());
+			BarriersChanged(new BarrierList());
 		}
 
 		public double FuzzyRangeAtBearing(double bearing, double fuzz = 2)

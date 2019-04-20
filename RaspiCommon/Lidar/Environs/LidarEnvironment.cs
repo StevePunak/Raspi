@@ -17,7 +17,7 @@ using RaspiCommon.Devices.Spatial;
 using RaspiCommon.Extensions;
 using RaspiCommon.Network;
 using RaspiCommon.Spatial;
-using RaspiCommon.Spatial.Imaging;
+using RaspiCommon.Spatial.LidarImaging;
 using RaspiCommon.System;
 
 namespace RaspiCommon.Lidar.Environs

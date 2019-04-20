@@ -7,7 +7,7 @@ using KanoopCommon.Geometry;
 using KanoopCommon.Extensions;
 using RaspiCommon;
 using KanoopCommon.Logging;
-using RaspiCommon.Spatial.Imaging;
+using RaspiCommon.Spatial.LidarImaging;
 using TrackBot.System;
 
 namespace TrackBot.Spatial
@@ -43,7 +43,7 @@ namespace TrackBot.Spatial
 
 		#region Init State
 
-		protected override bool RunInitState()
+		protected bool RunInitState()
 		{
 			Widgets.Instance.Tracks.Stop();
 			SwitchState(ActivityStates.FindDestination);
@@ -61,7 +61,7 @@ namespace TrackBot.Spatial
 			return true;
 		}
 
-		protected override bool RunIdleState()
+		protected bool RunIdleState()
 		{
 			Interval = TimeSpan.FromMilliseconds(500);
 
@@ -72,7 +72,7 @@ namespace TrackBot.Spatial
 
 		#region Find Destination State
 
-		protected override bool RunFindDestinationState()
+		protected bool RunFindDestinationState()
 		{
 			Log.SysLogText(LogLevel.DEBUG, "================ RunFindDestinationState");
 
@@ -124,7 +124,7 @@ namespace TrackBot.Spatial
 
 		#region Rotate To Bearing
 
-		protected override bool RunRotateToNewBearingState()
+		protected bool RunRotateToNewBearingState()
 		{
 			bool result = false;
 
@@ -172,7 +172,7 @@ namespace TrackBot.Spatial
 			return true;
 		}
 
-		override protected bool RunTravelToDestState()
+		bool RunTravelToDestState()
 		{
 			bool result = true;
 
@@ -213,7 +213,7 @@ namespace TrackBot.Spatial
 			return true;
 		}
 
-		override protected bool RunStuckState()
+		bool RunStuckState()
 		{
 			const Double UNSTUCK_FIDGET_DISTANCE = .25;
 

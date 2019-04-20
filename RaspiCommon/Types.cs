@@ -8,6 +8,15 @@ namespace RaspiCommon
 {
 	public delegate void GPIOInputCallback(GpioPin pin, EdgeType edgeType, UInt64 nanoseconds);
 
+	public enum ImageType
+	{
+		Unknown = 0,
+		Jpeg = 1,
+		Bitmap = 2,
+		RawRGB = 100,
+		RawBGR = 101,
+	}
+
 	public enum ChassisParts
 	{
 		FrontLeft,

@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using KanoopCommon.Geometry;
 using RaspiCommon.Lidar.Environs;
-using RaspiCommon.Spatial.Imaging;
+using RaspiCommon.Spatial.LidarImaging;
 
 namespace TrackBot.TTY
 {

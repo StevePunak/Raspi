@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using KanoopCommon.Addresses;
 using KanoopCommon.CommonObjects;
+using KanoopCommon.Encoding;
 using KanoopCommon.Extensions;
 using KanoopCommon.Geometry;
 using KanoopCommon.Logging;
@@ -17,11 +18,12 @@ using KanoopCommon.Threading;
 using MQTT;
 using RaspiCommon.Devices.Chassis;
 using RaspiCommon.Devices.Compass;
+using RaspiCommon.Devices.Optics;
 using RaspiCommon.Lidar;
 using RaspiCommon.Lidar.Environs;
 using RaspiCommon.Spatial;
 using RaspiCommon.Spatial.DeadReckoning;
-using RaspiCommon.Spatial.Imaging;
+using RaspiCommon.Spatial.LidarImaging;
 
 namespace RaspiCommon.Network
 {
@@ -38,6 +40,8 @@ namespace RaspiCommon.Network
 		public String MqqtClientID { get; private set; }
 
 		public IPAddress Address { get; private set; }
+
+		public String ImageDirectory { get; set; }
 
 		private FuzzyPath _fuzzyPath;
 		private bool _sendFuzzyPath;
@@ -78,6 +82,9 @@ namespace RaspiCommon.Network
 			Widgets.DistanceToTravel += OnWidgets_DistanceToTravel;
 			Widgets.DistanceLeft += OnWidgets_DistanceLeft;
 			Widgets.DeadReckoningEnvironmentReceived += OnDeadReckoningLandscapeReceived;
+			Widgets.CameraImagesAnalyzed += OnCameraImagesAnalyzed;
+
+			ImageDirectory = Camera.ImageDirectory;
 			
 			_sendFuzzyPath = false;
 			_sendBarriers = false;
@@ -138,6 +145,21 @@ namespace RaspiCommon.Network
 				Interval = TimeSpan.FromSeconds(1);
 			}
 			return true;
+		}
+
+		private void OnCameraImagesAnalyzed(ImageAnalysis analysis)
+		{
+			Log.LogText(LogLevel.DEBUG, "Going to publish {0} files with {1} leds", analysis.FileNames.Count, analysis.LEDs.Count);
+			byte[] bytes = analysis.Serialize();
+			Client.Publish(MqttTypes.CameraLastAnalysisTopic, bytes, true);
+		}
+
+		public void PublishImage(List<String> filenames)
+		{
+			Log.LogText(LogLevel.DEBUG, "Going to publish {0} files");
+			List<String> rawFilenames = filenames.GetFileNames();
+			byte[] bytes = UTF8.Encode(rawFilenames);
+			Client.Publish(MqttTypes.CameraLastImageTopic, bytes);
 		}
 
 		private void SendDeadReckoningEnvironment()

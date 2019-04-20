@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using RaspiCommon.Spatial.Imaging;
+using RaspiCommon.Spatial.LidarImaging;
 using TrackBot.Spatial;
 
 namespace TrackBot.TTY
@@ -16,13 +16,8 @@ namespace TrackBot.TTY
 
 		public override bool Execute(List<string> commandParts)
 		{
-			FuzzyPathList paths = Widgets.Instance.ImageEnvironment.FindGoodDestinations(Program.Config.ShortRangeClearance);
-			if(paths != null)
-			{
-				Widgets.Instance.ImageEnvironment.FuzzyPath = paths.Longest;
-			}
-
-			Activity.StartActivity(ActivityType.GoToDestination, true);
+			bool wait = commandParts.Count > 1;
+			Activity.StartActivity(ActivityType.FindTwoLEDs, wait);
 
 			return true;
 		}
