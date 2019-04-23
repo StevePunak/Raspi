@@ -11,13 +11,21 @@ namespace KanoopCommon.CommonObjects
 	/// </summary>
 	public class PathUtil
 	{
-		public const string KARMA = "Karma";
-
+		/// <summary>
+		/// Is path a windows network path format
+		/// </summary>
+		/// <param name="strPath"></param>
+		/// <returns></returns>
 		public static bool IsUncPath(string strPath)
 		{
 			return strPath.StartsWith(@"\\");
 		}
 
+		/// <summary>
+		/// Retrieve host portion of path name
+		/// </summary>
+		/// <param name="uncPath"></param>
+		/// <returns></returns>
 		public static string GetHost(string uncPath)
 		{
 			string []split = uncPath.Split(new char[]{'\\', '/'} ,  StringSplitOptions.RemoveEmptyEntries);
@@ -25,6 +33,10 @@ namespace KanoopCommon.CommonObjects
 			return split[0];
 		}
 
+		/// <summary>
+		/// Get users configuration directory
+		/// </summary>
+		/// <returns></returns>
 		public static string GetPersonalConfigurationDirectory()
 		{
 			return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Personal));
@@ -46,6 +58,11 @@ namespace KanoopCommon.CommonObjects
 			return version != null;
 		}
 
+		/// <summary>
+		/// Returns any config files 'like' the one given
+		/// </summary>
+		/// <param name="configFileName"></param>
+		/// <returns></returns>
 		static List<String> GetConfigFilesLike(string configFileName)
 		{
 			String path = Path.GetDirectoryName(configFileName);
@@ -61,6 +78,10 @@ namespace KanoopCommon.CommonObjects
 			return files;
 		}
 
+		/// <summary>
+		/// Copy the config most 'like' the given to a new location (ostensibly for upgrade)
+		/// </summary>
+		/// <param name="configFileName"></param>
 		public static void CopyBestConfigLike(String configFileName)
 		{
 			List<String> files = GetConfigFilesLike(configFileName);
@@ -83,6 +104,11 @@ namespace KanoopCommon.CommonObjects
 			}
 		}
 
+		/// <summary>
+		/// Return path where personal configuration should be stored
+		/// </summary>
+		/// <param name="configFileName"></param>
+		/// <returns></returns>
 		public static string GetPersonalConfigurationFilePath(string configFileName)
 		{
 			String path = Path.Combine(GetPersonalConfigurationDirectory(), configFileName);

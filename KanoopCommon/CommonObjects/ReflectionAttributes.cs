@@ -7,6 +7,10 @@ using System.Reflection;
 
 namespace KanoopCommon.CommonObjects
 {
+	/// <summary>
+	/// Base class for attributes containing only a string.
+	/// It has additional methods for retrieving string value from objects
+	/// </summary>
 	public class StringAttribute : Attribute
 	{
 		#region Public Properties
