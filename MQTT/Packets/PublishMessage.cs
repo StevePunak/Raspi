@@ -9,7 +9,7 @@ using KanoopCommon.Encoding;
 
 namespace MQTT.Packets
 {
-	public class PublishMessage : ControlPacket
+	public class PublishMessage : ControlMessage
 	{
 		public String Topic { get; set; }
 		public QOSTypes QOS { get; set; }
@@ -19,12 +19,12 @@ namespace MQTT.Packets
 		public byte[] Message { get; set; }
 
 		public PublishMessage(MqttClient client)
-			: base(client, ControlPacketType.Publish)
+			: base(client, ControlMessageType.Publish)
 		{
 			Message = new byte[0];
 		}
 
-		public static bool TryParse(MqttClient client, Header header, byte[] buffer, int index, int length, out ControlPacket packet, out int bytesParsed)
+		public static bool TryParse(MqttClient client, Header header, byte[] buffer, int index, int length, out ControlMessage packet, out int bytesParsed)
 		{
 			packet = null;
 			bytesParsed = 0;

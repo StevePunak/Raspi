@@ -63,7 +63,6 @@ namespace MQTT
 
 		public IPv4AddressPort BrokerAddress { get; set; }
 		public String ClientID { get; set; }
-		public String Topic { get; set; }
 		public bool Connected { get; private set; }
 		public QOSTypes QOS { get; set; }
 		public String UserName { get; set; }
@@ -93,7 +92,7 @@ namespace MQTT
 		byte[] _recvBuffer;
 		int _bytesInRecvBuffer;
 
-		ControlPacket.Header _receiveHeader;
+		ControlMessage.Header _receiveHeader;
 
 		MutexEvent _connectEvent;
 
@@ -343,7 +342,7 @@ namespace MQTT
 
 		private void ProcessPublish(PublishMessage packet)
 		{
-			ControlPacket ack = null;
+			ControlMessage ack = null;
 			switch(packet.QOS)
 			{
 				case QOSTypes.Qos1:
@@ -383,7 +382,7 @@ namespace MQTT
 
 		#region Socket Handlers
 
-		private void SendControlPacket(ControlPacket packet)
+		private void SendControlPacket(ControlMessage packet)
 		{
 			if(!Connected || _client == null)
 			{
@@ -422,9 +421,9 @@ namespace MQTT
 
 			while(_bytesInRecvBuffer >= 2)
 			{
-				ControlPacket packet;
-				ControlPacket.Header header;
-				if(ControlPacket.TryParse(this, _recvBuffer, _bytesInRecvBuffer, out packet, out int bytesParsed, out header))
+				ControlMessage packet;
+				ControlMessage.Header header;
+				if(ControlMessage.TryParse(this, _recvBuffer, _bytesInRecvBuffer, out packet, out int bytesParsed, out header))
 				{
 					RemoveHeadBytes(bytesParsed);
 					_eventQueue.Enqueue(
@@ -471,41 +470,41 @@ namespace MQTT
 			ClientEvent clientEvent = _eventQueue.BlockDequeue(1000);
 			if(clientEvent != null)
 			{
-				if(clientEvent.Type == ClientEvent.EventType.InboundPacket && clientEvent.Packet is ControlPacket)
+				if(clientEvent.Type == ClientEvent.EventType.InboundPacket && clientEvent.Packet is ControlMessage)
 				{
-					ControlPacket controlPacket = clientEvent.Packet as ControlPacket;
+					ControlMessage controlPacket = clientEvent.Packet as ControlMessage;
 					switch(controlPacket.Type)
 					{
-						case ControlPacketType.ConnectAcknowledgment:
+						case ControlMessageType.ConnectAcknowledgment:
 							ProcessConnectAck(controlPacket as ConnectAcknowledgment);
 							break;
-						case ControlPacketType.PublishAcknowledgment:
+						case ControlMessageType.PublishAcknowledgment:
 							ProcessPublishAck(controlPacket as PublishAcknowledgment);
 							break;
-						case ControlPacketType.PingResponse:
+						case ControlMessageType.PingResponse:
 							ProcessPingResponse(controlPacket as PingResponse);
 							break;
-						case ControlPacketType.SubscribeAcknowledgment:
+						case ControlMessageType.SubscribeAcknowledgment:
 							ProcessSubscribeAcknowledgment(controlPacket as SubscribeAcknowledgment);
 							break;
-						case ControlPacketType.Publish:
+						case ControlMessageType.Publish:
 							ProcessPublish(controlPacket as PublishMessage);
 							break;
-						case ControlPacketType.PublishRelease:
+						case ControlMessageType.PublishRelease:
 							ProcessPublishRelease(controlPacket as PublishRelease);
 							break;
-						case ControlPacketType.UnsubscribeAcknowledment:
+						case ControlMessageType.UnsubscribeAcknowledment:
 							ProcessUnsubscribeAcknowledment(controlPacket as UnsubscribeAcknowledgment);
 							break;
-						case ControlPacketType.Reserved1:
-						case ControlPacketType.Connect:
-						case ControlPacketType.PublishReceived:
-						case ControlPacketType.PublishComplete:
-						case ControlPacketType.Subscribe:
-						case ControlPacketType.Unsubscribe:
-						case ControlPacketType.PingRequest:
-						case ControlPacketType.DisconnectRequest:
-						case ControlPacketType.Reserved2:
+						case ControlMessageType.Reserved1:
+						case ControlMessageType.Connect:
+						case ControlMessageType.PublishReceived:
+						case ControlMessageType.PublishComplete:
+						case ControlMessageType.Subscribe:
+						case ControlMessageType.Unsubscribe:
+						case ControlMessageType.PingRequest:
+						case ControlMessageType.DisconnectRequest:
+						case ControlMessageType.Reserved2:
 						default:
 							Log.SysLogText(LogLevel.DEBUG, "Unprocessed control packet type {0}", controlPacket.Type);
 							break;

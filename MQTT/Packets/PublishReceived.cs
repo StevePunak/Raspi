@@ -6,12 +6,12 @@ using System.Threading.Tasks;
 
 namespace MQTT.Packets
 {
-	public class PublishReceived : ControlPacket
+	public class PublishReceived : ControlMessage
 	{
 		public UInt16 MessageID { get; set; }
 
 		public PublishReceived(MqttClient client)
-			: base(client, ControlPacketType.PublishReceived)
+			: base(client, ControlMessageType.PublishReceived)
 		{
 			RemainingLength = 2;
 		}

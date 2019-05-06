@@ -7,16 +7,16 @@ using KanoopCommon.Threading;
 
 namespace MQTT.Packets
 {
-	public abstract class ControlPacket : MqqtPacket
+	public abstract class ControlMessage : MqqtPacket
 	{
 		public Header PacketHeader { get; protected set; }
 
-		public ControlPacketType Type { get { return PacketHeader.Type;  } }
+		public ControlMessageType Type { get { return PacketHeader.Type;  } }
 
 		public class Header
 		{
-			static readonly Dictionary<byte, ControlPacketType> _controlPacketIndex;
-			public ControlPacketType Type { get; set; }
+			static readonly Dictionary<byte, ControlMessageType> _controlPacketIndex;
+			public ControlMessageType Type { get; set; }
 			public Byte Flags { get; set; }
 			public int RemainingLength { get; set; }
 			public int Length { get; private set; }
@@ -28,28 +28,28 @@ namespace MQTT.Packets
 			static Header()
 			{
 				_lock = new MutexLock();
-				_controlPacketIndex = new Dictionary<byte, ControlPacketType>()
+				_controlPacketIndex = new Dictionary<byte, ControlMessageType>()
 				{
 //					{ (byte)ControlPacketType.Reserved1,				ControlPacketType.Reserved1 },
-					{ (byte)ControlPacketType.Connect,					ControlPacketType.Connect },
-					{ (byte)ControlPacketType.ConnectAcknowledgment,	ControlPacketType.ConnectAcknowledgment },
-					{ (byte)ControlPacketType.Publish,					ControlPacketType.Publish },
-					{ (byte)ControlPacketType.PublishAcknowledgment,    ControlPacketType.PublishAcknowledgment },
-					{ (byte)ControlPacketType.PublishReceived,					ControlPacketType.PublishReceived },
-					{ (byte)ControlPacketType.PublishRelease,					ControlPacketType.PublishRelease },
-					{ (byte)ControlPacketType.PublishComplete,					ControlPacketType.PublishComplete },
-					{ (byte)ControlPacketType.Subscribe,				ControlPacketType.Subscribe },
-					{ (byte)ControlPacketType.SubscribeAcknowledgment,	ControlPacketType.SubscribeAcknowledgment },
-					{ (byte)ControlPacketType.Unsubscribe,				ControlPacketType.Unsubscribe },
-					{ (byte)ControlPacketType.UnsubscribeAcknowledment,					ControlPacketType.UnsubscribeAcknowledment },
-					{ (byte)ControlPacketType.PingRequest,				ControlPacketType.PingRequest },
-					{ (byte)ControlPacketType.PingResponse,				ControlPacketType.PingResponse },
-					{ (byte)ControlPacketType.DisconnectRequest,				ControlPacketType.DisconnectRequest },
+					{ (byte)ControlMessageType.Connect,					ControlMessageType.Connect },
+					{ (byte)ControlMessageType.ConnectAcknowledgment,	ControlMessageType.ConnectAcknowledgment },
+					{ (byte)ControlMessageType.Publish,					ControlMessageType.Publish },
+					{ (byte)ControlMessageType.PublishAcknowledgment,    ControlMessageType.PublishAcknowledgment },
+					{ (byte)ControlMessageType.PublishReceived,					ControlMessageType.PublishReceived },
+					{ (byte)ControlMessageType.PublishRelease,					ControlMessageType.PublishRelease },
+					{ (byte)ControlMessageType.PublishComplete,					ControlMessageType.PublishComplete },
+					{ (byte)ControlMessageType.Subscribe,				ControlMessageType.Subscribe },
+					{ (byte)ControlMessageType.SubscribeAcknowledgment,	ControlMessageType.SubscribeAcknowledgment },
+					{ (byte)ControlMessageType.Unsubscribe,				ControlMessageType.Unsubscribe },
+					{ (byte)ControlMessageType.UnsubscribeAcknowledment,					ControlMessageType.UnsubscribeAcknowledment },
+					{ (byte)ControlMessageType.PingRequest,				ControlMessageType.PingRequest },
+					{ (byte)ControlMessageType.PingResponse,				ControlMessageType.PingResponse },
+					{ (byte)ControlMessageType.DisconnectRequest,				ControlMessageType.DisconnectRequest },
 //					{ (byte)ControlPacketType.Reserved2,				ControlPacketType.Reserved2 },
 				};
 			}
 
-			public Header(ControlPacketType type, Byte flags, int remainingLength = 0)
+			public Header(ControlMessageType type, Byte flags, int remainingLength = 0)
 			{
 				Type = type;
 				Flags = (Byte)((int)flags & 0x0f);
@@ -62,7 +62,7 @@ namespace MQTT.Packets
 				header = null;
 				bytesParsed = 0;
 
-				ControlPacketType type;
+				ControlMessageType type;
 				if(TryGetControlPacketType((byte)(buffer[0] >> 4), out type))
 				{
 					int shift = 0;
@@ -94,7 +94,7 @@ namespace MQTT.Packets
 				return header != null;
 			}
 
-			public byte[] Serialize(ControlPacket packet)
+			public byte[] Serialize(ControlMessage packet)
 			{
 				byte[] remainingLengthField = MakeRemainingLengthField();
 				byte[] output = new byte[1 + _remainingLengthFieldSize];
@@ -108,7 +108,7 @@ namespace MQTT.Packets
 				return output;
 			}
 
-			public static bool TryGetControlPacketType(byte b, out ControlPacketType type)
+			public static bool TryGetControlPacketType(byte b, out ControlMessageType type)
 			{
 				bool result = false;
 				try
@@ -152,14 +152,14 @@ namespace MQTT.Packets
 		public int RemainingLength { get; set; }
 		public MqttClient Client { get; set; }
 
-		protected ControlPacket(MqttClient client, ControlPacketType type, Byte flags = 0)
+		protected ControlMessage(MqttClient client, ControlMessageType type, Byte flags = 0)
 			: base(PacketType.MQTT)
 		{
 			Client = client;
 			PacketHeader = new Header(type, flags);
 		}
 
-		public static bool TryParse(MqttClient client, byte[] buffer, int length, out ControlPacket packet, out int bytesParsed, out Header header)
+		public static bool TryParse(MqttClient client, byte[] buffer, int length, out ControlMessage packet, out int bytesParsed, out Header header)
 		{
 			header = null;
 			packet = null;
@@ -168,36 +168,36 @@ namespace MQTT.Packets
 			{
 				switch(header.Type)
 				{
-					case ControlPacketType.ConnectAcknowledgment:
+					case ControlMessageType.ConnectAcknowledgment:
 						result = ConnectAcknowledgment.TryParse(client, header, buffer, bytesParsed, length, out packet, out bytesParsed);
 						break;
-					case ControlPacketType.PublishAcknowledgment:
+					case ControlMessageType.PublishAcknowledgment:
 						result = PublishAcknowledgment.TryParse(client, header, buffer, bytesParsed, length, out packet, out bytesParsed);
 						break;
-					case ControlPacketType.PingResponse:
+					case ControlMessageType.PingResponse:
 						result = PingResponse.TryParse(client, header, buffer, bytesParsed, length, out packet, out bytesParsed);
 						break;
-					case ControlPacketType.SubscribeAcknowledgment:
+					case ControlMessageType.SubscribeAcknowledgment:
 						result = SubscribeAcknowledgment.TryParse(client, header, buffer, bytesParsed, length, out packet, out bytesParsed);
 						break;
-					case ControlPacketType.Publish:
+					case ControlMessageType.Publish:
 						result = PublishMessage.TryParse(client, header, buffer, bytesParsed, length, out packet, out bytesParsed);
 						break;
-					case ControlPacketType.PublishRelease:
+					case ControlMessageType.PublishRelease:
 						result = PublishRelease.TryParse(client, header, buffer, bytesParsed, length, out packet, out bytesParsed);
 						break;
-					case ControlPacketType.UnsubscribeAcknowledment:
+					case ControlMessageType.UnsubscribeAcknowledment:
 						result = UnsubscribeAcknowledgment.TryParse(client, header, buffer, bytesParsed, length, out packet, out bytesParsed);
 						break;
-					case ControlPacketType.Reserved1:
-					case ControlPacketType.Connect:
-					case ControlPacketType.PublishReceived:
-					case ControlPacketType.PublishComplete:
-					case ControlPacketType.Subscribe:
-					case ControlPacketType.Unsubscribe:
-					case ControlPacketType.PingRequest:
-					case ControlPacketType.DisconnectRequest:
-					case ControlPacketType.Reserved2:
+					case ControlMessageType.Reserved1:
+					case ControlMessageType.Connect:
+					case ControlMessageType.PublishReceived:
+					case ControlMessageType.PublishComplete:
+					case ControlMessageType.Subscribe:
+					case ControlMessageType.Unsubscribe:
+					case ControlMessageType.PingRequest:
+					case ControlMessageType.DisconnectRequest:
+					case ControlMessageType.Reserved2:
 					default:
 						Log.SysLogText(LogLevel.WARNING, "Unparsable packet type {0}", header.Type);
 						break;

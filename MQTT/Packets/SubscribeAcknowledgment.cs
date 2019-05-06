@@ -7,21 +7,21 @@ using System.Threading.Tasks;
 
 namespace MQTT.Packets
 {
-	public class SubscribeAcknowledgment : ControlPacket
+	public class SubscribeAcknowledgment : ControlMessage
 	{
 		public UInt16 MessageID { get; private set; }
 		public QOSTypes GrantedQOS { get; set; }
 		public bool Success { get; set; }
 
 		public SubscribeAcknowledgment(MqttClient client)
-			: base(client, ControlPacketType.SubscribeAcknowledgment)
+			: base(client, ControlMessageType.SubscribeAcknowledgment)
 		{
 			MessageID = 0;
 			GrantedQOS = QOSTypes.Qos0;
 			Success = false;
 		}
 
-		public static bool TryParse(MqttClient client, Header header, byte[] buffer, int index, int length, out ControlPacket packet, out int bytesParsed)
+		public static bool TryParse(MqttClient client, Header header, byte[] buffer, int index, int length, out ControlMessage packet, out int bytesParsed)
 		{
 			packet = null;
 			bytesParsed = 0;

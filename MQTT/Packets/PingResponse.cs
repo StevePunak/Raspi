@@ -7,10 +7,10 @@ using System.Threading.Tasks;
 
 namespace MQTT.Packets
 {
-	public class PingResponse : ControlPacket
+	public class PingResponse : ControlMessage
 	{
 		public PingResponse(MqttClient client)
-			: base(client, ControlPacketType.PingResponse)
+			: base(client, ControlMessageType.PingResponse)
 		{
 		}
 
@@ -30,7 +30,7 @@ namespace MQTT.Packets
 			return serialized;
 		}
 
-		public static bool TryParse(MqttClient client, Header header, byte[] buffer, int index, int length, out ControlPacket packet, out int bytesParsed)
+		public static bool TryParse(MqttClient client, Header header, byte[] buffer, int index, int length, out ControlMessage packet, out int bytesParsed)
 		{
 			packet = null;
 			bytesParsed = 0;

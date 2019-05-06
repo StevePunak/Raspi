@@ -7,17 +7,17 @@ using System.Threading.Tasks;
 
 namespace MQTT.Packets
 {
-	public class PublishRelease : ControlPacket
+	public class PublishRelease : ControlMessage
 	{
 		public UInt16 MessageID { get; set; }
 
 		public PublishRelease(MqttClient client)
-			: base(client, ControlPacketType.PublishRelease)
+			: base(client, ControlMessageType.PublishRelease)
 		{
 			RemainingLength = 2;
 		}
 
-		public static bool TryParse(MqttClient client, Header header, byte[] buffer, int index, int length, out ControlPacket packet, out int bytesParsed)
+		public static bool TryParse(MqttClient client, Header header, byte[] buffer, int index, int length, out ControlMessage packet, out int bytesParsed)
 		{
 			packet = null;
 			bytesParsed = 0;
