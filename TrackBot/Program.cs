@@ -1,11 +1,13 @@
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Emgu.CV;
 using KanoopCommon.Database;
 using KanoopCommon.Geometry;
 using KanoopCommon.Logging;
@@ -56,9 +58,19 @@ namespace TrackBot
 			try
 			{
 				Program.Config.RemoteImageDirectory = "/home/pi/images";
-				Program.Config.LedLowThreshold = 50;
-				Program.Config.LedHighThreshold = 120;
-				Program.Config.CameraBearingOffset = 1;
+
+				//Program.Config.BlueThresholds = new ColorThreshold(Color.Blue, 150, 70);
+				//Program.Config.GreenThresholds = new ColorThreshold(Color.Green, 150, 100);
+				//Program.Config.RedThresholds = new ColorThreshold(Color.Red, 150, 70); 
+				//Program.Config.CameraBrightness = 0;
+				//Program.Config.CameraContrast = 0;
+				//Program.Config.CameraSaturation = 0;
+				//Program.Config.CameraImageEffect = String.Empty;
+				//Program.Config.CameraColorEffect = String.Empty;
+				//Program.Config.CameraExposureType = String.Empty;
+				//Program.Config.CameraBearingOffset = 4;
+				//Program.Config.CameraImageDelay = TimeSpan.FromMilliseconds(1500);
+
 				Program.Config.Save();
 			}
 			catch(Exception e)

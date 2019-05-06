@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using KanoopCommon.Logging;
+using RaspiCommon.Devices.Optics;
 
 namespace TrackBot.TTY
 {
@@ -20,27 +23,54 @@ namespace TrackBot.TTY
 				throw new CommandException("Invalid parameter value");
 			}
 
-			if(!(commandParts[1] == "br" || commandParts[1] == "ex" || commandParts[1] == "ifx"))
-			{
-				throw new CommandException("Invalid parameter value");
-			}
-
+			Color color;
 			if(commandParts[1] == "br" && int.TryParse(commandParts[2], out parm) == true)
 			{
-				Widgets.Instance.Camera.Brightness = parm;
+				Program.Config.CameraBrightness = Widgets.Instance.Camera.Brightness = parm;
+			}
+			else if(commandParts[1] == "co" && int.TryParse(commandParts[2], out parm) == true)
+			{
+				Program.Config.CameraContrast = Widgets.Instance.Camera.Contrast = parm;
+			}
+			else if(commandParts[1] == "sa" && int.TryParse(commandParts[2], out parm) == true)
+			{
+				Program.Config.CameraSaturation = Widgets.Instance.Camera.Saturation = parm;
+			}
+			else if(commandParts[1] == "delay" && int.TryParse(commandParts[2], out parm) == true)
+			{
+				Program.Config.CameraImageDelay = Widgets.Instance.Camera.SnapshotDelay = TimeSpan.FromMilliseconds(parm);
 			}
 			else if(commandParts[1] == "ex")
 			{
-				Widgets.Instance.Camera.Exposure = commandParts[2];
+				Program.Config.CameraExposureType = Widgets.Instance.Camera.Exposure = commandParts[2];
 			}
 			else if(commandParts[1] == "ifx")
 			{
-				Widgets.Instance.Camera.Effect = commandParts[2];
+				Program.Config.CameraImageEffect = Widgets.Instance.Camera.ImageEffect = commandParts[2];
+			}
+			else if(commandParts[1] == "cfx")
+			{
+				Program.Config.CameraColorEffect = Widgets.Instance.Camera.ColorEffect = commandParts[2];
+			}
+			else if(commandParts[1] == "low" && int.TryParse(commandParts[2], out parm) && (color = Color.FromName(commandParts[3])).ToArgb() !=  0)
+			{
+				if(color == Color.Blue)	Program.Config.BlueThresholds.MinimumValue = parm;
+				else if(color == Color.Green) Program.Config.GreenThresholds.MinimumValue = parm;
+				else if(color == Color.Red) Program.Config.RedThresholds.MinimumValue = parm;
+			}
+			else if(commandParts[1] == "high" && int.TryParse(commandParts[2], out parm) && (color = Color.FromName(commandParts[3])).ToArgb() != 0)
+			{
+				if(color == Color.Blue)	Program.Config.BlueThresholds.MaximumOtherValue = parm;
+				else if(color == Color.Green) Program.Config.GreenThresholds.MaximumOtherValue = parm;
+				else if(color == Color.Red) Program.Config.RedThresholds.MaximumOtherValue = parm;
 			}
 			else
 			{
 				throw new CommandException("Invalid paramters");
 			}
+			Program.Config.Save();
+			Log.SysLogText(LogLevel.DEBUG, "Exposure setting is '{0}'", Program.Config.CameraExposureType);
+
 
 			return true;
 		}

@@ -28,6 +28,15 @@ namespace KanoopCommon.Extensions
 			return new Rectangle(left, top, right - left, bottom - top);
 		}
 
+		public static Rectangle GetFromPoint(Size imageSize, Point point, Size rectangleSize)
+		{
+			int left = Math.Max(0, point.X - rectangleSize.Width / 2);
+			int top = Math.Max(0, point.Y - rectangleSize.Height / 2);
+			int right = Math.Min(imageSize.Width - 1, point.X + rectangleSize.Width / 2);
+			int bottom = Math.Min(imageSize.Height - 1, point.Y + rectangleSize.Height / 2);
+			return new Rectangle(left, top, right - left, bottom - top);
+		}
+
 		public static int GetMidX(this Rectangle rect)
 		{
 			return rect.X + rect.Width / 2;

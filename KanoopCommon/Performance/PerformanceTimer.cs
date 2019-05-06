@@ -126,6 +126,11 @@ namespace KanoopCommon.Performance
 
 		}
 
+		public void DumpToLog()
+		{
+			DumpToLog(Log.SystemLog, LogLevel.DEBUG);
+		}
+
 		public void DumpToLog(Log log, LogLevel level)
 		{
 			log.LogText(level, "{0}", this.ToString());

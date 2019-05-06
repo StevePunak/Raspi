@@ -89,15 +89,15 @@ namespace TrackBotCommon.Controls
 			{
 				case 1:
 					radii = new List<double>() { min, centerRadius, max };
-					Log.SysLogText(LogLevel.DEBUG, "Max");
+//					Log.SysLogText(LogLevel.DEBUG, "Max");
 					break;
 				case 2:
 					radii = new List<double>() { min + 10, centerRadius, max - 10 };
-					Log.SysLogText(LogLevel.DEBUG, "Mid");
+//					Log.SysLogText(LogLevel.DEBUG, "Mid");
 					break;
 				case 3:
 					radii = new List<double>() { centerRadius - 3, centerRadius - 6, centerRadius, centerRadius + 3, centerRadius + 6 };
-					Log.SysLogText(LogLevel.DEBUG, "min");
+//					Log.SysLogText(LogLevel.DEBUG, "min");
 					break;
 			}
 			return radii;

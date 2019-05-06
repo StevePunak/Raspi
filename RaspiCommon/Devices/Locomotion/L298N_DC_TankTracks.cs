@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using KanoopCommon.Geometry;
 using KanoopCommon.Logging;
 using RaspiCommon.Devices.MotorControl;
 using RaspiCommon.Spatial;
@@ -15,6 +17,9 @@ namespace RaspiCommon.Devices.Locomotion
 		#endregion
 
 		#region Public Properties
+
+		public static SortedDictionary<int, Double> SpeedAtPower { get; private set; }
+		static List<int> _sortedSpeeds;
 
 		bool _hardwarePWM;
 		public bool HardwarePWM
@@ -54,6 +59,23 @@ namespace RaspiCommon.Devices.Locomotion
 
 		#region Constructor
 
+		static L298N_DC_TankTracks()
+		{
+			SpeedAtPower = new SortedDictionary<int, double>()
+			{
+				{ 50,   .2125 },
+				{ 60,   .325 },
+				{ 70,   .425 },
+				{ 75,   .475 },
+				{ 80,   .5 },
+				{ 85,   .53 },
+				{ 90,   .575 },
+				{ 95,   .625 },
+				{100,   .74 },
+			};
+			_sortedSpeeds = new List<int>(SpeedAtPower.Keys);
+		}
+
 		public L298N_DC_TankTracks(GpioPin leftIn1, GpioPin leftIn2, GpioPin leftSpeed, GpioPin rightIn1, GpioPin rightIn2, GpioPin rightSpeed)
 		{
 			Motors = new L298N_DC_MotorControl[2];
@@ -64,7 +86,30 @@ namespace RaspiCommon.Devices.Locomotion
 			Motors[RIGHT_MOTOR].Start();
 		}
 	
-	#endregion
+		public static TimeSpan TimeToTravel(Double distance, int speed)
+		{
+			speed = Math.Abs(speed);
+			int index = _sortedSpeeds.BinarySearch(speed);
+			if(index < 0)
+			{
+				index = ~index;
+				index = Math.Min(index, _sortedSpeeds.Count - 1);
+				if(index > 0)
+				{
+					int diff1 = Math.Abs(_sortedSpeeds[index] - speed);
+					int diff2 = Math.Abs(_sortedSpeeds[index - 1] - speed);
+					if(diff2 < diff1)
+					{
+						--index;
+					}
+				}
+			}
+			Double thisSpeed = SpeedAtPower[_sortedSpeeds[index]];
+			Double travelTime = distance / thisSpeed;
+			return TimeSpan.FromSeconds(travelTime);
+		}
+		
+		#endregion
 
 		#region Private Methods
 

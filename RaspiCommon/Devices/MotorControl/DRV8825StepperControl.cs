@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using KanoopCommon.Geometry;
 using KanoopCommon.Logging;
 
 namespace RaspiCommon.Devices.MotorControl

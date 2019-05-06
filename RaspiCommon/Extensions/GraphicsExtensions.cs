@@ -8,6 +8,7 @@ using Emgu.CV;
 using Emgu.CV.CvEnum;
 using Emgu.CV.Structure;
 using Emgu.CV.Util;
+using KanoopCommon.CommonObjects;
 using KanoopCommon.Extensions;
 using KanoopCommon.Geometry;
 using KanoopCommon.Logging;
@@ -64,6 +65,25 @@ namespace RaspiCommon.Extensions
 		public static Point ToPoint(this PointF from)
 		{
 			return new Point((int)from.X, (int)from.Y);
+		}
+
+		public static int ToBGRChannel(this Color color)
+		{
+			int channel = -1;
+			if(color == Color.Blue)
+				channel = 0;
+			else if(color == Color.Green)
+				channel = 1;
+			else if(color == Color.Red)
+				channel = 2;
+			else
+				throw new CommonException("Illegal color for BGR channel");
+			return channel;
+		}
+
+		public static SpinDirection Opposite(this SpinDirection from)
+		{
+			return from == SpinDirection.Clockwise ? SpinDirection.CounterClockwise : SpinDirection.Clockwise;
 		}
 
 	}

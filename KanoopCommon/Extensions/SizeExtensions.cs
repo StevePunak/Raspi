@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -9,6 +10,8 @@ namespace KanoopCommon.Extensions
 {
 	public static class SizeExtensions
 	{
+		public static int SizeByteArraySize = sizeof(Int32) + sizeof(Int32);
+
 		public static Size MinimumSize(this Size size)
 		{
 			int min = Math.Min(size.Height, size.Width);
@@ -30,6 +33,29 @@ namespace KanoopCommon.Extensions
 		public static Size Grow(this Size size, int pixels)
 		{
 			return new Size(size.Width + pixels, size.Height + pixels);
+		}
+
+		public static Size Validate(this Size value, Size max)
+		{
+			return new Size(Math.Min(max.Width, value.Width), Math.Min(max.Height, value.Height));
+		}
+
+		public static byte[] Serialize(this Size size)
+		{
+			byte[] serialized = new byte[SizeByteArraySize];
+			using(BinaryWriter bw = new BinaryWriter(new MemoryStream(serialized)))
+			{
+				bw.Write(size.Width);
+				bw.Write(size.Height);
+			}
+			return serialized;
+		}
+
+		public static Size Deserailize(BinaryReader br)
+		{
+			Int32 width = br.ReadInt32();
+			Int32 height = br.ReadInt32();
+			return new Size(width, height);
 		}
 	}
 }

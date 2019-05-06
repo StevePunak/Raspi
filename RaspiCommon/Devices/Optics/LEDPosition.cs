@@ -8,21 +8,27 @@ using System.Threading.Tasks;
 using Emgu.CV;
 using KanoopCommon.Extensions;
 using KanoopCommon.Geometry;
+using KanoopCommon.Serialization;
 
 namespace RaspiCommon.Devices.Optics
 {
 	public class LEDPosition
 	{
-		public static int ByteArraySize { get { return sizeof(UInt32) + PointD.ByteArraySize; } }
+		public static int ByteArraySize { get { return sizeof(UInt32) + PointD.ByteArraySize + sizeof(Double) + SizeExtensions.SizeByteArraySize; } }
 
 		public Color Color { get; set; }
 		public PointD Location { get; set; }
+		public Double Bearing { get; set; }
 		public DateTime CreateTime { get; set; }
+		public Size Size { get; set; }
 
 		public LEDPosition()
 		{
 			Color = Color.Empty;
 			Location = PointD.Empty;
+			Bearing = 0;
+			Size = new Size();
+
 			CreateTime = DateTime.UtcNow;
 		}
 
@@ -32,6 +38,8 @@ namespace RaspiCommon.Devices.Optics
 			{
 				Color = ColorExtensions.DeserializeColor(br.ReadBytes(sizeof(int)));
 				Location = new PointD(br.ReadBytes(PointD.ByteArraySize));
+				Bearing = br.ReadDouble();
+				Size = SizeExtensions.Deserailize(br);
 			}
 		}
 
@@ -42,13 +50,15 @@ namespace RaspiCommon.Devices.Optics
 			{
 				bw.Write(Color.Serialize());
 				bw.Write(Location.Serialize());
+				bw.Write(Bearing);
+				bw.Write(Size.Serialize());
 			}
 			return serialized;
 		}
 
 		public override string ToString()
 		{
-			return String.Format("{0} at {1}", Color, Location);
+			return String.Format("{0} at {1} - bearing {2}", Color, Location, Bearing.ToAngleString());
 		}
 	}
 
@@ -79,4 +89,5 @@ namespace RaspiCommon.Devices.Optics
 			return sb.ToString();
 		}
 	}
+
 }
