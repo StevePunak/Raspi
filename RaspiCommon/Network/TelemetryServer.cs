@@ -149,7 +149,6 @@ namespace RaspiCommon.Network
 
 		private void OnCameraImagesAnalyzed(ImageAnalysis analysis)
 		{
-			Log.LogText(LogLevel.DEBUG, "Going to publish {0} files with {1} leds", analysis.FileNames.Count, analysis.LEDs.Count);
 			byte[] bytes = analysis.Serialize();
 			Client.Publish(MqttTypes.CameraLastAnalysisTopic, bytes, true);
 		}

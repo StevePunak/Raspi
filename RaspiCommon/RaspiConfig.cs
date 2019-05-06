@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using KanoopCommon.CommonObjects;
 using KanoopCommon.Database;
 using KanoopCommon.PersistentConfiguration;
+using RaspiCommon.Devices.Optics;
 using RaspiCommon.Lidar.Environs;
 using RaspiCommon.Spatial.LidarImaging;
 
@@ -227,9 +228,24 @@ namespace RaspiCommon
 		public String DeadReckoningEnvironmentName { get; set; }
 		public int LastAnalyticsTabIndex { get; set; }
 		public String RemoteImageDirectory { get; set; }
-		public int LedLowThreshold { get; set; }
-		public int LedHighThreshold { get; set; }
+
+		public ColorThreshold BlueThresholds { get; set; }
+		public ColorThreshold GreenThresholds { get; set; }
+		public ColorThreshold RedThresholds { get; set; }
+
 		public Double CameraBearingOffset { get; set; }
+		public int CameraBrightness { get; set; }
+		public int CameraContrast { get; set; }
+		public int CameraSaturation { get; set; }
+		public String CameraImageEffect { get; set; }
+		public String CameraColorEffect { get; set; }
+		public String CameraExposureType { get; set; }
+		public int IgnoreRows { get; set; }
+		public TimeSpan CameraImageDelay { get; set; }
+
+		public LEDTravelHistoryEntryList LEDTravelHistory { get; set; }
+
+		public bool FullScaleImages { get; set; }
 
 		public static String GetDefaultConfigFileName()
 		{

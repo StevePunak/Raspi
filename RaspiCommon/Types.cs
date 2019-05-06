@@ -73,20 +73,6 @@ namespace RaspiCommon
 		OpenSource = 1 << 4
 	}
 
-	public enum Direction
-	{
-		Forward,
-		Backward
-	}
-
-	public enum SpinDirection
-	{
-		None,
-
-		Clockwise,
-		CounterClockwise
-	}
-
 	public enum GpioPin
 	{
 		Unset = 0,

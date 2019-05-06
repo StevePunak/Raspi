@@ -12,7 +12,8 @@ namespace TrackBot.Spatial
 		RoamAndSeekUS,
 		TravelLongestPath,
 		GoToDestination,
-		FindTwoLEDs
+		FindTwoLEDs,
+		GotoLED
 	}
 
 	public enum CellContents

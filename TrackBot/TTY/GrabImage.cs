@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Emgu.CV;
 using KanoopCommon.Extensions;
 using KanoopCommon.Logging;
 using RaspiCommon.Devices.Optics;
@@ -19,17 +20,22 @@ namespace TrackBot.TTY
 
 		public override bool Execute(List<string> commandParts)
 		{
-			Widgets.Instance.LEDImageAnalysis.AnalyzeImage();
+			LEDImageAnalysis.DebugAnalysis = true;
 
+			Mat image;
+			if(Widgets.Instance.Camera.TryTakeSnapshot(out image) == false)
+			{
+				throw new CommandException("Could not retrieve camera image");
+			}
+
+			Widgets.Instance.LEDImageAnalysis.AnalyzeImage(image);
 			Double ledBearing;
 			if(Widgets.Instance.LEDImageAnalysis.TryGetBearing(Color.Green, Widgets.Instance.Compass.Bearing, out ledBearing))
 			{
 				Log.SysLogText(LogLevel.DEBUG, "LED Bearing is {0}", ledBearing.ToAngleString());
-//				Widgets.Instance.Tracks.TurnToBearing(ledBearing);
 			}
 
-//			Widgets.Instance.Server.PublishImage(outputFiles);
-
+			LEDImageAnalysis.DebugAnalysis = false;
 			return true;
 		}
 

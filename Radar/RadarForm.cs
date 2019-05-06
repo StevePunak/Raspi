@@ -87,6 +87,8 @@ namespace Radar
 
 		Image _tank;
 
+		int _tempImageCount;
+
 		bool _layoutComplete;
 
 		TrackDataSource _ds;
@@ -105,6 +107,9 @@ namespace Radar
 		public String BlueImage { get; set; }
 		public String GreenImage { get; set; }
 		public String RedImage { get; set; }
+
+		VideoCapture _capture;
+		Mat _captureFrame;
 
 		public RadarForm()
 		{
@@ -153,6 +158,16 @@ namespace Radar
 
 				SetupImageTabs();
 
+				_capture = new VideoCapture(0);
+				if(_capture != null)
+				{
+					_capture.SetCaptureProperty(CapProp.FrameWidth, 1280);
+					_capture.SetCaptureProperty(CapProp.FrameHeight, 1024);
+					_captureFrame = new Mat();
+					_capture.ImageGrabbed += OnCaptureImageGrabbed;
+					_capture.Start();
+				}
+
 				_layoutComplete = true;
 			}
 			catch(Exception e)
@@ -160,6 +175,12 @@ namespace Radar
 				MessageBox.Show(e.Message);
 				Close();
 			}
+		}
+
+
+		void LoadOptions()
+		{
+			checkFullScaleImages.Checked = Program.Config.FullScaleImages;
 		}
 
 		void RepopulateLandmarks()
@@ -218,7 +239,7 @@ namespace Radar
 
 		private void OnDrawTimer(object sender, EventArgs e)
 		{
-			if(_client == null || _client.Connected == false || _client.Connected == true)
+			if(_client == null || _client.Connected == false)
 				return;
 
 			PointCloud2D cloud = _client.Vectors.ToPointCloud2D();
@@ -264,6 +285,8 @@ namespace Radar
 				botDash.FrontSecondaryRange = EnvironmentInfo.ForwardSecondaryRange;
 				botDash.RearPrimaryRange = EnvironmentInfo.BackwardPrimaryRange;
 				botDash.RearSecondaryRange = EnvironmentInfo.BackwardSecondaryRange;
+
+				Program.Compass.Bearing = EnvironmentInfo.Bearing;
 
 				botDash.Redraw();
 			}
@@ -320,35 +343,55 @@ namespace Radar
 
 		void DrawImages(ImageAnalysis analysis)
 		{
+			String TEMP_IMAGE_DIRECTORY = @"c:\pub\tmp\junk";
+
 			foreach(String filename in analysis.FileNames)
 			{
-				String file = Path.Combine(Program.Config.RemoteImageDirectory, filename);
-				Mat bitmap = new Mat(file);
+				String sourceFile = Path.Combine(Program.Config.RemoteImageDirectory, filename);
+				String destFile = Path.Combine(TEMP_IMAGE_DIRECTORY, String.Format("{0}-{1}", _tempImageCount++, filename));
+				if(File.Exists(sourceFile) == false)
+					continue;
+				File.Copy(sourceFile, destFile, true);
+				Log.SysLogText(LogLevel.DEBUG, "Copied {0} to {1}", sourceFile, destFile);
+
+				Mat bitmap = new Mat(destFile);
 
 				String tabPageName = String.Empty;
 
 				if(filename.Contains("blue"))
 				{
 					tabPageName = TAB_BLUE;
-					BlueImage = file;
+					BlueImage = destFile;
 				}
 				else if(filename.Contains("red"))
 				{
 					tabPageName = TAB_RED;
-					RedImage = file;
+					RedImage = destFile;
 				}
 				else if(filename.Contains("green"))
 				{
 					tabPageName = TAB_GREEN;
-					GreenImage = file;
+					GreenImage = destFile;
 				}
 				else
 				{
 					tabPageName = TAB_FULL_IMAGE;
-					FullImage = file;
-				}
+					DrawLEDPositions(bitmap, analysis.LEDs);
+					FullImage = destFile;
+				} 
 
 				SetImage(bitmap, tabPageName);
+			}
+		}
+
+		void DrawLEDPositions(Mat image, LEDPositionList leds)
+		{
+			foreach(LEDPosition led in leds)
+			{
+				Size size = led.Size != Size.Empty ? led.Size : new Size(20, 20);
+				size = size.Grow(10);
+				Rectangle rectangle = RectangleExtensions.GetFromPoint(image.Size, led.Location.ToPoint(), size);
+				image.DrawRectangle(rectangle, led.Color, 2);
 			}
 		}
 
@@ -357,14 +400,28 @@ namespace Radar
 			if(tabCameraImages.TabPages.ContainsKey(name))
 			{
 				TabPage page = tabCameraImages.TabPages[name];
+				page.AutoScroll = true;
 				Control[] controls = page.Controls.Find(name, false);
 				if(controls.Length > 0)
 				{
-					PictureBox pic = controls[0] as PictureBox;
+					Log.SysLogText(LogLevel.DEBUG, "Writing {0} picbox from {1}", image.Size, name);
+					image.Save(@"c:\pub\tmp\junk.bmp");
+
+					PictureBox picBox = controls[0] as PictureBox;
 					Bitmap bitmap  = new Bitmap(image.Bitmap.Clone() as Image);
-					pic.BackgroundImage = bitmap;
-					pic.Tag = page.Tag = image.Clone();
-					pic.Size = image.Size;
+					picBox.BackgroundImage = bitmap;
+					picBox.Tag = page.Tag = image.Clone();
+
+					if(Program.Config.FullScaleImages)
+					{
+						picBox.Size = image.Size;
+						picBox.Dock = DockStyle.None;
+					}
+					else
+					{
+						picBox.Dock = DockStyle.Fill;
+						picBox.BackgroundImageLayout = ImageLayout.Zoom;
+					}
 				}
 			}
 		}
@@ -638,19 +695,46 @@ namespace Radar
 
 		private void OnAnalyzeClicked(object sender, EventArgs e)
 		{
+			//Mat bitmap = new Mat(@"c:\pub\tmp\fullimage.bmp");
+
+			//int lowThreshold = 100;
+			//int highThreshold = 65;
+
+			//Mat blur = new Mat();
+			//CvInvoke.GaussianBlur(bitmap, blur, new Size(11, 11), 0);
+			//blur.Save(@"c:\pub\tmp\blur.bmp");
+
+			//MCvScalar lowRange = new MCvScalar(lowThreshold, 0, 0);
+			//MCvScalar topRange = new MCvScalar(255, highThreshold, highThreshold);
+			//Mat outputImage = new Mat(bitmap.Size, DepthType.Cv8U, 1);
+			//CvInvoke.InRange(bitmap, new ScalarArray(lowRange), new ScalarArray(topRange), outputImage);
+			//int totalcount = CvInvoke.CountNonZero(outputImage);
+			//outputImage.Save(@"c:\pub\tmp\green.png");
+#if !LIVE
+			LEDImageAnalysis.DebugAnalysis = true;
+			List<String> filenames = new List<string>();
+			LEDPositionList leds;
+			LEDImageAnalysis.SetThreshold(Color.Blue, 150, 100);
+			LEDImageAnalysis.SetThreshold(Color.Green, 150, 100);
+			LEDImageAnalysis.SetThreshold(Color.Red, 150, 70);
+			LEDImageAnalysis.AnalyzeImage(FullImage, @"c:\pub\tmp\analysis", out filenames, out leds);
+
+#else
 			if( String.IsNullOrEmpty(BlueImage) == false &&
 				String.IsNullOrEmpty(GreenImage) == false &&
 				String.IsNullOrEmpty(RedImage) == false &&
 				String.IsNullOrEmpty(FullImage) == false)
 			{
-				Mat blue = new Mat(BlueImage);
-				Mat green = new Mat(GreenImage);
-				Mat red = new Mat(RedImage);
+
+
+				Mat blue = OpenCvExtensions.ToSingleChannel(new Mat(BlueImage));
+				Mat green = OpenCvExtensions.ToSingleChannel(new Mat(GreenImage));
+				Mat red = OpenCvExtensions.ToSingleChannel(new Mat(RedImage));
 
 				List<LEDPosition> leds = LEDImageAnalysis.FindLEDs(blue, green, red);
 
 			}
-
+#endif
 		}
 
 		private void DrawDeadReckoningPaths()
@@ -755,10 +839,52 @@ namespace Radar
 
 		}
 
-		private void OnAnalysisTabChanged(object sender, EventArgs e)
+		private void OnTabAnalysisSelected(object sender, TabControlEventArgs e)
 		{
-			Program.Config.LastAnalyticsTabIndex = tabAnalysis.TabIndex;
+			Program.Config.LastAnalyticsTabIndex = e.TabPageIndex;
 			Program.Config.Save();
+		}
+
+		private void OnCaptureImageGrabbed(object sender, EventArgs e)
+		{
+			if(_capture != null && _capture.Ptr != IntPtr.Zero)
+			{
+				lock(_capture)
+				{
+					_capture.Retrieve(_captureFrame, 0);
+					picVideo.Image = _captureFrame.Bitmap;
+				}
+			}
+		}
+
+		private void OnSnapClicked(object sender, EventArgs e)
+		{
+			Mat bitmap = null;
+			lock(_capture)
+			{
+				bitmap = _captureFrame.Clone();
+			}
+			bitmap.Save(@"c:\pub\tmp\full.png");
+
+
+			int lowThreshold = 150;
+			int highThreshold = 255;
+			MCvScalar lowRange = new MCvScalar(lowThreshold, 0, 0);
+			MCvScalar topRange = new MCvScalar(highThreshold, 100, 100);
+			Mat outputImage = new Mat(bitmap.Size, DepthType.Cv8U, 1);
+
+			CvInvoke.InRange(bitmap, new ScalarArray(lowRange), new ScalarArray(topRange), outputImage);
+			int totalcount = CvInvoke.CountNonZero(outputImage);
+			outputImage.Save(@"c:\pub\tmp\blue.png");
+		}
+
+		private void OnFullScaleImagesChecked(object sender, EventArgs e)
+		{
+			if(_layoutComplete)
+			{
+				Program.Config.FullScaleImages = checkFullScaleImages.Checked;
+				Program.Config.Save();
+			}
 		}
 	}
 }

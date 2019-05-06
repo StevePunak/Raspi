@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using KanoopCommon.Encoding;
+using KanoopCommon.Logging;
 
 namespace RaspiCommon.Spatial.DeadReckoning
 {
@@ -18,7 +19,20 @@ namespace RaspiCommon.Spatial.DeadReckoning
 
 		public GridCell this[double x, double y]
 		{
-			get { return Matrix.Cells[(int)(x / Scale), (int)(y / Scale)]; }
+			get
+			{
+				Double scaledX = x / Scale;
+				Double scaledY = y / Scale;
+				if(scaledX >= 0 && scaledY >= 0 && scaledX < Matrix.Width && scaledY < Matrix.Height)
+				{
+					return Matrix.Cells[(int)scaledX, (int)scaledY];
+				}
+				else
+				{
+					Log.SysLogText(LogLevel.WARNING, "GridCell overrun trying to get {0},{1}", scaledX, scaledY);
+					return new GridCell();
+				}
+			}
 		}
 
 		public DRGrid(String name, Double width, Double height, Double scale)

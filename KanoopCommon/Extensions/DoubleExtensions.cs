@@ -461,9 +461,28 @@ namespace KanoopCommon.Extensions
 			return result;
 		}
 
+		/// <summary>
+		/// Return the angular difference between this and another angle
+		/// </summary>
+		/// <param name="value"></param>
+		/// <param name="other"></param>
+		/// <returns></returns>
 		public static Double AngularDifference(this Double value, Double other)
 		{
 			return Degrees.AngularDifference(value, other);
+		}
+
+		/// <summary>
+		/// Return the direction (clockwise / counterclockwise) with shortest rotation to given bearing
+		/// </summary>
+		/// <param name="value"></param>
+		/// <param name="other"></param>
+		/// <returns></returns>
+		public static SpinDirection ShortestSpinDirectionTo(this Double value, Double other)
+		{
+			Double cw = Degrees.ClockwiseDifference(value, other);
+			Double ccw = Degrees.CounterClockwiseDifference(value, other);
+			return cw < ccw ? SpinDirection.Clockwise : SpinDirection.CounterClockwise;
 		}
 
 		public static bool Between(this Double value, Double d1, Double d2)

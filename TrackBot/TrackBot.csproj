@@ -59,6 +59,8 @@
     <Compile Include="ForkLift\Lift.cs" />
     <Compile Include="Network\CommandServer.cs" />
     <Compile Include="Network\RadarController.cs" />
+    <Compile Include="Spatial\ActivityException.cs" />
+    <Compile Include="Spatial\GotoLED.cs" />
     <Compile Include="Spatial\FindTwoLEDs.cs" />
     <Compile Include="System\Performance.cs" />
     <Compile Include="Program.cs" />
@@ -77,6 +79,7 @@
     <Compile Include="Testing.cs" />
     <Compile Include="TrackBotException.cs" />
     <Compile Include="TTY\Backward.cs" />
+    <Compile Include="TTY\DumpCommand.cs" />
     <Compile Include="TTY\ImageParameter.cs" />
     <Compile Include="TTY\CalibrateCompass.cs" />
     <Compile Include="TTY\CalibrateSpeed.cs" />
@@ -104,6 +107,7 @@
     <Compile Include="TTY\SpinClockwise.cs" />
     <Compile Include="TTY\SpinCounterClockwise.cs" />
     <Compile Include="TTY\StandardSpeed.cs" />
+    <Compile Include="TTY\StartActivity.cs" />
     <Compile Include="TTY\Status.cs" />
     <Compile Include="TTY\StopActivity.cs" />
     <Compile Include="TTY\StoppingDistance.cs" />
@@ -138,6 +142,7 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="EmguCV\arm-raspi\" />
+    <Folder Include="RaspiCommon\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

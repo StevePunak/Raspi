@@ -84,8 +84,9 @@
     <Compile Include="Addresses\UUID.cs" />
     <Compile Include="CommonObjects\ColorPair.cs" />
     <Compile Include="CommonObjects\CommonException.cs" />
-    <Compile Include="CommonObjects\FormatException.cs" />
+    <Compile Include="CommonObjects\IllegalFormatException.cs" />
     <Compile Include="CommonObjects\IllegalTypeComparison.cs" />
+    <Compile Include="CommonObjects\ImageException.cs" />
     <Compile Include="CommonObjects\PathUtil.cs" />
     <Compile Include="CommonObjects\ReflectionAttributes.cs" />
     <Compile Include="CommonObjects\SoftwareVersion.cs" />
@@ -218,6 +219,7 @@
     <Compile Include="Geometry\RectangleD.cs" />
     <Compile Include="Geometry\SizeD.cs" />
     <Compile Include="Geometry\Triangle.cs" />
+    <Compile Include="Geometry\Types.cs" />
     <Compile Include="Geo\NMEALine.cs" />
     <Compile Include="Linux\Authorization.cs" />
     <Compile Include="Linux\LineSplitter.cs" />

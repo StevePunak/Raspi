@@ -426,6 +426,12 @@ namespace RaspiCommon.Lidar.Environs
 			return image;
 		}
 
+		/// <summary>
+		/// Get the shortest range centered at the given bearing in the given angular width
+		/// </summary>
+		/// <param name="trueBearing"></param>
+		/// <param name="angularWidth"></param>
+		/// <returns></returns>
 		public Double ShortestRangeAtBearing(Double trueBearing, Double angularWidth)
 		{
 			Double start = trueBearing.SubtractDegrees(angularWidth / 2);

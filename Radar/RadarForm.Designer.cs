@@ -40,13 +40,26 @@ namespace Radar
 			this.statusRadar = new System.Windows.Forms.StatusStrip();
 			this.textRadarCateresian = new System.Windows.Forms.ToolStripStatusLabel();
 			this.textLandscapeCoords = new System.Windows.Forms.ToolStripStatusLabel();
+			this.tabControl1 = new System.Windows.Forms.TabControl();
+			this.tabPageFullEnvironment = new System.Windows.Forms.TabPage();
+			this.picFullEnvironment = new System.Windows.Forms.PictureBox();
+			this.tabPageOptions = new System.Windows.Forms.TabPage();
+			this.panel1 = new System.Windows.Forms.Panel();
+			this.checkFullScaleImages = new System.Windows.Forms.CheckBox();
+			this.flowBitmap = new StackPanel();
 			this.tabAnalysis = new System.Windows.Forms.TabControl();
 			this.tabPageAnalysis = new System.Windows.Forms.TabPage();
 			this.picWorkBitmap = new System.Windows.Forms.PictureBox();
 			this.tabPageDeadReckoning = new System.Windows.Forms.TabPage();
 			this.picDeadReckoning = new System.Windows.Forms.PictureBox();
-			this.flowBitmap = new StackPanel();
-			this.picFullEnvironment = new System.Windows.Forms.PictureBox();
+			this.tabPageImage = new System.Windows.Forms.TabPage();
+			this.tabCameraImages = new System.Windows.Forms.TabControl();
+			this.tabPage1 = new System.Windows.Forms.TabPage();
+			this.tabPage2 = new System.Windows.Forms.TabPage();
+			this.tabPageVideo = new System.Windows.Forms.TabPage();
+			this.picVideo = new System.Windows.Forms.PictureBox();
+			this.cmenuVideo = new System.Windows.Forms.ContextMenuStrip(this.components);
+			this.snapToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.flowBigButtons = new StackPanel();
 			this.btnGrabInitial = new System.Windows.Forms.Button();
 			this.btnLoadLandmarks = new System.Windows.Forms.Button();
@@ -55,16 +68,12 @@ namespace Radar
 			this.btnSavePointMarkers = new System.Windows.Forms.Button();
 			this.btnParms = new System.Windows.Forms.Button();
 			this.btnAnalyze = new System.Windows.Forms.Button();
+			this.botDash = new TrackBotCommon.Controls.BotDash();
 			this.panel2 = new System.Windows.Forms.Panel();
 			this.textCommand = new System.Windows.Forms.TextBox();
 			this.btnCommand = new System.Windows.Forms.Button();
 			this.cmenuLandscape = new System.Windows.Forms.ContextMenuStrip(this.components);
 			this.assignLabelToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-			this.tabPageImage = new System.Windows.Forms.TabPage();
-			this.botDash = new TrackBotCommon.Controls.BotDash();
-			this.tabCameraImages = new System.Windows.Forms.TabControl();
-			this.tabPage1 = new System.Windows.Forms.TabPage();
-			this.tabPage2 = new System.Windows.Forms.TabPage();
 			this.cmenuRadar.SuspendLayout();
 			((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
 			this.splitContainer1.Panel1.SuspendLayout();
@@ -80,17 +89,24 @@ namespace Radar
 			this.splitRadar.SuspendLayout();
 			((System.ComponentModel.ISupportInitialize)(this.picLidar)).BeginInit();
 			this.statusRadar.SuspendLayout();
+			this.tabControl1.SuspendLayout();
+			this.tabPageFullEnvironment.SuspendLayout();
+			((System.ComponentModel.ISupportInitialize)(this.picFullEnvironment)).BeginInit();
+			this.tabPageOptions.SuspendLayout();
+			this.panel1.SuspendLayout();
 			this.tabAnalysis.SuspendLayout();
 			this.tabPageAnalysis.SuspendLayout();
 			((System.ComponentModel.ISupportInitialize)(this.picWorkBitmap)).BeginInit();
 			this.tabPageDeadReckoning.SuspendLayout();
 			((System.ComponentModel.ISupportInitialize)(this.picDeadReckoning)).BeginInit();
-			((System.ComponentModel.ISupportInitialize)(this.picFullEnvironment)).BeginInit();
+			this.tabPageImage.SuspendLayout();
+			this.tabCameraImages.SuspendLayout();
+			this.tabPageVideo.SuspendLayout();
+			((System.ComponentModel.ISupportInitialize)(this.picVideo)).BeginInit();
+			this.cmenuVideo.SuspendLayout();
 			this.flowBigButtons.SuspendLayout();
 			this.panel2.SuspendLayout();
 			this.cmenuLandscape.SuspendLayout();
-			this.tabPageImage.SuspendLayout();
-			this.tabCameraImages.SuspendLayout();
 			this.SuspendLayout();
 			// 
 			// cmenuRadar
@@ -130,7 +146,7 @@ namespace Radar
 			// 
 			this.splitContainer1.Panel2.Controls.Add(this.flowBigButtons);
 			this.splitContainer1.Size = new System.Drawing.Size(1053, 702);
-			this.splitContainer1.SplitterDistance = 771;
+			this.splitContainer1.SplitterDistance = 764;
 			this.splitContainer1.SplitterWidth = 5;
 			this.splitContainer1.TabIndex = 1;
 			// 
@@ -148,8 +164,8 @@ namespace Radar
 			// splitTopToBottom.Panel2
 			// 
 			this.splitTopToBottom.Panel2.AutoScroll = true;
-			this.splitTopToBottom.Panel2.Controls.Add(this.picFullEnvironment);
-			this.splitTopToBottom.Size = new System.Drawing.Size(771, 702);
+			this.splitTopToBottom.Panel2.Controls.Add(this.tabAnalysis);
+			this.splitTopToBottom.Size = new System.Drawing.Size(764, 702);
 			this.splitTopToBottom.SplitterDistance = 399;
 			this.splitTopToBottom.SplitterWidth = 5;
 			this.splitTopToBottom.TabIndex = 0;
@@ -169,22 +185,22 @@ namespace Radar
 			// splitRadar.Panel2
 			// 
 			this.splitRadar.Panel2.AutoScroll = true;
-			this.splitRadar.Panel2.Controls.Add(this.tabAnalysis);
+			this.splitRadar.Panel2.Controls.Add(this.tabControl1);
 			this.splitRadar.Panel2.Controls.Add(this.flowBitmap);
-			this.splitRadar.Size = new System.Drawing.Size(771, 399);
-			this.splitRadar.SplitterDistance = 381;
+			this.splitRadar.Size = new System.Drawing.Size(764, 399);
+			this.splitRadar.SplitterDistance = 374;
 			this.splitRadar.TabIndex = 0;
 			this.splitRadar.SplitterMoved += new System.Windows.Forms.SplitterEventHandler(this.OnSplitterMoved);
 			// 
 			// picLidar
 			// 
 			this.picLidar.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(64)))), ((int)(((byte)(0)))), ((int)(((byte)(64)))));
-			this.picLidar.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Center;
+			this.picLidar.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Zoom;
 			this.picLidar.ContextMenuStrip = this.cmenuRadar;
 			this.picLidar.Dock = System.Windows.Forms.DockStyle.Fill;
 			this.picLidar.Location = new System.Drawing.Point(0, 0);
 			this.picLidar.Name = "picLidar";
-			this.picLidar.Size = new System.Drawing.Size(381, 375);
+			this.picLidar.Size = new System.Drawing.Size(374, 375);
 			this.picLidar.TabIndex = 0;
 			this.picLidar.TabStop = false;
 			this.picLidar.MouseMove += new System.Windows.Forms.MouseEventHandler(this.OnRadarMouseMove);
@@ -196,7 +212,7 @@ namespace Radar
             this.textLandscapeCoords});
 			this.statusRadar.Location = new System.Drawing.Point(0, 375);
 			this.statusRadar.Name = "statusRadar";
-			this.statusRadar.Size = new System.Drawing.Size(381, 24);
+			this.statusRadar.Size = new System.Drawing.Size(374, 24);
 			this.statusRadar.TabIndex = 1;
 			this.statusRadar.Text = "statusStrip1";
 			// 
@@ -214,18 +230,92 @@ namespace Radar
 			this.textLandscapeCoords.Size = new System.Drawing.Size(26, 19);
 			this.textLandscapeCoords.Text = "0,0";
 			// 
+			// tabControl1
+			// 
+			this.tabControl1.Controls.Add(this.tabPageFullEnvironment);
+			this.tabControl1.Controls.Add(this.tabPageOptions);
+			this.tabControl1.Dock = System.Windows.Forms.DockStyle.Fill;
+			this.tabControl1.Location = new System.Drawing.Point(0, 0);
+			this.tabControl1.Name = "tabControl1";
+			this.tabControl1.SelectedIndex = 0;
+			this.tabControl1.Size = new System.Drawing.Size(386, 399);
+			this.tabControl1.TabIndex = 2;
+			// 
+			// tabPageFullEnvironment
+			// 
+			this.tabPageFullEnvironment.Controls.Add(this.picFullEnvironment);
+			this.tabPageFullEnvironment.Location = new System.Drawing.Point(4, 24);
+			this.tabPageFullEnvironment.Name = "tabPageFullEnvironment";
+			this.tabPageFullEnvironment.Padding = new System.Windows.Forms.Padding(3);
+			this.tabPageFullEnvironment.Size = new System.Drawing.Size(378, 371);
+			this.tabPageFullEnvironment.TabIndex = 0;
+			this.tabPageFullEnvironment.Text = "Full Environment";
+			this.tabPageFullEnvironment.UseVisualStyleBackColor = true;
+			// 
+			// picFullEnvironment
+			// 
+			this.picFullEnvironment.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Center;
+			this.picFullEnvironment.Dock = System.Windows.Forms.DockStyle.Fill;
+			this.picFullEnvironment.Location = new System.Drawing.Point(3, 3);
+			this.picFullEnvironment.Name = "picFullEnvironment";
+			this.picFullEnvironment.Size = new System.Drawing.Size(372, 365);
+			this.picFullEnvironment.TabIndex = 1;
+			this.picFullEnvironment.TabStop = false;
+			this.picFullEnvironment.MouseClick += new System.Windows.Forms.MouseEventHandler(this.OnLandscapeMouseClick);
+			this.picFullEnvironment.MouseMove += new System.Windows.Forms.MouseEventHandler(this.OnLandscapeMouseMove);
+			// 
+			// tabPageOptions
+			// 
+			this.tabPageOptions.Controls.Add(this.panel1);
+			this.tabPageOptions.Location = new System.Drawing.Point(4, 22);
+			this.tabPageOptions.Name = "tabPageOptions";
+			this.tabPageOptions.Padding = new System.Windows.Forms.Padding(3);
+			this.tabPageOptions.Size = new System.Drawing.Size(378, 373);
+			this.tabPageOptions.TabIndex = 1;
+			this.tabPageOptions.Text = "Options";
+			this.tabPageOptions.UseVisualStyleBackColor = true;
+			// 
+			// panel1
+			// 
+			this.panel1.Controls.Add(this.checkFullScaleImages);
+			this.panel1.Dock = System.Windows.Forms.DockStyle.Fill;
+			this.panel1.Location = new System.Drawing.Point(3, 3);
+			this.panel1.Name = "panel1";
+			this.panel1.Size = new System.Drawing.Size(372, 367);
+			this.panel1.TabIndex = 0;
+			// 
+			// checkFullScaleImages
+			// 
+			this.checkFullScaleImages.AutoSize = true;
+			this.checkFullScaleImages.Location = new System.Drawing.Point(14, 15);
+			this.checkFullScaleImages.Name = "checkFullScaleImages";
+			this.checkFullScaleImages.Size = new System.Drawing.Size(116, 19);
+			this.checkFullScaleImages.TabIndex = 0;
+			this.checkFullScaleImages.Text = "Full Scale Images";
+			this.checkFullScaleImages.UseVisualStyleBackColor = true;
+			this.checkFullScaleImages.CheckedChanged += new System.EventHandler(this.OnFullScaleImagesChecked);
+			// 
+			// flowBitmap
+			// 
+			this.flowBitmap.Dock = System.Windows.Forms.DockStyle.Bottom;
+			this.flowBitmap.Location = new System.Drawing.Point(0, 399);
+			this.flowBitmap.Name = "flowBitmap";
+			this.flowBitmap.Size = new System.Drawing.Size(386, 0);
+			this.flowBitmap.TabIndex = 0;
+			// 
 			// tabAnalysis
 			// 
 			this.tabAnalysis.Controls.Add(this.tabPageAnalysis);
 			this.tabAnalysis.Controls.Add(this.tabPageDeadReckoning);
 			this.tabAnalysis.Controls.Add(this.tabPageImage);
+			this.tabAnalysis.Controls.Add(this.tabPageVideo);
 			this.tabAnalysis.Dock = System.Windows.Forms.DockStyle.Fill;
 			this.tabAnalysis.Location = new System.Drawing.Point(0, 0);
 			this.tabAnalysis.Name = "tabAnalysis";
 			this.tabAnalysis.SelectedIndex = 0;
-			this.tabAnalysis.Size = new System.Drawing.Size(386, 399);
+			this.tabAnalysis.Size = new System.Drawing.Size(764, 298);
 			this.tabAnalysis.TabIndex = 1;
-			this.tabAnalysis.SelectedIndexChanged += new System.EventHandler(this.OnAnalysisTabChanged);
+			this.tabAnalysis.Selected += new System.Windows.Forms.TabControlEventHandler(this.OnTabAnalysisSelected);
 			// 
 			// tabPageAnalysis
 			// 
@@ -234,7 +324,7 @@ namespace Radar
 			this.tabPageAnalysis.Location = new System.Drawing.Point(4, 24);
 			this.tabPageAnalysis.Name = "tabPageAnalysis";
 			this.tabPageAnalysis.Padding = new System.Windows.Forms.Padding(3);
-			this.tabPageAnalysis.Size = new System.Drawing.Size(378, 371);
+			this.tabPageAnalysis.Size = new System.Drawing.Size(756, 270);
 			this.tabPageAnalysis.TabIndex = 0;
 			this.tabPageAnalysis.Text = "Analysis";
 			this.tabPageAnalysis.UseVisualStyleBackColor = true;
@@ -253,10 +343,10 @@ namespace Radar
 			// 
 			this.tabPageDeadReckoning.AutoScroll = true;
 			this.tabPageDeadReckoning.Controls.Add(this.picDeadReckoning);
-			this.tabPageDeadReckoning.Location = new System.Drawing.Point(4, 24);
+			this.tabPageDeadReckoning.Location = new System.Drawing.Point(4, 22);
 			this.tabPageDeadReckoning.Name = "tabPageDeadReckoning";
 			this.tabPageDeadReckoning.Padding = new System.Windows.Forms.Padding(3);
-			this.tabPageDeadReckoning.Size = new System.Drawing.Size(378, 371);
+			this.tabPageDeadReckoning.Size = new System.Drawing.Size(756, 272);
 			this.tabPageDeadReckoning.TabIndex = 1;
 			this.tabPageDeadReckoning.Text = "Dead Reckoning";
 			this.tabPageDeadReckoning.UseVisualStyleBackColor = true;
@@ -270,24 +360,81 @@ namespace Radar
 			this.picDeadReckoning.TabIndex = 0;
 			this.picDeadReckoning.TabStop = false;
 			// 
-			// flowBitmap
+			// tabPageImage
 			// 
-			this.flowBitmap.Dock = System.Windows.Forms.DockStyle.Bottom;
-			this.flowBitmap.Location = new System.Drawing.Point(0, 399);
-			this.flowBitmap.Name = "flowBitmap";
-			this.flowBitmap.Size = new System.Drawing.Size(386, 0);
-			this.flowBitmap.TabIndex = 0;
+			this.tabPageImage.AutoScroll = true;
+			this.tabPageImage.Controls.Add(this.tabCameraImages);
+			this.tabPageImage.Location = new System.Drawing.Point(4, 22);
+			this.tabPageImage.Name = "tabPageImage";
+			this.tabPageImage.Size = new System.Drawing.Size(756, 272);
+			this.tabPageImage.TabIndex = 2;
+			this.tabPageImage.Text = "Image";
+			this.tabPageImage.UseVisualStyleBackColor = true;
 			// 
-			// picFullEnvironment
+			// tabCameraImages
 			// 
-			this.picFullEnvironment.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Center;
-			this.picFullEnvironment.Location = new System.Drawing.Point(0, 42);
-			this.picFullEnvironment.Name = "picFullEnvironment";
-			this.picFullEnvironment.Size = new System.Drawing.Size(706, 198);
-			this.picFullEnvironment.TabIndex = 1;
-			this.picFullEnvironment.TabStop = false;
-			this.picFullEnvironment.MouseClick += new System.Windows.Forms.MouseEventHandler(this.OnLandscapeMouseClick);
-			this.picFullEnvironment.MouseMove += new System.Windows.Forms.MouseEventHandler(this.OnLandscapeMouseMove);
+			this.tabCameraImages.Controls.Add(this.tabPage1);
+			this.tabCameraImages.Controls.Add(this.tabPage2);
+			this.tabCameraImages.Dock = System.Windows.Forms.DockStyle.Fill;
+			this.tabCameraImages.Location = new System.Drawing.Point(0, 0);
+			this.tabCameraImages.Name = "tabCameraImages";
+			this.tabCameraImages.SelectedIndex = 0;
+			this.tabCameraImages.Size = new System.Drawing.Size(756, 272);
+			this.tabCameraImages.TabIndex = 0;
+			// 
+			// tabPage1
+			// 
+			this.tabPage1.Location = new System.Drawing.Point(4, 24);
+			this.tabPage1.Name = "tabPage1";
+			this.tabPage1.Padding = new System.Windows.Forms.Padding(3);
+			this.tabPage1.Size = new System.Drawing.Size(748, 244);
+			this.tabPage1.TabIndex = 0;
+			this.tabPage1.Text = "tabPage1";
+			this.tabPage1.UseVisualStyleBackColor = true;
+			// 
+			// tabPage2
+			// 
+			this.tabPage2.Location = new System.Drawing.Point(4, 22);
+			this.tabPage2.Name = "tabPage2";
+			this.tabPage2.Padding = new System.Windows.Forms.Padding(3);
+			this.tabPage2.Size = new System.Drawing.Size(749, 246);
+			this.tabPage2.TabIndex = 1;
+			this.tabPage2.Text = "tabPage2";
+			this.tabPage2.UseVisualStyleBackColor = true;
+			// 
+			// tabPageVideo
+			// 
+			this.tabPageVideo.Controls.Add(this.picVideo);
+			this.tabPageVideo.Location = new System.Drawing.Point(4, 22);
+			this.tabPageVideo.Name = "tabPageVideo";
+			this.tabPageVideo.Size = new System.Drawing.Size(756, 272);
+			this.tabPageVideo.TabIndex = 3;
+			this.tabPageVideo.Text = "Video";
+			this.tabPageVideo.UseVisualStyleBackColor = true;
+			// 
+			// picVideo
+			// 
+			this.picVideo.ContextMenuStrip = this.cmenuVideo;
+			this.picVideo.Dock = System.Windows.Forms.DockStyle.Fill;
+			this.picVideo.Location = new System.Drawing.Point(0, 0);
+			this.picVideo.Name = "picVideo";
+			this.picVideo.Size = new System.Drawing.Size(756, 272);
+			this.picVideo.TabIndex = 0;
+			this.picVideo.TabStop = false;
+			// 
+			// cmenuVideo
+			// 
+			this.cmenuVideo.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.snapToolStripMenuItem});
+			this.cmenuVideo.Name = "cmenuVideo";
+			this.cmenuVideo.Size = new System.Drawing.Size(101, 26);
+			// 
+			// snapToolStripMenuItem
+			// 
+			this.snapToolStripMenuItem.Name = "snapToolStripMenuItem";
+			this.snapToolStripMenuItem.Size = new System.Drawing.Size(100, 22);
+			this.snapToolStripMenuItem.Text = "Snap";
+			this.snapToolStripMenuItem.Click += new System.EventHandler(this.OnSnapClicked);
 			// 
 			// flowBigButtons
 			// 
@@ -304,14 +451,14 @@ namespace Radar
 			this.flowBigButtons.FlowDirection = System.Windows.Forms.FlowDirection.TopDown;
 			this.flowBigButtons.Location = new System.Drawing.Point(0, 0);
 			this.flowBigButtons.Name = "flowBigButtons";
-			this.flowBigButtons.Size = new System.Drawing.Size(271, 702);
+			this.flowBigButtons.Size = new System.Drawing.Size(284, 702);
 			this.flowBigButtons.TabIndex = 0;
 			// 
 			// btnGrabInitial
 			// 
 			this.btnGrabInitial.Location = new System.Drawing.Point(3, 3);
 			this.btnGrabInitial.Name = "btnGrabInitial";
-			this.btnGrabInitial.Size = new System.Drawing.Size(265, 46);
+			this.btnGrabInitial.Size = new System.Drawing.Size(278, 46);
 			this.btnGrabInitial.TabIndex = 0;
 			this.btnGrabInitial.Text = "&Grab Initial Landmarks";
 			this.btnGrabInitial.UseVisualStyleBackColor = true;
@@ -321,7 +468,7 @@ namespace Radar
 			// 
 			this.btnLoadLandmarks.Location = new System.Drawing.Point(3, 55);
 			this.btnLoadLandmarks.Name = "btnLoadLandmarks";
-			this.btnLoadLandmarks.Size = new System.Drawing.Size(265, 46);
+			this.btnLoadLandmarks.Size = new System.Drawing.Size(278, 46);
 			this.btnLoadLandmarks.TabIndex = 0;
 			this.btnLoadLandmarks.Text = "&Load Landmarks";
 			this.btnLoadLandmarks.UseVisualStyleBackColor = true;
@@ -333,7 +480,7 @@ namespace Radar
 			this.listLandmarks.HideSelection = false;
 			this.listLandmarks.Location = new System.Drawing.Point(3, 107);
 			this.listLandmarks.Name = "listLandmarks";
-			this.listLandmarks.Size = new System.Drawing.Size(265, 97);
+			this.listLandmarks.Size = new System.Drawing.Size(278, 97);
 			this.listLandmarks.TabIndex = 1;
 			this.listLandmarks.UseCompatibleStateImageBehavior = false;
 			this.listLandmarks.View = System.Windows.Forms.View.Details;
@@ -342,7 +489,7 @@ namespace Radar
 			// 
 			this.btnPullBitmap.Location = new System.Drawing.Point(3, 210);
 			this.btnPullBitmap.Name = "btnPullBitmap";
-			this.btnPullBitmap.Size = new System.Drawing.Size(265, 42);
+			this.btnPullBitmap.Size = new System.Drawing.Size(278, 42);
 			this.btnPullBitmap.TabIndex = 0;
 			this.btnPullBitmap.Text = "Pull";
 			this.btnPullBitmap.UseVisualStyleBackColor = true;
@@ -352,7 +499,7 @@ namespace Radar
 			// 
 			this.btnSavePointMarkers.Location = new System.Drawing.Point(3, 258);
 			this.btnSavePointMarkers.Name = "btnSavePointMarkers";
-			this.btnSavePointMarkers.Size = new System.Drawing.Size(265, 46);
+			this.btnSavePointMarkers.Size = new System.Drawing.Size(278, 46);
 			this.btnSavePointMarkers.TabIndex = 0;
 			this.btnSavePointMarkers.Text = "&Fetch Image";
 			this.btnSavePointMarkers.UseVisualStyleBackColor = true;
@@ -362,7 +509,7 @@ namespace Radar
 			// 
 			this.btnParms.Location = new System.Drawing.Point(3, 310);
 			this.btnParms.Name = "btnParms";
-			this.btnParms.Size = new System.Drawing.Size(265, 42);
+			this.btnParms.Size = new System.Drawing.Size(278, 42);
 			this.btnParms.TabIndex = 0;
 			this.btnParms.Text = "Change Corner Parms";
 			this.btnParms.UseVisualStyleBackColor = true;
@@ -372,11 +519,25 @@ namespace Radar
 			// 
 			this.btnAnalyze.Location = new System.Drawing.Point(3, 358);
 			this.btnAnalyze.Name = "btnAnalyze";
-			this.btnAnalyze.Size = new System.Drawing.Size(265, 42);
+			this.btnAnalyze.Size = new System.Drawing.Size(278, 42);
 			this.btnAnalyze.TabIndex = 0;
 			this.btnAnalyze.Text = "Analyze";
 			this.btnAnalyze.UseVisualStyleBackColor = true;
 			this.btnAnalyze.Click += new System.EventHandler(this.OnAnalyzeClicked);
+			// 
+			// botDash
+			// 
+			this.botDash.Bearing = 0D;
+			this.botDash.DestinationBearing = 0D;
+			this.botDash.FrontPrimaryRange = 0D;
+			this.botDash.FrontSecondaryRange = 0D;
+			this.botDash.Location = new System.Drawing.Point(3, 406);
+			this.botDash.Name = "botDash";
+			this.botDash.RearPrimaryRange = 0D;
+			this.botDash.RearSecondaryRange = 0D;
+			this.botDash.Size = new System.Drawing.Size(278, 182);
+			this.botDash.TabIndex = 7;
+			this.botDash.TankBitmap = null;
 			// 
 			// panel2
 			// 
@@ -385,7 +546,7 @@ namespace Radar
 			this.panel2.Controls.Add(this.btnCommand);
 			this.panel2.Location = new System.Drawing.Point(3, 594);
 			this.panel2.Name = "panel2";
-			this.panel2.Size = new System.Drawing.Size(265, 23);
+			this.panel2.Size = new System.Drawing.Size(278, 23);
 			this.panel2.TabIndex = 6;
 			// 
 			// textCommand
@@ -393,13 +554,13 @@ namespace Radar
 			this.textCommand.Dock = System.Windows.Forms.DockStyle.Fill;
 			this.textCommand.Location = new System.Drawing.Point(0, 0);
 			this.textCommand.Name = "textCommand";
-			this.textCommand.Size = new System.Drawing.Size(237, 23);
+			this.textCommand.Size = new System.Drawing.Size(250, 23);
 			this.textCommand.TabIndex = 4;
 			// 
 			// btnCommand
 			// 
 			this.btnCommand.Dock = System.Windows.Forms.DockStyle.Right;
-			this.btnCommand.Location = new System.Drawing.Point(237, 0);
+			this.btnCommand.Location = new System.Drawing.Point(250, 0);
 			this.btnCommand.Name = "btnCommand";
 			this.btnCommand.Size = new System.Drawing.Size(28, 23);
 			this.btnCommand.TabIndex = 5;
@@ -420,62 +581,6 @@ namespace Radar
 			this.assignLabelToolStripMenuItem.Size = new System.Drawing.Size(140, 22);
 			this.assignLabelToolStripMenuItem.Text = "&Assign Label";
 			this.assignLabelToolStripMenuItem.Click += new System.EventHandler(this.OnAssignLandmarkLabelClicked);
-			// 
-			// tabPageImage
-			// 
-			this.tabPageImage.AutoScroll = true;
-			this.tabPageImage.Controls.Add(this.tabCameraImages);
-			this.tabPageImage.Location = new System.Drawing.Point(4, 24);
-			this.tabPageImage.Name = "tabPageImage";
-			this.tabPageImage.Size = new System.Drawing.Size(378, 371);
-			this.tabPageImage.TabIndex = 2;
-			this.tabPageImage.Text = "Image";
-			this.tabPageImage.UseVisualStyleBackColor = true;
-			// 
-			// botDash
-			// 
-			this.botDash.Bearing = 0D;
-			this.botDash.DestinationBearing = 0D;
-			this.botDash.FrontPrimaryRange = 0D;
-			this.botDash.FrontSecondaryRange = 0D;
-			this.botDash.Location = new System.Drawing.Point(3, 406);
-			this.botDash.Name = "botDash";
-			this.botDash.RearPrimaryRange = 0D;
-			this.botDash.RearSecondaryRange = 0D;
-			this.botDash.Size = new System.Drawing.Size(265, 182);
-			this.botDash.TabIndex = 7;
-			this.botDash.TankBitmap = null;
-			// 
-			// tabCameraImages
-			// 
-			this.tabCameraImages.Controls.Add(this.tabPage1);
-			this.tabCameraImages.Controls.Add(this.tabPage2);
-			this.tabCameraImages.Dock = System.Windows.Forms.DockStyle.Fill;
-			this.tabCameraImages.Location = new System.Drawing.Point(0, 0);
-			this.tabCameraImages.Name = "tabCameraImages";
-			this.tabCameraImages.SelectedIndex = 0;
-			this.tabCameraImages.Size = new System.Drawing.Size(378, 371);
-			this.tabCameraImages.TabIndex = 0;
-			// 
-			// tabPage1
-			// 
-			this.tabPage1.Location = new System.Drawing.Point(4, 24);
-			this.tabPage1.Name = "tabPage1";
-			this.tabPage1.Padding = new System.Windows.Forms.Padding(3);
-			this.tabPage1.Size = new System.Drawing.Size(370, 343);
-			this.tabPage1.TabIndex = 0;
-			this.tabPage1.Text = "tabPage1";
-			this.tabPage1.UseVisualStyleBackColor = true;
-			// 
-			// tabPage2
-			// 
-			this.tabPage2.Location = new System.Drawing.Point(4, 24);
-			this.tabPage2.Name = "tabPage2";
-			this.tabPage2.Padding = new System.Windows.Forms.Padding(3);
-			this.tabPage2.Size = new System.Drawing.Size(192, 72);
-			this.tabPage2.TabIndex = 1;
-			this.tabPage2.Text = "tabPage2";
-			this.tabPage2.UseVisualStyleBackColor = true;
 			// 
 			// RadarForm
 			// 
@@ -509,18 +614,26 @@ namespace Radar
 			((System.ComponentModel.ISupportInitialize)(this.picLidar)).EndInit();
 			this.statusRadar.ResumeLayout(false);
 			this.statusRadar.PerformLayout();
+			this.tabControl1.ResumeLayout(false);
+			this.tabPageFullEnvironment.ResumeLayout(false);
+			((System.ComponentModel.ISupportInitialize)(this.picFullEnvironment)).EndInit();
+			this.tabPageOptions.ResumeLayout(false);
+			this.panel1.ResumeLayout(false);
+			this.panel1.PerformLayout();
 			this.tabAnalysis.ResumeLayout(false);
 			this.tabPageAnalysis.ResumeLayout(false);
 			((System.ComponentModel.ISupportInitialize)(this.picWorkBitmap)).EndInit();
 			this.tabPageDeadReckoning.ResumeLayout(false);
 			((System.ComponentModel.ISupportInitialize)(this.picDeadReckoning)).EndInit();
-			((System.ComponentModel.ISupportInitialize)(this.picFullEnvironment)).EndInit();
+			this.tabPageImage.ResumeLayout(false);
+			this.tabCameraImages.ResumeLayout(false);
+			this.tabPageVideo.ResumeLayout(false);
+			((System.ComponentModel.ISupportInitialize)(this.picVideo)).EndInit();
+			this.cmenuVideo.ResumeLayout(false);
 			this.flowBigButtons.ResumeLayout(false);
 			this.panel2.ResumeLayout(false);
 			this.panel2.PerformLayout();
 			this.cmenuLandscape.ResumeLayout(false);
-			this.tabPageImage.ResumeLayout(false);
-			this.tabCameraImages.ResumeLayout(false);
 			this.ResumeLayout(false);
 
 		}
@@ -561,6 +674,15 @@ namespace Radar
 		private System.Windows.Forms.TabControl tabCameraImages;
 		private System.Windows.Forms.TabPage tabPage1;
 		private System.Windows.Forms.TabPage tabPage2;
+		private System.Windows.Forms.TabPage tabPageVideo;
+		private System.Windows.Forms.ContextMenuStrip cmenuVideo;
+		private System.Windows.Forms.ToolStripMenuItem snapToolStripMenuItem;
+		private System.Windows.Forms.PictureBox picVideo;
+		private System.Windows.Forms.TabControl tabControl1;
+		private System.Windows.Forms.TabPage tabPageFullEnvironment;
+		private System.Windows.Forms.TabPage tabPageOptions;
+		private System.Windows.Forms.Panel panel1;
+		private System.Windows.Forms.CheckBox checkFullScaleImages;
 	}
 }
 

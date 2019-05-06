@@ -1,12 +1,18 @@
 #define LOG_STATE_CHANGES
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using Emgu.CV;
+using KanoopCommon.Extensions;
+using KanoopCommon.Geometry;
 using KanoopCommon.Logging;
 using KanoopCommon.Threading;
+using RaspiCommon;
+using RaspiCommon.Devices.Optics;
 
 namespace TrackBot.Spatial
 {
@@ -37,7 +43,9 @@ namespace TrackBot.Spatial
 			TravelToDest,
 			RotateToNewBearing,
 			Stuck,
-			FindInImage
+			FindInImage,
+			CenterInImage,
+			Success,
 		}
 
 		public ActivityStates ActivityState { get; protected set; }
@@ -63,37 +71,27 @@ namespace TrackBot.Spatial
 			QuitRequest = false;
 		}
 
-		public static void StartActivity(ActivityType activityType, bool waitForStateChange)
+		public static void StartActivity(ActivityType activityType, object[] args, bool promptForStateChange)
 		{
+			Log.SysLogText(LogLevel.DEBUG, "Start {0}", activityType);
+
 			try
 			{
 				StopActivity();
 
-				switch(activityType)
+				foreach(Type type in Assembly.GetExecutingAssembly().GetTypes())
 				{
-					case ActivityType.GoToDestination:
-						RunningActivity = new GoToDestination();
-						RunningActivity.Start();
-						RunningActivityType = ActivityType.GoToDestination;
-						break;
-					case ActivityType.TravelLongestPath:
-						RunningActivity = new TravelLongestPath();
-						RunningActivity.Start();
-						RunningActivityType = ActivityType.TravelLongestPath;
-						break;
-					case ActivityType.FindTwoLEDs:
-						RunningActivity = new FindTwoLEDs();
-						RunningActivity.Start();
-						RunningActivityType = ActivityType.FindTwoLEDs;
-						break;
-					default:
-						Log.SysLogText(LogLevel.WARNING, "Unkown activity {0}", activityType);
-						break;
-				}
-
-				if(RunningActivity != null)
-				{
-					RunningActivity.WaitForStateChange = waitForStateChange;
+					if(type.IsSubclassOf(typeof(Activity)) && type.Name.Equals(activityType.ToString(), StringComparison.InvariantCultureIgnoreCase))
+					{
+						RunningActivity = Activator.CreateInstance(type) as Activity;
+						if(RunningActivity.ParseArgs(args))
+						{
+							RunningActivityType = RunningActivity.ActivityType;
+							RunningActivity.WaitForStateChange = promptForStateChange;
+							RunningActivity.Start();
+							break;
+						}
+					}
 				}
 			}
 			catch(Exception e)
@@ -108,8 +106,10 @@ namespace TrackBot.Spatial
 			{
 				if(RunningActivity.State == ThreadState.Started)
 				{
-					Log.SysLogText(LogLevel.INFO, "Stopping previous running activity {0}", RunningActivity);
+					Log.SysLogText(LogLevel.INFO, "Stopping previous running activity {0}", RunningActivityType);
+					RunningActivityType = ActivityType.None;
 					RunningActivity.Stop();
+					RunningActivity = null;
 				}
 			}
 		}
@@ -220,6 +220,89 @@ namespace TrackBot.Spatial
 		{
 			Log.SysLogText(LogLevel.DEBUG, "Change state request (Quit = {0})", RunningActivity.QuitRequest);
 			_changeStateEvent.Set();
+		}
+
+		virtual protected bool ParseArgs(object[] args)
+		{
+			return true;
+		}
+
+		/// <summary>
+		/// Wait for the given time fo a valid range to show up in the Lidar
+		/// </summary>
+		/// <param name="howLong"></param>
+		/// <returns></returns>
+		protected Double WaitForValidRange(Double bearing, TimeSpan howLong)
+		{
+			Double distance = 0;
+			DateTime startTime = DateTime.UtcNow;
+			while(DateTime.UtcNow < startTime + howLong)
+			{
+				distance = Widgets.Instance.ImageEnvironment.GetRangeAtBearing(bearing);
+				Log.LogText(LogLevel.DEBUG, ">>>> Distance at {0} is {1}", bearing.ToAngleString(), distance.ToMetersString());
+				if(distance > 0)
+				{
+					break;
+				}
+				Sleep(250);
+			}
+			return distance;
+		}
+
+		/// <summary>
+		/// Wait for range after adjusting for lidar position
+		/// </summary>
+		/// <param name="bearing"></param>
+		/// <param name="waitTime"></param>
+		/// <returns></returns>
+		protected Double WaitForAdjustedRange(Double bearing, TimeSpan waitTime)
+		{
+			Double range = Math.Max(WaitForValidRange(bearing, waitTime) - Widgets.Instance.Chassis.LidarPosition.Y, 0.1);
+			return range;
+		}
+
+		/// <summary>
+		/// Turn to bearing with retries
+		/// </summary>
+		/// <param name="bearing"></param>
+		/// <returns></returns>
+		protected bool TryTurnToBearing(Double bearing)
+		{
+			int tries = 3;
+			Direction correct = Direction.Forward;
+
+			do
+			{
+				if(Widgets.Instance.Tracks.TurnToBearing(bearing, SpinDirection.None, Program.Config.StandardSpeed) == true)
+				{
+					break;
+				}
+
+				Log.LogText(LogLevel.DEBUG, "Failed to turn... correcting ({0} attempts left", tries);
+				correct = correct == Direction.Forward ? Direction.Backward : Direction.Forward;
+				Sleep(1000);
+				Widgets.Instance.Tracks.MoveMeters(correct, .2, Widgets.Instance.Tracks.Slow);
+				Sleep(1000);
+			} while(--tries > 0);
+			return tries > 0;
+		}
+
+		protected bool TryGetLEDPosition(Color color,  out LEDPosition ledPosition)
+		{
+			ledPosition = null;
+			Mat image;
+			if(!Widgets.Instance.Camera.TryTakeSnapshot(out image))
+			{
+				throw new ActivityException("Could not get new image");
+			}
+
+			Widgets.Instance.LEDImageAnalysis.AnalyzeImage(image);
+
+			if(Widgets.Instance.LEDImageAnalysis.HasColor(color))
+			{
+				ledPosition = Widgets.Instance.LEDImageAnalysis.GetColor(color);
+			}
+			return ledPosition != null;
 		}
 	}
 }

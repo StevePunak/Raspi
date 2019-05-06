@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Drawing;
 using System.IO.Ports;
 using System.Linq;
 using System.Net;
@@ -104,7 +105,6 @@ namespace TrackBot
 
 		public void StartWidgets()
 		{
-			StartCamera();
 			StartChassis();
 			StartDatabase();
 			StartRangeFinders();
@@ -112,6 +112,7 @@ namespace TrackBot
 			StartSpatial();
 			StartActivities();
 			StartLift();
+			StartCamera();
 			StartSaveImageThread();
 			StartSpatialPolling();
 			StartCommandServer();
@@ -165,16 +166,24 @@ namespace TrackBot
 
 		private void StartCamera()
 		{
-			Camera = new Camera()
+			Log.SysLogText(LogLevel.DEBUG, "Exposre setting is '{0}'", Program.Config.CameraExposureType);
+			Camera = new CommandLineCamera()
 			{
-				ConvertTo = ImageType.Bitmap
+				ConvertTo = ImageType.Bitmap,
+				Brightness = Program.Config.CameraBrightness,
+				ImageEffect = Program.Config.CameraImageEffect,
+				Exposure = Program.Config.CameraExposureType,
+				ColorEffect = Program.Config.CameraColorEffect,
+				Saturation = Program.Config.CameraSaturation,
+				Contrast = Program.Config.CameraContrast,
+				SnapshotDelay = Program.Config.CameraImageDelay,
 			};
-			LEDImageAnalysis = new LEDImageAnalysis(Camera)
-			{
-				BearingOffset = Program.Config.CameraBearingOffset
-			};
-			LEDImageAnalysis.LedLowThreshold = Program.Config.LedLowThreshold;
-			LEDImageAnalysis.LedHighThreshold = Program.Config.LedHighThreshold;
+			LEDImageAnalysis = new LEDImageAnalysis(Camera);
+			LEDImageAnalysis.SetThreshold(Program.Config.BlueThresholds);
+			LEDImageAnalysis.SetThreshold(Program.Config.GreenThresholds);
+			LEDImageAnalysis.SetThreshold(Program.Config.RedThresholds);
+			LEDImageAnalysis.BearingOffset = Program.Config.CameraBearingOffset;
+			LEDImageAnalysis.Compass = Compass;
 			LEDImageAnalysis.CameraImagesAnalyzed += OnCameraImagesAnalyzed;
 			Log.SysLogText(LogLevel.DEBUG, "Setting dir to '{0}'", Program.Config.RemoteImageDirectory);
 			LEDImageAnalysis.ImageAnalysisDirectory = Program.Config.RemoteImageDirectory;
@@ -454,7 +463,7 @@ namespace TrackBot
 			DeadReckoningEnvironmentReceived(environment);
 		}
 
-		public Double GetRangeAtDirection(Direction direction)
+		public Double GetRangeAtDirection(Direction direction, bool fuzzy = true)
 		{
 			Double bearing = Widgets.Instance.GyMag.Bearing;
 			if(direction == Direction.Backward)
@@ -462,7 +471,20 @@ namespace TrackBot
 				bearing = bearing.AddDegrees(180);
 			}
 
-			Double range = Widgets.Instance.ImageEnvironment.FuzzyRangeAtBearing(Widgets.Instance.Chassis, bearing, Widgets.Instance.ImageEnvironment.RangeFuzz);
+			Double range = 0;
+			if(fuzzy)
+			{
+				range = Widgets.Instance.ImageEnvironment.FuzzyRangeAtBearing(Widgets.Instance.Chassis, bearing, Widgets.Instance.ImageEnvironment.RangeFuzz);
+			}
+			else
+			{
+				Log.SysLogText(LogLevel.DEBUG, "getting non-fuzzy range");
+				if((range = Widgets.Instance.ImageEnvironment.GetRangeAtBearing(bearing)) == 0)
+				{
+					range = Widgets.Instance.ImageEnvironment.ShortestRangeAtBearing(bearing, 4);
+					Log.SysLogText(LogLevel.DEBUG, "was zero and is now {0}", range);
+				}
+			}
 
 			HCSR04_RangeFinder rangeFinder;
 			if(direction == Direction.Forward && Widgets.Instance.RangeFinders.TryGetValue(RFDir.Front, out rangeFinder) && rangeFinder.Range != 0)

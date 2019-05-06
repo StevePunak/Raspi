@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Threading;
 using KanoopCommon.Extensions;
 using KanoopCommon.Geometry;
 using KanoopCommon.Logging;
@@ -17,7 +19,7 @@ namespace TrackBot.Tracks
 		const Double BEARING_ADJUST_LOW_THERSHOLD = 1;
 		const int MAX_SPEED_ADJUST = 5;
 
-		static readonly TimeSpan MAX_TIME_TO_RUN = TimeSpan.FromSeconds(4);
+		static readonly TimeSpan MAX_TIME_TO_RUN = TimeSpan.FromSeconds(8);
 		static readonly TimeSpan MIN_DIRECTION_ADJUST_INTERVAL = TimeSpan.FromMilliseconds(500);
 
 		#endregion
@@ -35,6 +37,7 @@ namespace TrackBot.Tracks
 		#endregion
 
 		public int TooSlow { get { return 50; } }
+		public int PrettySlow { get { return 60; } }
 		public int Slow { get { return 70; } }
 		public int Medium { get { return 85; } }
 		public int Fast { get { return 100; } }
@@ -192,9 +195,11 @@ namespace TrackBot.Tracks
 
 		public void ForwardTime(TimeSpan time, int motorSpeed)
 		{
-			Widgets.Instance.Tracks.Speed = 75;
-			GpioSharp.Sleep(time);
+			Log.SysLogText(LogLevel.INFO, "Starting forward move {0}", (int)time.TotalMilliseconds);
+			Widgets.Instance.Tracks.Speed = StandardSpeed;
+			Thread.Sleep(time);
 			Widgets.Instance.Tracks.Stop();
+			Log.SysLogText(LogLevel.INFO, "Ending forward move {0}", (int)time.TotalMilliseconds);
 		}
 
 		/// <summary>
@@ -204,9 +209,11 @@ namespace TrackBot.Tracks
 		/// <param name="motorSpeed"></param>
 		public void BackwardTime(TimeSpan time, int motorSpeed)
 		{
-			Widgets.Instance.Tracks.Speed = -75;
-			GpioSharp.Sleep(time);
+			Log.SysLogText(LogLevel.INFO, "Starting backward move {0}", (int)time.TotalMilliseconds);
+			Widgets.Instance.Tracks.Speed = -StandardSpeed;
+			Thread.Sleep(time);
 			Widgets.Instance.Tracks.Stop();
+			Log.SysLogText(LogLevel.INFO, "Ending backward move {0}", (int)time.TotalMilliseconds);
 		}
 
 		public bool ForwardMeters(Double meters, int motorSpeed, bool stagger = false, bool ignoreCollision = false)
@@ -219,11 +226,13 @@ namespace TrackBot.Tracks
 			return MoveMeters(Direction.Backward, meters, motorSpeed, stagger, ignoreCollision);
 		}
 
-		public bool MoveMeters(Direction direction, Double meters, int motorSpeed, bool stagger = false, bool ignoreCollision = false)
+		public bool MoveMeters(Direction direction, Double meters, int motorSpeed, bool stagger = false, bool ignoreCollision = false, bool useFuzzyRange = true)
 		{
 			bool result = false;
 
 			DistanceToTravel(meters);
+
+			TimeSpan maxTimeToTravel = TimeToTravel(meters, motorSpeed);
 
 			Double startDistance = Widgets.Instance.GetRangeAtDirection(direction);
 			Double travelBearing = direction == Direction.Forward ? Widgets.Instance.Compass.Bearing : Widgets.Instance.Compass.Bearing.AddDegrees(180);
@@ -232,10 +241,12 @@ namespace TrackBot.Tracks
 			DateTime startTime = DateTime.UtcNow;
 			int trackSpeed = direction == Direction.Forward ? motorSpeed : -motorSpeed;
 			Widgets.Instance.Tracks.Speed = trackSpeed;
+
+			
 			while(true)
 			{
-				Double forwardRange = Widgets.Instance.GetRangeAtDirection(Direction.Forward);
-				Double backwardRange = Widgets.Instance.GetRangeAtDirection(Direction.Backward);
+				Double forwardRange = Widgets.Instance.GetRangeAtDirection(Direction.Forward, useFuzzyRange);
+				Double backwardRange = Widgets.Instance.GetRangeAtDirection(Direction.Backward, useFuzzyRange);
 
 				ForwardPrimaryRange(forwardRange);
 				BackwardPrimaryRange(backwardRange);
@@ -253,7 +264,7 @@ namespace TrackBot.Tracks
 				DistanceLeft(range);
 
 				Double distanceTraveled = startDistance - range;
-				if(stagger == false && DateTime.UtcNow > startTime + MAX_TIME_TO_RUN)
+				if(stagger == false && DateTime.UtcNow > startTime + maxTimeToTravel)
 				{
 					Log.SysLogText(LogLevel.DEBUG, "Ran out of time");
 					break;
@@ -273,15 +284,15 @@ namespace TrackBot.Tracks
 				}
 				if(stagger)
 				{
-					GpioSharp.Sleep(250);	// go for 250ms
+					Thread.Sleep(250);	// go for 250ms
 					Stop();
-					GpioSharp.Sleep(1500);  // stop and settle down
+					Thread.Sleep(1500);  // stop and settle down
 
 					Widgets.Instance.Tracks.Speed = trackSpeed;		// go again
 				}
 				else
 				{
-					GpioSharp.Sleep(100);
+					Thread.Sleep(100);
 				}
 			}
 			Widgets.Instance.Tracks.Stop();
@@ -359,10 +370,11 @@ namespace TrackBot.Tracks
 			return time != TimeSpan.Zero;
 		}
 
-		public bool TurnToBearing(Double to, SpinDirection direction = SpinDirection.None)
+		public bool TurnToBearing(Double to, SpinDirection direction = SpinDirection.None, int speed = 0)
 		{
 			const Double THRESHOLD = 2;
 
+			int spinSpeed = speed == 0 ? Widgets.Instance.Tracks.Fast : speed;
 			NewDestinationBearing(to);
 
 			Double from = Widgets.Instance.GyMag.Bearing;
@@ -375,7 +387,7 @@ namespace TrackBot.Tracks
 
 			Log.SysLogText(LogLevel.DEBUG, "Will turn {0} to from {1} to {2}", direction, from.ToAngleString(), to.ToAngleString());
 
-			Widgets.Instance.Tracks.Spin(direction, Widgets.Instance.Tracks.Fast);
+			Widgets.Instance.Tracks.Spin(direction, spinSpeed);
 
 			DateTime start = DateTime.UtcNow;
 

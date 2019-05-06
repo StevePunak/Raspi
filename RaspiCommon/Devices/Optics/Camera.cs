@@ -19,7 +19,7 @@ namespace RaspiCommon.Devices.Optics
 {
 	public delegate void SnapshotTakenHandler(String imageLocation, ImageType imageType);
 
-	public class Camera : ThreadBase
+	public abstract class Camera : ThreadBase
 	{
 		#region Events
 
@@ -31,9 +31,8 @@ namespace RaspiCommon.Devices.Optics
 
 		public static string ImageDirectory = "/var/robo/images";
 
-		const String SNAPSHOT_PROGRAM = "raspiyuv";
-		const String SAVE_NAME_END = "snap.img";
-		const String DELETE_WILDCARD = "*-snap*";
+		protected const String DELETE_WILDCARD = "*-snap*";
+		protected const String SAVE_NAME_END = "snap.img";
 
 		const int COUNT_TO_KEEP = 10;
 
@@ -41,68 +40,40 @@ namespace RaspiCommon.Devices.Optics
 
 		#region Public Properties
 
-		public String LastSavedImage { get; private set; }
+		public String LastSavedImageFileName { get; protected set; }
+		public Mat LastSavedImage { get; protected set; }
+		public DateTime LastSavedImageTime { get; protected set; }
 
 		public Double FieldOfViewHorizontal { get { return 53.0; } }
 		public Double FieldOfViewVertical { get { return 41.0; } }
 
 		public Double AngleOffset { get; set; }
 
-		public TimeSpan WaitTime { get; set; }
+		public TimeSpan SnapshotDelay { get; set; }
 		public int Width { get; set; }
 		public int Height { get; set; }
 		public ImageType ImageType { get; set; }
 		public bool FlipHorizontal { get; set; }
 		public bool FlipVertical { get; set; }
 		public int Brightness { get; set; }
-		public String Effect { get; set; }
+		public String ImageEffect { get; set; }
+		public String ColorEffect { get; set; }
 		public String Exposure { get; set; }
+		public int Contrast { get; set; }
+		public int Saturation { get; set; }
 
 		public ImageType ConvertTo { get; set; }
 
-		#endregion
+		public bool AutoSnap { get; set; }
 
-		#region Private Properties
-
-		String WaitTimeString { get { return WaitTime != TimeSpan.Zero ? String.Format("-t {0}", (int)WaitTime.TotalMilliseconds) : String.Empty; } }
-		String WidthString { get { return Width != 0 ? String.Format("-w {0}", Width) : String.Empty; } }
-		String HeightString { get { return Height != 0 ? String.Format("-h {0}", Height) : String.Empty; } }
-		String EffectString { get { return String.IsNullOrEmpty(Effect) ? String.Empty : String.Format("-ifx {0}", Effect); } }
-		String ExposureString { get { return String.IsNullOrEmpty(Exposure) ? String.Empty : String.Format("-ex {0}", Exposure); } }
-		String ImageTypeString
-		{
-			get
-			{
-				String output = String.Empty;
-				switch(ImageType)
-				{
-					case ImageType.RawRGB:
-						output = String.Format("--rgb");
-						break;
-					case ImageType.RawBGR:
-						output = String.Format("--bgr");
-						break;
-					default:
-						break;
-				}
-				return output;
-			}
-		}
-		String FlipHorizontalString { get { return FlipHorizontal ? "-hf" : String.Empty; } }
-		String FlipVerticalString { get { return FlipVertical ? "-vf" : String.Empty; } }
-		String BrightnessString { get { return String.Format("-br {0}", Brightness); } }
+		public int ImageNumber { get; protected set; }
 
 		#endregion
 
-		#region Local Member Variables
+		#region Constructor
 
-		String _lastParms;
-		int _snapshotCount;
-
-		#endregion
-
-		public Camera()
-			: base(typeof(Camera).Name)
+		protected Camera(String name)
+			: base(name)
 		{
 			Log.SysLogText(LogLevel.INFO, "Creating camera object");
 
@@ -112,16 +83,17 @@ namespace RaspiCommon.Devices.Optics
 				Directory.CreateDirectory(ImageDirectory);
 			}
 
-			if(TryGetLastSnapshot(out _snapshotCount))
+			int imageNumber;
+			if(TryGetLastSnapshot(out imageNumber))
 			{
-				_snapshotCount++;
+				ImageNumber = imageNumber + 1;
 			}
 			else
 			{
-				_snapshotCount = 0;
+				ImageNumber = 0;
 			}
 
-			WaitTime = TimeSpan.FromMilliseconds(1000);
+			SnapshotDelay = TimeSpan.FromMilliseconds(1000);
 			Width = 800;
 			Height = 600;
 			ImageType = ImageType.RawRGB;
@@ -132,56 +104,19 @@ namespace RaspiCommon.Devices.Optics
 			ConvertTo = ImageType.Unknown;
 
 			SnapshotTaken += delegate {};
-			_lastParms = String.Empty;
 
 			Interval = TimeSpan.FromSeconds(2);
 		}
 
-		protected override bool OnRun()
-		{
-			String filename = String.Format("{0}/{1:0000}-{2}", ImageDirectory, _snapshotCount, SAVE_NAME_END);
-			String parms = String.Format("{0} {1} {2} {3} {4} {5} {6} {7} {8}",
-				WaitTimeString, WidthString, HeightString, ImageTypeString, FlipHorizontalString, FlipVerticalString, BrightnessString, EffectString, ExposureString);
-			String args = String.Format("{0} -o {1}", parms, filename);
-			if(parms != _lastParms)
-			{
-				Log.LogText(LogLevel.DEBUG, "File '{0}'  args: '{1}'", filename, args);
-			}
-			_lastParms = parms;
-			ProcessStartInfo pinfo = new ProcessStartInfo(SNAPSHOT_PROGRAM, args)
-			{
+		#endregion
 
-			};
+		#region Public Properties
 
-			Process process = Process.Start(pinfo);
-			if(process.WaitForExit(10000) && process.ExitCode == 0)
-			{
-				String outputFile;
-				if(ConvertTo != ImageType.Unknown && ConvertImage(filename, new Size(Width, Height), ImageType, ConvertTo, _snapshotCount, out outputFile))
-				{
-					LastSavedImage = outputFile;
-					SnapshotTaken(outputFile, ConvertTo);
-				}
-				else
-				{
-					LastSavedImage = filename;
-					SnapshotTaken(filename, ImageType.RawRGB);
-				}
-			}
-			else
-			{
-				Log.LogText(LogLevel.DEBUG, "Process exit {0}", process.ExitCode);
-			}
+		public abstract bool TryTakeSnapshot(out Mat image);
 
-			if(++_snapshotCount > 9999)
-			{
-				_snapshotCount = 0;
-			}
+		#endregion
 
-			CleanUp();
-
-			return true;
-		}
+		#region File Handling
 
 		protected void CleanUp()
 		{
@@ -192,7 +127,7 @@ namespace RaspiCommon.Devices.Optics
 				String part = Path.GetFileName(file).Substring(0, 4);
 				if(int.TryParse(part, out num))
 				{
-					if(num < _snapshotCount - COUNT_TO_KEEP || num > _snapshotCount)
+					if(num < ImageNumber - COUNT_TO_KEEP || num > ImageNumber)
 					{
 						File.Delete(file);
 					}
@@ -212,7 +147,7 @@ namespace RaspiCommon.Devices.Optics
 				String s = String.Format("{0:0000}", last);
 				Log.SysLogText(LogLevel.DEBUG, "Looking for file starts with {0} in {1} files", s, files.Count);
 
-				if((name  = files.Find(f => Path.GetFileName(f).StartsWith(s))) != null)
+				if((name = files.Find(f => Path.GetFileName(f).StartsWith(s))) != null)
 				{
 					foundAny = true;
 				}
@@ -221,19 +156,33 @@ namespace RaspiCommon.Devices.Optics
 			return foundAny;
 		}
 
+		#endregion
+
+		#region Event Invocation
+
+		protected void InvokeSnapshotTaken(String filename, ImageType imageType)
+		{
+			SnapshotTaken(filename, imageType);
+		}
+
+		#endregion
+
+		#region Image Conversion
+
 		public static bool ConvertImage(
 			String inputFilename,
 			Size size,
 			ImageType fromType, 
 			ImageType toType, 
 			int number, 
-			out String outputFilename)
+			out String outputFilename, out Mat image)
 		{
+			image = null;
 			bool converted = false;
 			outputFilename = inputFilename;
 			if(fromType == ImageType.RawRGB || fromType == ImageType.RawBGR)
 			{
-				converted = ConvertRaw(inputFilename, size, fromType, toType, number, out outputFilename);
+				converted = ConvertRaw(inputFilename, size, fromType, toType, number, out outputFilename, out image);
 			}
 			else
 			{
@@ -247,7 +196,7 @@ namespace RaspiCommon.Devices.Optics
 								ImageType fromType,
 								ImageType toType,
 								int number,
-								out String outputFilename)
+								out String outputFilename, out Mat image)
 		{
 			String extension = String.Empty;
 			switch(toType)
@@ -262,7 +211,7 @@ namespace RaspiCommon.Devices.Optics
 
 			outputFilename = Path.Combine(ImageDirectory, String.Format(@"snap-{0:0000}.{1}", number, extension));
 			byte[] data = File.ReadAllBytes(inputFilename);
-			Mat image = new Mat(size, DepthType.Cv8U, 3);
+			image = new Mat(size, DepthType.Cv8U, 3);
 			unsafe
 			{
 				IntPtr ptr = image.DataPointer;
@@ -280,5 +229,6 @@ namespace RaspiCommon.Devices.Optics
 			return true;
 		}
 
+		#endregion
 	}
 }

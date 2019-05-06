@@ -9,18 +9,6 @@ namespace KanoopCommon.Geometry
 {
 	public class Degrees
 	{
-		public static Double ClockwiseDifference(Double bearing1, Double bearing2)
-		{
-			if(bearing1 > bearing2)
-			{
-				bearing1 -= 360;
-			}
-
-			Double diff = bearing2 - bearing1;
-
-			return diff;
-		}
-
 		public static Double BearingBetween(Double bearing1, Double bearing2)
 		{
 			Double diff = bearing1.AngularDifference(bearing2) / 2;
@@ -36,6 +24,30 @@ namespace KanoopCommon.Geometry
 			return bearing;
 		}
 
+		/// <summary>
+		/// Return the angular difference in a clockwise direction
+		/// </summary>
+		/// <param name="bearing1"></param>
+		/// <param name="bearing2"></param>
+		/// <returns></returns>
+		public static Double ClockwiseDifference(Double bearing1, Double bearing2)
+		{
+			if(bearing1 > bearing2)
+			{
+				bearing1 -= 360;
+			}
+
+			Double diff = bearing2 - bearing1;
+
+			return diff;
+		}
+
+		/// <summary>
+		/// Return the angular difference in a counterclockwise direction
+		/// </summary>
+		/// <param name="bearing1"></param>
+		/// <param name="bearing2"></param>
+		/// <returns></returns>
 		public static Double CounterClockwiseDifference(Double bearing1, Double bearing2)
 		{
 			if(bearing2 > bearing1)

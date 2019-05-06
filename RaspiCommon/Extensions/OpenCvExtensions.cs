@@ -2,21 +2,58 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using Emgu.CV;
 using Emgu.CV.CvEnum;
 using Emgu.CV.Structure;
 using Emgu.CV.Util;
+using KanoopCommon.CommonObjects;
 using KanoopCommon.Extensions;
 using KanoopCommon.Geometry;
 using KanoopCommon.Logging;
+using RaspiCommon.GraphicalHelp;
 
 namespace RaspiCommon.Extensions
 {
 	public static class OpenCvExtensions
 	{
-		public static void SetPixel(this Mat mat, PointD point, Color color)
+		public static int ValidX(this Mat image, int x)
+		{
+			if(x >= image.Width)
+				x = image.Width - 1;
+			else if(x < 0)
+				x = 0;
+			return x;
+		}
+
+		public static int ValidY(this Mat image, int y)
+		{
+			if(y >= image.Height)
+				y = image.Height - 1;
+			else if(y < 0)
+				y = 0;
+			return y;
+		}
+
+		public static Rectangle ValidRectangle(this Mat image, Point upperLeft, Size size)
+		{
+			Size adjustedSize = new Size(Math.Min(size.Width, image.Width - upperLeft.X), Math.Min(size.Height, image.Height - upperLeft.Y));
+			return new Rectangle(upperLeft, adjustedSize);
+		}
+
+		public static Mat GetROIWithinImage(this Mat image, Point origin, Size size, int xoffset, int yoffset)
+		{
+			int x = Math.Max(0, origin.X + xoffset);
+			int y = Math.Max(0, origin.Y + yoffset);
+			int width = Math.Min(image.Width - 1, origin.X + xoffset + size.Width) - x;
+			int height = Math.Min(image.Height - 1, origin.Y + yoffset + size.Height) - y;
+			Rectangle roi = new Rectangle(x, y, width, height);
+			return new Mat(image, roi);
+		}
+
+		public static void SetPixelBGR(this Mat mat, PointD point, Color color)
 		{
 			unsafe
 			{
@@ -27,6 +64,47 @@ namespace RaspiCommon.Extensions
 				ptr[1] = color.G;
 				ptr[2] = color.R;
 			}
+		}
+
+		public static void SetPixel(this Mat mat, PointD point, int channel, int value)
+		{
+			unsafe
+			{
+				int offset = ((int)point.Y * mat.Width * mat.NumberOfChannels) + ((int)point.X * mat.NumberOfChannels);
+				byte* ptr = (byte *)mat.DataPointer.ToPointer();
+				ptr += offset;
+				ptr[channel] = (byte)value;
+			}
+		}
+
+		public static int GetPixel(this Mat mat, PointD point, int channel)
+		{
+			int ret = 0;
+			unsafe
+			{
+				int offset = ((int)point.Y * mat.Width * mat.NumberOfChannels) + ((int)point.X * mat.NumberOfChannels);
+				byte* ptr = (byte *)mat.DataPointer.ToPointer();
+				ptr += offset;
+				ret = ptr[channel];
+			}
+			return ret;
+		}
+
+		public static int MaxValue(this Mat bitmap, int channel)
+		{
+			int max = 0;
+			unsafe
+			{
+				byte* start = (byte *)bitmap.DataPointer.ToPointer();
+				byte* end = start + (bitmap.Rows * bitmap.Cols * bitmap.NumberOfChannels);
+				int elementSize = bitmap.ElementSize;
+				for(byte* ptr = start + channel;ptr < end;ptr += elementSize)
+				{
+					if(*ptr > max)
+						max = *ptr;
+				}
+			}
+			return max;
 		}
 
 		public static Mat ToBitmap(this PointCloud2D cloud, int squarePixels, Color dotColor, Double scale = 1)
@@ -48,7 +126,7 @@ namespace RaspiCommon.Extensions
 					PointD point = center.GetPointAt(angle, bar.Range * scale);
 					if(point.X >= 0 && point.Y < size.Width && point.Y >= 0 && point.Y <= size.Height)
 					{
-						mat.SetPixel(point, dotColor);
+						mat.SetPixelBGR(point, dotColor);
 					}
 				}
 			}
@@ -65,7 +143,7 @@ namespace RaspiCommon.Extensions
 				if(bar.Range != 0)
 				{
 					PointD point = origin.GetPointAt(angle, bar.Range * scale);
-					bitmap.SetPixel(point, dotColor);
+					bitmap.SetPixelBGR(point, dotColor);
 				}
 			}
 		}
@@ -80,14 +158,57 @@ namespace RaspiCommon.Extensions
 			return new PointD(bitmap.Width / 2, bitmap.Height / 2);
 		}
 
-		public static bool FindMatrix(this Mat bitmap, Size size, Double percent, out PointD where)
+		public static Rectangle ShrinkROIToNonZero(this Mat image, Rectangle originalRegion)
 		{
-			where = null;
+			int minY, maxY, minX, maxX;
 
-			Double threshold = (Double)(size.Height * size.Width) * percent;
+			for(minY = originalRegion.Top;minY < originalRegion.Bottom;minY++)
+			{
+				Mat roi = new Mat(image, new Rectangle(new Point(originalRegion.X, minY), new Size(originalRegion.Width, 1)));
+				if(CvInvoke.CountNonZero(roi) > 0)
+					break;
+			}
+			for(maxY = originalRegion.Bottom - 1;maxY > originalRegion.Top;maxY--)
+			{
+				Mat roi = new Mat(image, new Rectangle(new Point(originalRegion.X, maxY), new Size(originalRegion.Width, 1)));
+				if(CvInvoke.CountNonZero(roi) > 0)
+					break;
+			}
+			for(minX = originalRegion.Left;minX < originalRegion.Right;minX++)
+			{
+				Mat roi = new Mat(image, new Rectangle(new Point(minX, originalRegion.Y), new Size(1, originalRegion.Height)));
+				if(CvInvoke.CountNonZero(roi) > 0)
+					break;
+			}
+			for(maxX = originalRegion.Right - 1;maxX > originalRegion.Left;maxX--)
+			{
+				Mat roi = new Mat(image, new Rectangle(new Point(maxX, originalRegion.Y), new Size(1, originalRegion.Height)));
+				if(CvInvoke.CountNonZero(roi) > 0)
+					break;
+			}
+
+			return new Rectangle(minX, minY, (maxX - minX) + 1, (maxY - minY) + 1);
+		}
+
+		public static bool FindMatrix(this Mat bitmap, Size size, out LEDCandidateList candidates)
+		{
+			if(bitmap.NumberOfChannels > 1)
+			{
+				throw new ImageException("Can not FindMatrix with more than one color channel");
+			}
+
+			candidates = new LEDCandidateList();
+
+			int totalcount = CvInvoke.CountNonZero(bitmap);
+			if(totalcount > 999999)
+			{
+				Log.SysLogText(LogLevel.DEBUG, "Image is too noisy with {0} pixels", totalcount);
+				return false;
+			}
+
 			if(bitmap.NumberOfChannels != 1)
 			{
-				throw new FormatException("Image must be single channel");
+				throw new IllegalFormatException("Image must be single channel");
 			}
 			unsafe
 			{
@@ -95,58 +216,35 @@ namespace RaspiCommon.Extensions
 
 				int row, col;
 				byte* ptr = (byte*)bitmap.DataPointer.ToPointer();
-				for(row = 0;row < bitmap.Rows && where == null;row++)
+				for(row = 0;row < bitmap.Rows;row++)
 				{
-					for(col = 0;col < bitmap.Cols && where == null;col++, ptr++)
+					byte[] rowArray = new byte[bitmap.Cols];
+					//Marshal.Copy()
+					for(col = 0;col < bitmap.Cols;col++, ptr++)
 					{
 						if(*ptr != 0 && row < bitmap.Rows - size.Height / 2 && col < bitmap.Cols - size.Width / 2)
 						{
-							Rectangle bestRect = Rectangle.Empty;
-							int bestCount = 0;
-
-							// make rectangles along the bottom and count the pixels
-							for(int x = Math.Max(col - size.Width, 0);x < Math.Min(col + size.Width, bitmap.Cols - size.Width);x++)
+							if(candidates.Contains(new Point(col, row)) == false)
 							{
-								Rectangle rect = new Rectangle(new Point(x, row), size);
-								using(Mat square = new Mat(bitmap, rect))
+								LEDCandidate candidate;
+								if(LEDCandidate.TryGetCandidate(bitmap, new Point(col, row), size, out candidate))
 								{
-									int count = CvInvoke.CountNonZero(square);
-									if(count > bestCount)
-									{
-										bestRect = rect;
-										bestCount = count;
-									}
+									candidates.Add(candidate);
 								}
-							}
-							if(bestCount >= threshold)
-							{
-								// make a bigger rectangle (3 * size) going downward and see if
-								// there are lots more pixels of this color... if so blacklist this rect
-								PointD centroid = bestRect.Centroid();
-								Log.SysLogText(LogLevel.DEBUG, "Checking Matrix Centroid of {0} at {1} with count of {2}", bestRect, centroid, bestCount);
-								where = centroid;
-
-#if work_on_later
-								Size checkSize = new Size(bestRect.Width * 4, bestRect.Height * 4);
-								PointD checkPoint = new PointD(Math.Max(0, bestRect.GetMidX() - checkSize.Width / 2), bestRect.Y);
-								Rectangle checkRect = new Rectangle(checkPoint.ToPoint(), checkSize);
-
-								using(Mat square = new Mat(bitmap, checkRect))
-								{
-									int count = CvInvoke.CountNonZero(square);
-									if(count > bestCount)
-									{
-										bestCount = count;
-									}
-								}
-								where = null; // ???
-#endif
 							}
 						}
 					}
 				}
 			}
-			return where != null;
+
+			return candidates.Count > 0;
+		}
+
+		public static Mat ToSingleChannel(this Mat source)
+		{
+			Mat output = new Mat();
+			CvInvoke.ExtractChannel(source, output, 0);
+			return output;
 		}
 
 		public static void DrawFilledPolygon(this Mat dest, PointDList polygon, Color color)

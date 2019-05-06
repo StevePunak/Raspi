@@ -592,8 +592,6 @@ namespace RaspiForm
 		int _angle = 0;
 		Double _dist = 60;
 
-		Direction _lag = Direction.Forward;
-
 		static readonly PointD center = new PointD(150, 150);
 		static readonly Brush _eraserBrush = new SolidBrush(Color.Black);
 		static readonly Pen _eraserPen = new Pen(Color.Black, 2);

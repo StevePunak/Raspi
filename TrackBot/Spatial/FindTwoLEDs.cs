@@ -97,27 +97,22 @@ namespace TrackBot.Spatial
 				Blue = Widgets.Instance.LEDImageAnalysis.BlueLED;
 
 				Double bearing = Widgets.Instance.Compass.Bearing;
-				Double greenBearing, blueBearing;
-				if( Widgets.Instance.LEDImageAnalysis.TryGetBearing(Color.Green, bearing, out greenBearing) &&
-					Widgets.Instance.LEDImageAnalysis.TryGetBearing(Color.Blue, bearing, out blueBearing))
+				Log.LogText(LogLevel.DEBUG, "Found green LED at [{0}]  and a blue LED at [{1}]  Interior Angle {2}", 
+					Green, Blue,
+					Green.Bearing.AngularDifference(Blue.Bearing).ToAngleString());
+
+				BlueBearings.Add(Blue.Bearing);
+				GreenBearings.Add(Green.Bearing);
+
+				if(BlueBearings.Count == 1)
 				{
-					Log.LogText(LogLevel.DEBUG, "Found green LED at {0} [{1}]  and a blue LED at {2} [{3}]  Interior Angle {4}", 
-						Green, greenBearing.ToAngleString(), Blue, blueBearing.ToAngleString(), 
-						greenBearing.AngularDifference(blueBearing).ToAngleString());
-
-					BlueBearings.Add(blueBearing);
-					GreenBearings.Add(greenBearing);
-
-					if(BlueBearings.Count == 1)
-					{
-						SwitchState(ActivityStates.FindSecondaryPoint);
-					}
-					else
-					{
-						Log.LogText(LogLevel.DEBUG, "Done for now BB1: {0}  GB1: {1}    BB2: {2}  GB2: {3}",
-							BlueBearings[0].ToAngleString(), GreenBearings[0].ToAngleString(), BlueBearings[1].ToAngleString(), GreenBearings[1].ToAngleString());
-						SwitchState(ActivityStates.Idle);
-					}
+					SwitchState(ActivityStates.FindSecondaryPoint);
+				}
+				else
+				{
+					Log.LogText(LogLevel.DEBUG, "Done for now BB1: {0}  GB1: {1}    BB2: {2}  GB2: {3}",
+						BlueBearings[0].ToAngleString(), GreenBearings[0].ToAngleString(), BlueBearings[1].ToAngleString(), GreenBearings[1].ToAngleString());
+					SwitchState(ActivityStates.Idle);
 				}
 			}
 			else
@@ -172,7 +167,7 @@ namespace TrackBot.Spatial
 
 			Double startDistance = Widgets.Instance.GetRangeAtDirection(Direction.Forward);
 			Log.SysLogText(LogLevel.DEBUG, "Movin slow");
-			Widgets.Instance.Tracks.MoveMeters(RaspiCommon.Direction.Forward, .3, Widgets.Instance.Tracks.Slow, true, true);
+			Widgets.Instance.Tracks.MoveMeters(Direction.Forward, .3, Widgets.Instance.Tracks.Slow, true, true);
 
 			Sleep(1000);
 			Double endDistance = Widgets.Instance.GetRangeAtDirection(Direction.Forward);

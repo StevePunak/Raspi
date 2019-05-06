@@ -25,7 +25,6 @@ namespace TrackBot.TTY
 			LEDImageAnalysis.AnalyzeImage(
 				Widgets.Instance.LEDImageAnalysis.LastImageAnalysisFile, 
 				Widgets.Instance.Server.ImageDirectory, 
-				Program.Config.LedLowThreshold, Program.Config.LedHighThreshold,
 				out outputFiles, out leds);
 			Widgets.Instance.Server.PublishImage(outputFiles);
 			return true;

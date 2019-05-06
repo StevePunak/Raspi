@@ -19,6 +19,8 @@ using RaspiCommon;
 using RaspiCommon.Data.DataSource;
 using RaspiCommon.Data.Entities;
 using RaspiCommon.Devices.Chassis;
+using RaspiCommon.Devices.Compass;
+using RaspiCommon.Devices.Locomotion;
 using RaspiCommon.Devices.Optics;
 using RaspiCommon.Network;
 using RaspiCommon.Spatial;
@@ -32,6 +34,7 @@ namespace Radar
 	{
 		public static RaspiConfig Config { get; private set; }
 		public static Log Log { get; private set; }
+		public static NullCompass Compass { get; private set; }
 
 		/// <summary>
 		/// The main entry point for the application.
@@ -39,9 +42,13 @@ namespace Radar
 		[STAThread]
 		static void Main()
 		{
+			LEDImageAnalysis.Compass = Compass = new NullCompass();
+
 			OpenLog();
 
 			OpenConfig();
+
+			SetConfigDefaults();
 
 			Test();
 
@@ -52,7 +59,7 @@ namespace Radar
 
 		static void Test()
 		{
-			TestImage();
+			//TestImage();
 
 			//Program.Config.RemoteImageDirectory = @"\\raspi\pi\images";
 			//Program.Config.Save();
@@ -68,106 +75,33 @@ namespace Radar
 			////env = new DeadReckoningEnvironment(serialized);
 		}
 
+		static void SetConfigDefaults()
+		{
+			Config.RadarHost = "thufir";
+			Config.RemoteImageDirectory = @"\\raspi\pi\images";
+		}
 
 		static void TestImage()
 		{
 			LEDImageAnalysis.Width = 800;
 			LEDImageAnalysis.Height = 600;
-			//LEDImageAnalysis.Width = 1024;
-			//LEDImageAnalysis.Height = 768;
 
-			String sourceDir = @"\\raspi\pi\images";
 			String workDir = @"c:\pub\tmp\junk";
-			Camera.ImageDirectory = sourceDir;
+			Camera.ImageDirectory = workDir;
 
-			Camera camera = new Camera();
+			RaspiCamCv camera = new RaspiCamCv();
 			LEDImageAnalysis ledAnalysis = new LEDImageAnalysis(camera);
 
-			String inputFile = Path.Combine(sourceDir, "fullimage.bmp");
+			String inputFile = Path.Combine(workDir, "fullimage.bmp");
+			Mat image = new Mat(inputFile);
 //		Camera.ConvertImage(outputFile, new Size(LEDImageAnalysis.Width, LEDImageAnalysis.Height), ImageType.RawRGB, ImageType.Bitmap, 0, out outputFile);
 
 			List <String> files;
 			LEDPositionList leds;
-			LEDImageAnalysis.AnalyzeImage(inputFile, workDir, 30, 120, out files, out leds);
+			LEDImageAnalysis.AnalyzeImage(image, workDir, out files, out leds);
 
 			ledAnalysis.LEDs = leds;
 
-			Mat red = new Mat(Path.Combine(workDir, "red.bmp"), ImreadModes.Unchanged);
-			Mat green = new Mat(Path.Combine(workDir, "green.bmp"), ImreadModes.Unchanged);
-			Mat blue = new Mat(Path.Combine(workDir, "blue.bmp"), ImreadModes.Unchanged);
-
-			if(ledAnalysis.HasGreen)
-			{
-				LEDPosition g = ledAnalysis.GreenLED;
-
-				Double width = LEDImageAnalysis.Width;
-				Double x = g.Location.X;
-				Double pixelsPerDegree = width / camera.FieldOfViewHorizontal;
-				Double degreesFromCenter = (x - (width / 2)) / pixelsPerDegree;
-			}
-
-			leds = LEDImageAnalysis.FindLEDs(blue, red, green);
-
-
-			//int resx = 3280;
-			//int resy = 2464;
-			int resx = 800;
-			int resy = 600;
-
-			int cols = ((resx + 31) / 32) * 32;
-			int rows = ((resy + 15) / 16) * 16;
-
-			String file = @"\\raspi\pi\tmp\image.bgr";
-			byte[] data = File.ReadAllBytes(file);
-			Mat image = new Mat(new Size(cols, rows), DepthType.Cv8U, 3);
-			unsafe
-			{
-				IntPtr ptr = image.DataPointer;
-				Marshal.Copy(data, 0, ptr, (rows * cols * 3));
-
-				int row, col;
-				for(col = 0;col < image.Cols;col++)
-				{
-					for(row = 0;row < image.Rows;row++)
-					{
-						// 282, 171
-						if(col == 282 && row == 171)
-						{
-							byte* b = (byte*)(ptr.ToPointer()) + ((row * resx) * 3) + (col * 3);
-							byte b1 = b[0];
-							byte b2 = b[1];
-							byte b3 = b[2];
-						}
-					}
-
-				}
-			}
-
-			Mat[] colors = image.Split();
-			CvInvoke.Merge(new VectorOfMat(colors[2], colors[1], colors[0]), image);
-			image.Save(@"c:\pub\tmp\output.bmp");
-
-			{
-				MCvScalar lowRange = new MCvScalar(50, 0, 0);
-				MCvScalar topRange = new MCvScalar(256, 0, 0);
-				Mat outputImage = new Mat(new Size(cols, rows), DepthType.Cv8U, 3);
-				CvInvoke.InRange(image, new ScalarArray(lowRange), new ScalarArray(topRange), outputImage);
-				outputImage.Save(@"c:\pub\tmp\blue.bmp");
-			}
-			{
-				MCvScalar lowRange = new MCvScalar(0, 0, 50);
-				MCvScalar topRange = new MCvScalar(0, 0, 256);
-				Mat outputImage = new Mat(new Size(cols, rows), DepthType.Cv8U, 3);
-				CvInvoke.InRange(image, new ScalarArray(lowRange), new ScalarArray(topRange), outputImage);
-				outputImage.Save(@"c:\pub\tmp\red.bmp");
-			}
-			{
-				MCvScalar lowRange = new MCvScalar(0, 50, 0);
-				MCvScalar topRange = new MCvScalar(0, 256, 0);
-				Mat outputImage = new Mat(new Size(cols, rows), DepthType.Cv8U, 3);
-				CvInvoke.InRange(image, new ScalarArray(lowRange), new ScalarArray(topRange), outputImage);
-				outputImage.Save(@"c:\pub\tmp\green.bmp");
-			}
 		}
 
 		private static void OpenConfig()

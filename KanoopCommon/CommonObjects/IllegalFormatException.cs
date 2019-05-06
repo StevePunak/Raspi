@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 
 namespace KanoopCommon.CommonObjects
 {
-	public class FormatException : CommonException
+	public class IllegalFormatException : CommonException
 	{
-		public FormatException(String format, params object[] parms)
+		public IllegalFormatException(String format, params object[] parms)
 			: base(format, parms) {}
 	}
 }

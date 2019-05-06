@@ -17,7 +17,7 @@ namespace TrackBot.TTY
 		public override bool Execute(List<string> commandParts)
 		{
 			bool wait = commandParts.Count > 1;
-			Activity.StartActivity(ActivityType.FindTwoLEDs, wait);
+			Activity.StartActivity(ActivityType.FindTwoLEDs, null, wait);
 
 			return true;
 		}
