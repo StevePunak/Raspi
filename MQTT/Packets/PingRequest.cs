@@ -7,10 +7,10 @@ using System.Threading.Tasks;
 
 namespace MQTT.Packets
 {
-	public class PingRequest : ControlPacket
+	public class PingRequest : ControlMessage
 	{
 		public PingRequest(MqttClient client)
-			: base(client, ControlPacketType.PingRequest)
+			: base(client, ControlMessageType.PingRequest)
 		{
 		}
 

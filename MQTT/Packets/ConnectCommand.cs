@@ -7,7 +7,7 @@ using KanoopCommon.Encoding;
 
 namespace MQTT.Packets
 {
-	public class ConnectCommand : ControlPacket
+	public class ConnectCommand : ControlMessage
 	{
 		const String PROTOCOL_NAME =        "MQTT";
 		const byte PROTOCOL_VERSION =		0x04;
@@ -37,7 +37,7 @@ namespace MQTT.Packets
 			: this(client, null, null, null, false, QOSTypes.Qos0, true, TimeSpan.Zero) { }
 
 		public ConnectCommand(MqttClient client, String willTopic, String user, String password, bool willRetain, QOSTypes willQOS, bool cleanSession, TimeSpan keepAliveInterval)
-			: base(client, ControlPacketType.Connect, 0)
+			: base(client, ControlMessageType.Connect, 0)
 		{
 			ClientID = Client != null ? Client.ClientID : String.Empty;
 			WillTopic = String.IsNullOrEmpty(willTopic) == false ? willTopic : null;

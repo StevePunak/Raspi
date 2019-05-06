@@ -6,18 +6,18 @@ using System.Threading.Tasks;
 
 namespace MQTT.Packets
 {
-	public class ConnectAcknowledgment : ControlPacket
+	public class ConnectAcknowledgment : ControlMessage
 	{
 		public bool SessionPresent { get; private set; }
 		public ConnectReturnCode ReturnCode { get; private set; }
 
 		public ConnectAcknowledgment(MqttClient client)
-			: base(client, ControlPacketType.ConnectAcknowledgment)
+			: base(client, ControlMessageType.ConnectAcknowledgment)
 		{
 			SessionPresent = false;
 		}
 
-		public static bool TryParse(MqttClient client, Header header, byte[] buffer, int index, int length, out ControlPacket packet, out int bytesParsed)
+		public static bool TryParse(MqttClient client, Header header, byte[] buffer, int index, int length, out ControlMessage packet, out int bytesParsed)
 		{
 			packet = null;
 			bytesParsed = 0;

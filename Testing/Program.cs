@@ -40,10 +40,24 @@ namespace Testing
 		{
 			OpenLog();
 
-			PointCloudTest();
+			MqttTest();
+//			PointCloudTest();
 //			EMGUTest();
 
 			RunLidar();
+		}
+
+		private static void MqttTest()
+		{
+			TelemetryClient client = new TelemetryClient("10.59.51.35", "myID",
+				new List<string>()
+				{
+					"punak/topics/myfavorite"
+				});
+			client.Start();
+
+			Thread.Sleep(10000000);
+
 		}
 
 		private static void PointCloudTest()

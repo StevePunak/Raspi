@@ -7,17 +7,17 @@ using System.Threading.Tasks;
 
 namespace MQTT.Packets
 {
-	public class UnsubscribeAcknowledgment : ControlPacket
+	public class UnsubscribeAcknowledgment : ControlMessage
 	{
 		public UInt16 MessageID { get; set; }
 
 		public UnsubscribeAcknowledgment(MqttClient client)
-			: base(client, ControlPacketType.UnsubscribeAcknowledment)
+			: base(client, ControlMessageType.UnsubscribeAcknowledment)
 		{
 			RemainingLength = 2;
 		}
 
-		public static bool TryParse(MqttClient client, Header header, byte[] buffer, int index, int length, out ControlPacket packet, out int bytesParsed)
+		public static bool TryParse(MqttClient client, Header header, byte[] buffer, int index, int length, out ControlMessage packet, out int bytesParsed)
 		{
 			packet = null;
 			bytesParsed = 0;

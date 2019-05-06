@@ -50,7 +50,7 @@
     <Compile Include="MqttException.cs" />
     <Compile Include="Packets\ConnectAcknowledgment.cs" />
     <Compile Include="Packets\ConnectCommand.cs" />
-    <Compile Include="Packets\ControlPacket.cs" />
+    <Compile Include="Packets\ControlMessage.cs" />
     <Compile Include="Packets\DisconnectRequest.cs" />
     <Compile Include="Packets\MqqtPacket.cs" />
     <Compile Include="Packets\PingRequest.cs" />

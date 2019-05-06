@@ -9,13 +9,13 @@ using KanoopCommon.Encoding;
 
 namespace MQTT.Packets
 {
-	public class UnsubscribeRequest : ControlPacket
+	public class UnsubscribeRequest : ControlMessage
 	{
 		public List<String> Topics { get; set; }
 		public UInt16 MessageID { get; set; }
 
 		public UnsubscribeRequest(MqttClient client)
-			: base(client, ControlPacketType.Unsubscribe)
+			: base(client, ControlMessageType.Unsubscribe)
 		{
 			MessageID = 0;
 			Topics = new List<String>();

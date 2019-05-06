@@ -15,7 +15,7 @@ namespace MQTT
 		MQTT
 	}
 
-	public enum ControlPacketType
+	public enum ControlMessageType
 	{
 		Reserved1 = 0,
 		Connect = 1,

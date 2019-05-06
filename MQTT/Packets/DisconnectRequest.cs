@@ -7,10 +7,10 @@ using System.Threading.Tasks;
 
 namespace MQTT.Packets
 {
-	public class DisconnectRequest : ControlPacket
+	public class DisconnectRequest : ControlMessage
 	{
 		public DisconnectRequest(MqttClient client)
-			: base(client, ControlPacketType.DisconnectRequest)
+			: base(client, ControlMessageType.DisconnectRequest)
 		{
 		}
 

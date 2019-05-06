@@ -8,13 +8,13 @@ using System.Threading.Tasks;
 
 namespace MQTT.Packets
 {
-	public class SubscribeRequest : ControlPacket
+	public class SubscribeRequest : ControlMessage
 	{
 		public TopicFilterList Topics { get; set; }
 		public UInt16 MessageID { get; set; }
 
 		public SubscribeRequest(MqttClient client)
-			: base(client, ControlPacketType.Subscribe)
+			: base(client, ControlMessageType.Subscribe)
 		{
 			MessageID = 0;
 			Topics = new TopicFilterList();

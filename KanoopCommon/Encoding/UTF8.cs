@@ -15,7 +15,7 @@ namespace KanoopCommon.Encoding
 			String value = String.Empty;
 			using(BinaryReader br = new BinaryReader(new MemoryStream(buffer)))
 			{
-				UInt16 length = br.ReadUInt16();
+				UInt16 length = (UInt16)IPAddress.NetworkToHostOrder((Int16)br.ReadUInt16());
 				value = ASCIIEncoding.UTF8.GetString(br.ReadBytes(length));
 			}
 			return value;
