@@ -385,6 +385,8 @@ namespace TrackBot
 			Tracks.ForwardSecondaryRange += OnForwardSecondaryRange;
 			Tracks.BackwardSecondaryRange += OnBackwardSecondaryRange;
 			Tracks.NewDestinationBearing += OnNewDestinationBearing;
+			Tracks.LeftAdjust = Program.Config.LeftTrackAdjust;
+			Tracks.RightAdjust = Program.Config.RightTrackAdjust;
 			Tracks.DistanceToTravel += OnDistanceToTravel;
 			Tracks.DistanceLeft += OnDistanceLeft;
 

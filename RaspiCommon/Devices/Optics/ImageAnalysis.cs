@@ -5,25 +5,28 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using KanoopCommon.Encoding;
+using RaspiCommon.GraphicalHelp;
 
 namespace RaspiCommon.Devices.Optics
 {
 	public class ImageAnalysis
 	{
-		public int ByteArraySize { get { return sizeof(int) + sizeof(int) + UTF8.Length(FileNames) + LEDs.ByteArraySize; } }
+		public int ByteArraySize { get { return sizeof(int) + sizeof(int) + sizeof(int) + UTF8.Length(FileNames) + LEDs.ByteArraySize + Candidates.ByteArraySize; } }
 
 		public List<String> FileNames { get; set; }
 		public LEDPositionList LEDs { get; set; }
+		public LEDCandidateList Candidates { get; set; }
 
 		public ImageAnalysis()
-			: this(new List<string>(), new LEDPositionList())
+			: this(new List<string>(), new LEDPositionList(), new LEDCandidateList())
 		{
 		}
 
-		public ImageAnalysis(List<String> filenames, LEDPositionList leds)
+		public ImageAnalysis(List<String> filenames, LEDPositionList leds, LEDCandidateList candidates)
 		{
 			FileNames = filenames;
 			LEDs = leds;
+			Candidates = candidates;
 		}
 
 		public ImageAnalysis(byte[] serialized)
@@ -33,6 +36,7 @@ namespace RaspiCommon.Devices.Optics
 			{
 				int fileCount = br.ReadInt32();
 				int ledCount = br.ReadInt32();
+				int candidateCount = br.ReadInt32();
 				FileNames = new List<String>();
 				for(int x = 0;x < fileCount;x++)
 				{
@@ -44,6 +48,11 @@ namespace RaspiCommon.Devices.Optics
 					LEDPosition led = new LEDPosition(br.ReadBytes(LEDPosition.ByteArraySize));
 					LEDs.Add(led);
 				}
+				for(int x = 0;x < candidateCount;x++)
+				{
+					LEDCandidate candidate = new LEDCandidate(br.ReadBytes(LEDCandidate.ByteArraySize));
+					Candidates.Add(candidate);
+				}
 			}
 		}
 
@@ -54,15 +63,17 @@ namespace RaspiCommon.Devices.Optics
 			{
 				bw.Write(FileNames.Count);
 				bw.Write(LEDs.Count);
+				bw.Write(Candidates.Count);
 				bw.Write(UTF8.Encode(FileNames));
 				bw.Write(LEDs.Serialize());
+				bw.Write(Candidates.Serialize());
 			}
 			return serialized;
 		}
 
 		public override string ToString()
 		{
-			return String.Format("{0} files {1} leds", FileNames.Count, LEDs.Count);
+			return String.Format("{0} files {1} leds {2} candidates", FileNames.Count, LEDs.Count, Candidates.Count);
 		}
 	}
 }

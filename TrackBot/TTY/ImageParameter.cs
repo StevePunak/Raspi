@@ -69,8 +69,6 @@ namespace TrackBot.TTY
 				throw new CommandException("Invalid paramters");
 			}
 			Program.Config.Save();
-			Log.SysLogText(LogLevel.DEBUG, "Exposure setting is '{0}'", Program.Config.CameraExposureType);
-
 
 			return true;
 		}

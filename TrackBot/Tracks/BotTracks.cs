@@ -54,7 +54,10 @@ namespace TrackBot.Tracks
 
 		public int Speed
 		{
-			set { LastSpeed = LeftSpeed = RightSpeed = value; }
+			set
+			{
+				LastSpeed = LeftSpeed = RightSpeed = value;
+			}
 		}
 
 		public GridLocation StartLocation { get; private set; }
@@ -193,6 +196,11 @@ namespace TrackBot.Tracks
 
 		}
 
+		/// <summary>
+		/// Go forwards for the given time
+		/// </summary>
+		/// <param name="time"></param>
+		/// <param name="motorSpeed"></param>
 		public void ForwardTime(TimeSpan time, int motorSpeed)
 		{
 			Log.SysLogText(LogLevel.INFO, "Starting forward move {0}", (int)time.TotalMilliseconds);
@@ -385,7 +393,7 @@ namespace TrackBot.Tracks
 				direction = Utility.GetClosestSpinDirection(from, to);
 			}
 
-			Log.SysLogText(LogLevel.DEBUG, "Will turn {0} to from {1} to {2}", direction, from.ToAngleString(), to.ToAngleString());
+			Log.SysLogText(LogLevel.DEBUG, "Will turn {0} to from {1} to {2}  (speed: {3})", direction, from.ToAngleString(), to.ToAngleString(), spinSpeed);
 
 			Widgets.Instance.Tracks.Spin(direction, spinSpeed);
 

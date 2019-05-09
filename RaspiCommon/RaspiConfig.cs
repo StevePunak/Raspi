@@ -210,6 +210,7 @@ namespace RaspiCommon
 		public Point LastRadarWindowLocation { get; set; }
 		public int SplitRadarPosition { get; set; }
 		public int SplitTopToBottomPosition { get; set; }
+		public int SplitLeftToRightPosition { get; set; }
 
 		ProcessingMetrics _processingMetrics;
 		public ProcessingMetrics ProcessingMetrics
@@ -242,6 +243,9 @@ namespace RaspiCommon
 		public String CameraExposureType { get; set; }
 		public int IgnoreRows { get; set; }
 		public TimeSpan CameraImageDelay { get; set; }
+
+		public int LeftTrackAdjust { get; set; }
+		public int RightTrackAdjust { get; set; }
 
 		public LEDTravelHistoryEntryList LEDTravelHistory { get; set; }
 

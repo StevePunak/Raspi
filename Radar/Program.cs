@@ -22,6 +22,7 @@ using RaspiCommon.Devices.Chassis;
 using RaspiCommon.Devices.Compass;
 using RaspiCommon.Devices.Locomotion;
 using RaspiCommon.Devices.Optics;
+using RaspiCommon.GraphicalHelp;
 using RaspiCommon.Network;
 using RaspiCommon.Spatial;
 using RaspiCommon.Spatial.DeadReckoning;
@@ -83,24 +84,34 @@ namespace Radar
 
 		static void TestImage()
 		{
+			Program.Config.BlueThresholds = new ColorThreshold(Color.Blue, 150, 70);
+			Program.Config.GreenThresholds = new ColorThreshold(Color.Green, 150, 100);
+			Program.Config.RedThresholds = new ColorThreshold(Color.Red, 150, 70);
+			Config.Save();
+
 			LEDImageAnalysis.Width = 800;
 			LEDImageAnalysis.Height = 600;
+			LEDImageAnalysis.ColorThresholds[Color.Blue] = Program.Config.BlueThresholds;
+			LEDImageAnalysis.ColorThresholds[Color.Green] = Program.Config.GreenThresholds;
+			LEDImageAnalysis.ColorThresholds[Color.Red] = Program.Config.RedThresholds;
 
+			String remoteFile = @"\\raspi\pi\images\snap-0003.bmp";
 			String workDir = @"c:\pub\tmp\junk";
+			String inputFile = Path.Combine(workDir, Path.GetFileName(remoteFile));
+
+			File.Copy(remoteFile, inputFile, true);
 			Camera.ImageDirectory = workDir;
+			LEDImageAnalysis.ImageAnalysisDirectory = workDir;
 
-			RaspiCamCv camera = new RaspiCamCv();
-			LEDImageAnalysis ledAnalysis = new LEDImageAnalysis(camera);
-
-			String inputFile = Path.Combine(workDir, "fullimage.bmp");
 			Mat image = new Mat(inputFile);
 //		Camera.ConvertImage(outputFile, new Size(LEDImageAnalysis.Width, LEDImageAnalysis.Height), ImageType.RawRGB, ImageType.Bitmap, 0, out outputFile);
 
-			List <String> files;
-			LEDPositionList leds;
-			LEDImageAnalysis.AnalyzeImage(image, workDir, out files, out leds);
+			LEDImageAnalysis analysis = new LEDImageAnalysis(new NullCamera());
+			analysis.AnalyzeImage(image); //, workDir, out files, out leds, out candidates);
+			//ImageAnalysis analysis = new ImageAnalysis(files, leds, candidates);
+			//analysis.Serialize();
 
-			ledAnalysis.LEDs = leds;
+			//ledAnalysis.LEDs = leds;
 
 		}
 

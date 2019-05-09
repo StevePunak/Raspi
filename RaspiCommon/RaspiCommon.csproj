@@ -97,6 +97,7 @@
     <Compile Include="Devices\Optics\LEDImageAnalysis.cs" />
     <Compile Include="Devices\Optics\LEDPosition.cs" />
     <Compile Include="Devices\Optics\LEDTravelHistoryEntry.cs" />
+    <Compile Include="Devices\Optics\NullCamera.cs" />
     <Compile Include="Devices\Optics\RaspiCamCv.cs" />
     <Compile Include="Devices\Optics\Types.cs" />
     <Compile Include="Extensions\GraphicsExtensions.cs" />

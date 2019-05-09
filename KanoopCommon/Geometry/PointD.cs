@@ -365,6 +365,11 @@ namespace KanoopCommon.Geometry
 
 		#region Utility
 
+		public PointD Offset(Double x, Double y)
+		{
+			return new PointD(X + x, Y + y);
+		}
+
 		public static PointD Empty
 		{
 			get { return new PointD(0, 0); }

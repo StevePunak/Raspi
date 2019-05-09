@@ -10,7 +10,7 @@ namespace KanoopCommon.Extensions
 {
 	public static class SizeExtensions
 	{
-		public static int SizeByteArraySize = sizeof(Int32) + sizeof(Int32);
+		public static int ByteArraySize = sizeof(Int32) + sizeof(Int32);
 
 		public static Size MinimumSize(this Size size)
 		{
@@ -42,7 +42,7 @@ namespace KanoopCommon.Extensions
 
 		public static byte[] Serialize(this Size size)
 		{
-			byte[] serialized = new byte[SizeByteArraySize];
+			byte[] serialized = new byte[ByteArraySize];
 			using(BinaryWriter bw = new BinaryWriter(new MemoryStream(serialized)))
 			{
 				bw.Write(size.Width);
@@ -51,7 +51,7 @@ namespace KanoopCommon.Extensions
 			return serialized;
 		}
 
-		public static Size Deserailize(BinaryReader br)
+		public static Size Deserialize(BinaryReader br)
 		{
 			Int32 width = br.ReadInt32();
 			Int32 height = br.ReadInt32();

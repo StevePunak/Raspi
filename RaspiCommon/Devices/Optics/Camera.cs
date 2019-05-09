@@ -183,6 +183,7 @@ namespace RaspiCommon.Devices.Optics
 			if(fromType == ImageType.RawRGB || fromType == ImageType.RawBGR)
 			{
 				converted = ConvertRaw(inputFilename, size, fromType, toType, number, out outputFilename, out image);
+				Log.SysLogText(LogLevel.DEBUG, "Ouput image is {0}", outputFilename);
 			}
 			else
 			{

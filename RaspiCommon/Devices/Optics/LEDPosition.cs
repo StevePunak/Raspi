@@ -14,13 +14,15 @@ namespace RaspiCommon.Devices.Optics
 {
 	public class LEDPosition
 	{
-		public static int ByteArraySize { get { return sizeof(UInt32) + PointD.ByteArraySize + sizeof(Double) + SizeExtensions.SizeByteArraySize; } }
+		public static int ByteArraySize { get { return sizeof(UInt32) + PointD.ByteArraySize + sizeof(Double) + SizeExtensions.ByteArraySize; } }
 
 		public Color Color { get; set; }
 		public PointD Location { get; set; }
 		public Double Bearing { get; set; }
 		public DateTime CreateTime { get; set; }
 		public Size Size { get; set; }
+
+		public Object Tag { get; set; }
 
 		public LEDPosition()
 		{
@@ -36,10 +38,10 @@ namespace RaspiCommon.Devices.Optics
 		{
 			using(BinaryReader br = new BinaryReader(new MemoryStream(serialized)))
 			{
-				Color = ColorExtensions.DeserializeColor(br.ReadBytes(sizeof(int)));
+				Color = ColorExtensions.Deserialize(br.ReadBytes(sizeof(int)));
 				Location = new PointD(br.ReadBytes(PointD.ByteArraySize));
 				Bearing = br.ReadDouble();
-				Size = SizeExtensions.Deserailize(br);
+				Size = SizeExtensions.Deserialize(br);
 			}
 		}
 
@@ -58,13 +60,22 @@ namespace RaspiCommon.Devices.Optics
 
 		public override string ToString()
 		{
-			return String.Format("{0} at {1} - bearing {2}", Color, Location, Bearing.ToAngleString());
+			return String.Format("{0} at {1} - bearing {2}", Color.Name, Location, Bearing.ToAngleString());
 		}
 	}
 
 	public class LEDPositionList : List<LEDPosition>
 	{
 		public int ByteArraySize { get { return LEDPosition.ByteArraySize * Count; } }
+
+		public List<PointD> Points
+		{
+			get
+			{
+				List<PointD> list = new List<PointD>(this.Select(l => l.Location).ToList());
+				return list;
+			}
+		}
 
 		public byte[] Serialize()
 		{

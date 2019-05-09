@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using RaspiCommon.Devices.Optics;
+using RaspiCommon.GraphicalHelp;
 
 namespace TrackBot.TTY
 {
@@ -22,10 +23,11 @@ namespace TrackBot.TTY
 
 			List<String> outputFiles;
 			LEDPositionList leds;
+			LEDCandidateList candidates;
 			LEDImageAnalysis.AnalyzeImage(
 				Widgets.Instance.LEDImageAnalysis.LastImageAnalysisFile, 
 				Widgets.Instance.Server.ImageDirectory, 
-				out outputFiles, out leds);
+				out outputFiles, out leds, out candidates);
 			Widgets.Instance.Server.PublishImage(outputFiles);
 			return true;
 		}

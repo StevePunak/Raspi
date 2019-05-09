@@ -21,6 +21,9 @@ namespace RaspiCommon.Devices.Locomotion
 		public static SortedDictionary<int, Double> SpeedAtPower { get; private set; }
 		static List<int> _sortedSpeeds;
 
+		public int RightAdjust { get; set; }
+		public int LeftAdjust { get; set; }
+
 		bool _hardwarePWM;
 		public bool HardwarePWM
 		{
@@ -38,8 +41,9 @@ namespace RaspiCommon.Devices.Locomotion
 		{
 			set
 			{
-				_leftspeed = value;
-				SetValue(Motors[LEFT_MOTOR], value);
+				_leftspeed = value;// AdjustedSpeed(value, LeftAdjust);
+				Log.SysLogText(LogLevel.DEBUG, "Setting LEFT to {0}", _leftspeed);
+				SetValue(Motors[LEFT_MOTOR], _leftspeed);
 			}
 			get { return _leftspeed; }
 		}
@@ -49,8 +53,9 @@ namespace RaspiCommon.Devices.Locomotion
 		{
 			set
 			{
-				_rightspeed = value;
-				SetValue(Motors[RIGHT_MOTOR], value);
+				_rightspeed = value; // AdjustedSpeed(value, RightAdjust);
+				Log.SysLogText(LogLevel.DEBUG, "Setting RIGHT to {0}", _rightspeed);
+				SetValue(Motors[RIGHT_MOTOR], _rightspeed);
 			}
 			get { return _rightspeed; }
 		}
@@ -129,6 +134,19 @@ namespace RaspiCommon.Devices.Locomotion
 				motor.Direction = value >= 0 ? Direction.Forward : Direction.Backward;
 				motor.Speed = (UInt32)speed;
 			}
+		}
+
+		protected int AdjustedSpeed(int speed, int adjustment)
+		{
+			if(speed > 0)
+			{
+				speed += adjustment;
+			}
+			else if(speed < 0)
+			{
+				speed -= adjustment;
+			}
+			return speed;
 		}
 
 		#endregion

@@ -57,33 +57,36 @@ namespace TrackBot
 		{
 			try
 			{
-				Program.Config.RemoteImageDirectory = "/home/pi/images";
+				Program.Config.TracksLeftA1Pin = GpioPin.Pin11;
+				Program.Config.TracksLeftA2Pin = GpioPin.Pin13;
+				Program.Config.TracksRightA1Pin = GpioPin.Pin10;
+				Program.Config.TracksRightA2Pin = GpioPin.Pin09;
 
-				//Program.Config.BlueThresholds = new ColorThreshold(Color.Blue, 150, 70);
-				//Program.Config.GreenThresholds = new ColorThreshold(Color.Green, 150, 100);
-				//Program.Config.RedThresholds = new ColorThreshold(Color.Red, 150, 70); 
-				//Program.Config.CameraBrightness = 0;
-				//Program.Config.CameraContrast = 0;
-				//Program.Config.CameraSaturation = 0;
-				//Program.Config.CameraImageEffect = String.Empty;
-				//Program.Config.CameraColorEffect = String.Empty;
-				//Program.Config.CameraExposureType = String.Empty;
-				//Program.Config.CameraBearingOffset = 4;
-				//Program.Config.CameraImageDelay = TimeSpan.FromMilliseconds(1500);
-
+				Log.SysLogText(LogLevel.DEBUG, "LEFT: {0} {1}", Program.Config.TracksLeftA1Pin, Program.Config.TracksLeftA2Pin);
+				Log.SysLogText(LogLevel.DEBUG, "Right: {0} {1}", Program.Config.TracksRightA1Pin, Program.Config.TracksRightA2Pin);
 				Program.Config.Save();
 			}
 			catch(Exception e)
 			{
 				Console.WriteLine("TEST CODE EXCEPTION: {0}", e.Message);
 			}
+		}
 
-#if zero
-			Grid grid = new Grid("TrackGrid", 15, 15, .1);
-
-			Cell cells = grid.GetCellAtLocation(new PointD(4, 7.5));
-#endif
-
+		void Defaults()
+		{
+			Program.Config.RemoteImageDirectory = "/home/pi/images";
+			Program.Config.RadarHost = "192.168.0.50";
+			Program.Config.BlueThresholds = new ColorThreshold(Color.Blue, 150, 70);
+			Program.Config.GreenThresholds = new ColorThreshold(Color.Green, 150, 100);
+			Program.Config.RedThresholds = new ColorThreshold(Color.Red, 150, 70);
+			Program.Config.CameraBrightness = 0;
+			Program.Config.CameraContrast = 0;
+			Program.Config.CameraSaturation = 0;
+			Program.Config.CameraImageEffect = String.Empty;
+			Program.Config.CameraColorEffect = String.Empty;
+			Program.Config.CameraExposureType = String.Empty;
+			Program.Config.CameraBearingOffset = 4;
+			Program.Config.CameraImageDelay = TimeSpan.FromMilliseconds(1500);
 		}
 
 		private static void OpenConfig()

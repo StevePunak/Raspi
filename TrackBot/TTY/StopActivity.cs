@@ -17,6 +17,8 @@ namespace TrackBot.TTY
 		{
 			Activity.StopActivity();
 
+			Widgets.Instance.Tracks.Stop();
+
 			return true;
 		}
 

@@ -86,73 +86,80 @@ namespace RaspiCommon.Network
 
 		private void OnLidarClientInboundSubscribedMessage(MqttClient client, PublishMessage packet)
 		{
-			if(packet.Topic == MqttTypes.RangeBlobTopic)
+			try
 			{
-				LidarVector.LoadFromRangeBlob(Vectors, packet.Message);
-				RangeBlobReceived(Vectors);
+				if(packet.Topic == MqttTypes.RangeBlobTopic)
+				{
+					LidarVector.LoadFromRangeBlob(Vectors, packet.Message);
+					RangeBlobReceived(Vectors);
+				}
+				else
+				{
+					if(packet.Topic == MqttTypes.CurrentPathTopic)
+					{
+						FuzzyPath path = new FuzzyPath(packet.Message);
+						FuzzyPath = path;
+					}
+					else if(packet.Topic == MqttTypes.BarriersTopic)
+					{
+						BarrierList barriers = new BarrierList(packet.Message);
+						ImageBarriers = barriers;
+					}
+					else if(packet.Topic == MqttTypes.LandmarksTopic)
+					{
+						ImageVectorList landmarks = new ImageVectorList(packet.Message);
+						ImageLandmarks = landmarks;
+						ImageLandmarksReceived(ImageLandmarks);
+					}
+					else if(packet.Topic == MqttTypes.BearingTopic)
+					{
+						Bearing = BitConverter.ToDouble(packet.Message, 0);
+					}
+					else if(packet.Topic == MqttTypes.ImageMetricsTopic)
+					{
+						ImageMetrics = KVPSerializer.Deserialize<ImageMetrics>(ASCIIEncoding.UTF8.GetString(packet.Message));
+						ScaleLandmarks();
+						ImageMetricsReceived(ImageMetrics);
+					}
+					else if(packet.Topic == MqttTypes.ChassisMetricsTopic)
+					{
+						ChassisMetrics = new ChassisMetrics(packet.Message);
+						ChassisMetricsReceived(ChassisMetrics);
+					}
+					else if(packet.Topic == MqttTypes.LandscapeMetricsTopic)
+					{
+						LandscapeMetrics = KVPSerializer.Deserialize<LandscapeMetrics>(ASCIIEncoding.UTF8.GetString(packet.Message));
+						ScaleLandmarks();
+						LandscapeMetricsReceived(LandscapeMetrics);
+					}
+					else if(packet.Topic == MqttTypes.DistanceAndBearingTopic)
+					{
+						EnvironmentInfo = BinarySerializer.Deserialize<EnvironmentInfo>(packet.Message);
+						EnvironmentInfoReceived(EnvironmentInfo);
+					}
+					else if(packet.Topic == MqttTypes.CommandsTopic)
+					{
+						String command = ASCIIEncoding.UTF8.GetString(packet.Message);
+						CommandReceived(command);
+					}
+					else if(packet.Topic == MqttTypes.DeadReckoningCompleteLandscapeTopic)
+					{
+						DeadReckoningEnvironment environment = new DeadReckoningEnvironment(packet.Message);
+						DeadReckoningEnvironmentReceived(environment);
+					}
+					else if(packet.Topic == MqttTypes.CameraLastImageTopic)
+					{
+						CameraImageReceived(UTF8.DecodeStrings(packet.Message));
+					}
+					else if(packet.Topic == MqttTypes.CameraLastAnalysisTopic)
+					{
+						CameraImageAnalyzed(new ImageAnalysis(packet.Message));
+					}
+				}
 			}
-			else
+			catch(Exception e)
 			{
-				if(packet.Topic == MqttTypes.CurrentPathTopic)
-				{
-					FuzzyPath path = new FuzzyPath(packet.Message);
-					FuzzyPath = path;
-				}
-				else if(packet.Topic == MqttTypes.BarriersTopic)
-				{
-					BarrierList barriers = new BarrierList(packet.Message);
-					ImageBarriers = barriers;
-				}
-				else if(packet.Topic == MqttTypes.LandmarksTopic)
-				{
-					ImageVectorList landmarks = new ImageVectorList(packet.Message);
-					ImageLandmarks = landmarks;
-					ImageLandmarksReceived(ImageLandmarks);
-				}
-				else if(packet.Topic == MqttTypes.BearingTopic)
-				{
-					Bearing = BitConverter.ToDouble(packet.Message, 0);
-				}
-				else if(packet.Topic == MqttTypes.ImageMetricsTopic)
-				{
-					ImageMetrics = KVPSerializer.Deserialize<ImageMetrics>(ASCIIEncoding.UTF8.GetString(packet.Message));
-					ScaleLandmarks();
-					ImageMetricsReceived(ImageMetrics);
-				}
-				else if(packet.Topic == MqttTypes.ChassisMetricsTopic)
-				{
-					ChassisMetrics = new ChassisMetrics(packet.Message);
-					ChassisMetricsReceived(ChassisMetrics);
-				}
-				else if(packet.Topic == MqttTypes.LandscapeMetricsTopic)
-				{
-					LandscapeMetrics = KVPSerializer.Deserialize<LandscapeMetrics>(ASCIIEncoding.UTF8.GetString(packet.Message));
-					ScaleLandmarks();
-					LandscapeMetricsReceived(LandscapeMetrics);
-				}
-				else if(packet.Topic == MqttTypes.DistanceAndBearingTopic)
-				{
-					EnvironmentInfo = BinarySerializer.Deserialize<EnvironmentInfo>(packet.Message);
-					EnvironmentInfoReceived(EnvironmentInfo);
-				}
-				else if(packet.Topic == MqttTypes.CommandsTopic)
-				{
-					String command = ASCIIEncoding.UTF8.GetString(packet.Message);
-					CommandReceived(command);
-				}
-				else if(packet.Topic == MqttTypes.DeadReckoningCompleteLandscapeTopic)
-				{
-					DeadReckoningEnvironment environment = new DeadReckoningEnvironment(packet.Message);
-					DeadReckoningEnvironmentReceived(environment);
-				}
-				else if(packet.Topic == MqttTypes.CameraLastImageTopic)
-				{
-					CameraImageReceived(UTF8.DecodeStrings(packet.Message));
-				}
-				else if(packet.Topic == MqttTypes.CameraLastAnalysisTopic)
-				{
-					CameraImageAnalyzed(new ImageAnalysis(packet.Message));
-				}
+				Log.LogText(LogLevel.ERROR, "EXCEPTION: {0}", e.Message);
 			}
 		}
 

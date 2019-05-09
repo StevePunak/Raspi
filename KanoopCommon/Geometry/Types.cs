@@ -20,4 +20,12 @@ namespace KanoopCommon.Geometry
 		CounterClockwise
 	}
 
+	public enum ImageDirection
+	{
+		Left,
+		Right,
+		Top,
+		Bottom
+	}
+
 }

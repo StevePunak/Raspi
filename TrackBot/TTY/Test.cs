@@ -19,9 +19,10 @@ namespace TrackBot.TTY
 
 		public override bool Execute(List<string> commandParts)
 		{
-			Log.SysLogText(LogLevel.DEBUG, "DR environment location is at {0}", Widgets.Instance.DeadReckoningEnvironment.CurrentLocation);
-			Widgets.Instance.DeadReckoningEnvironment.ProcessEnvironment(Widgets.Instance.ImageEnvironment.Vectors.ToPointCloud2D(360));
+			Widgets.Instance.Tracks.LeftSpeed = 40;
+			Console.ReadLine();
 
+			Widgets.Instance.Tracks.Stop();
 			return true;
 		}
 

@@ -293,14 +293,14 @@ namespace KanoopCommon.Geometry
 				if(y == 0)
 				{
 					ret = Double.PositiveInfinity;
-					m_bVertical = false;
-					m_bHorizontal = true;
+					_vertical = false;
+					_horizontal = true;
 				}
 				else if(x == 0)
 				{
 					ret = Double.NegativeInfinity;
-					m_bVertical = true;
-					m_bHorizontal = false;
+					_vertical = true;
+					_horizontal = false;
 				}
 				else
 				{
@@ -325,23 +325,23 @@ namespace KanoopCommon.Geometry
 			}
 		}
 
-		bool	m_bVertical;
+		bool	_vertical;
 		public bool IsVertical
 		{
 			get
 			{
 				if(Slope == Double.PositiveInfinity) {}
-				return m_bVertical;
+				return _vertical;
 			}
 		}
 
-		bool	m_bHorizontal;
+		bool	_horizontal;
 		public bool IsHorizontal
 		{
 			get
 			{
 				if(Slope == Double.PositiveInfinity) {}
-				return m_bHorizontal;
+				return _horizontal;
 			}
 		}
 

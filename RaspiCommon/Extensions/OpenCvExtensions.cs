@@ -190,7 +190,7 @@ namespace RaspiCommon.Extensions
 			return new Rectangle(minX, minY, (maxX - minX) + 1, (maxY - minY) + 1);
 		}
 
-		public static bool FindMatrix(this Mat bitmap, Size size, out LEDCandidateList candidates)
+		public static bool FindLEDMatrix(this Mat bitmap, Color color, Size size, out LEDCandidateList candidates)
 		{
 			if(bitmap.NumberOfChannels > 1)
 			{
@@ -205,6 +205,7 @@ namespace RaspiCommon.Extensions
 				Log.SysLogText(LogLevel.DEBUG, "Image is too noisy with {0} pixels", totalcount);
 				return false;
 			}
+			Log.SysLogText(LogLevel.DEBUG, "{0} Image has a total of {1} full pixels", color.Name, totalcount);
 
 			if(bitmap.NumberOfChannels != 1)
 			{
@@ -212,8 +213,6 @@ namespace RaspiCommon.Extensions
 			}
 			unsafe
 			{
-				List<Rectangle> blackballed = new List<Rectangle>();
-
 				int row, col;
 				byte* ptr = (byte*)bitmap.DataPointer.ToPointer();
 				for(row = 0;row < bitmap.Rows;row++)
@@ -227,7 +226,7 @@ namespace RaspiCommon.Extensions
 							if(candidates.Contains(new Point(col, row)) == false)
 							{
 								LEDCandidate candidate;
-								if(LEDCandidate.TryGetCandidate(bitmap, new Point(col, row), size, out candidate))
+								if(LEDCandidate.TryGetCandidate(bitmap, color, new Point(col, row), size, out candidate))
 								{
 									candidates.Add(candidate);
 								}
@@ -264,6 +263,22 @@ namespace RaspiCommon.Extensions
 			Double scale = 1;
 
 			CvInvoke.PutText(dest, text, where.ToPoint(), fontFace, scale, color.ToMCvScalar(), thickness);
+		}
+
+		public static void DrawTextAboveLine(this Mat dest, String text, FontFace fontFace, Color color, Line line, int howFarAbove = 0, int thickness = 1, Double scale = 1)
+		{
+			int baseLine = 0;
+			Size size = CvInvoke.GetTextSize(text, fontFace, scale, thickness, ref baseLine);
+			PointD centerPoint = line.MidPoint.Offset(0, -(size.Height + howFarAbove));
+			DrawCenteredText(dest, text, fontFace, color, centerPoint, thickness, scale);
+		}
+
+		public static void DrawTextBelowLine(this Mat dest, String text, FontFace fontFace, Color color, Line line, int howFarBelow = 0, int thickness = 1, Double scale = 1)
+		{
+			int baseLine = 0;
+			Size size = CvInvoke.GetTextSize(text, fontFace, scale, thickness, ref baseLine);
+			PointD centerPoint = line.MidPoint.Offset(0, size.Height + howFarBelow);
+			DrawCenteredText(dest, text, fontFace, color, centerPoint, thickness, scale);
 		}
 
 		public static void DrawCenteredText(this Mat dest, String text, FontFace fontFace, Color color, PointD where, int thickness = 1, Double scale = 1)

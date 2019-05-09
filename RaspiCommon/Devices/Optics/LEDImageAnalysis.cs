@@ -14,6 +14,7 @@ using Emgu.CV.Util;
 using KanoopCommon.Extensions;
 using KanoopCommon.Geometry;
 using KanoopCommon.Logging;
+using KanoopCommon.Threading;
 using RaspiCommon.Devices.Compass;
 using RaspiCommon.Extensions;
 using RaspiCommon.GraphicalHelp;
@@ -47,6 +48,7 @@ namespace RaspiCommon.Devices.Optics
 		public LEDPosition BlueLED { get { return GetColor(Color.Blue); } }
 
 		public LEDPositionList LEDs { get; set; }
+		public LEDCandidateList candidates { get; set; }
 
 		public static bool DebugAnalysis { get; set; }
 
@@ -101,19 +103,20 @@ namespace RaspiCommon.Devices.Optics
 
 				List<String> outputFiles;
 				LEDPositionList leds;
-				AnalyzeImage(image, ImageAnalysisDirectory, out outputFiles, out leds);
+				LEDCandidateList candidates;
+				AnalyzeImage(image, ImageAnalysisDirectory, out outputFiles, out leds, out candidates);
 
 				LEDs = leds;
 
 				List<String> trimmedFilenames = outputFiles.GetFileNames();
-				ImageAnalysis analysis = new ImageAnalysis(trimmedFilenames, leds);
+				ImageAnalysis analysis = new ImageAnalysis(trimmedFilenames, leds, candidates);
 				CameraImagesAnalyzed(analysis);
 
 				LastImageAnalysisFile = Camera.LastSavedImageFileName;
 			}
 			catch(Exception e)
 			{
-				Log.SysLogText(LogLevel.ERROR, "AnalyzeImage EXCEPTION: {0}", e.Message);
+				Log.SysLogText(LogLevel.ERROR, "AnalyzeImage EXCEPTION: {0}\n{1}", e.Message, ThreadBase.GetFormattedStackTrace(e));
 			}
 		}
 
@@ -126,10 +129,10 @@ namespace RaspiCommon.Devices.Optics
 		/// <param name="highThreshold">The max amount of other colors than the search color which will be allowed</param>
 		/// <param name="outputFilenames">Output for the saved files</param>
 		/// <param name="leds">Output for found LEDs</param>
-		public static void AnalyzeImage(String filename, String outputDirectory, out List<String> outputFilenames, out LEDPositionList leds)
+		public static void AnalyzeImage(String filename, String outputDirectory, out List<String> outputFilenames, out LEDPositionList leds, out LEDCandidateList candidates)
 		{
 			Mat image = new Mat(filename);
-			AnalyzeImage(image, outputDirectory, out outputFilenames, out leds);
+			AnalyzeImage(image, outputDirectory, out outputFilenames, out leds, out candidates);
 		}
 
 		/// <summary>
@@ -141,11 +144,10 @@ namespace RaspiCommon.Devices.Optics
 		/// <param name="highThreshold">The max amount of other colors than the search color which will be allowed</param>
 		/// <param name="outputFilenames">Output for the saved files</param>
 		/// <param name="leds">Output for found LEDs</param>
-		public static void AnalyzeImage(Mat image, String outputDirectory, out List<String> outputFilenames, out LEDPositionList leds)
+		public static void AnalyzeImage(Mat image, String outputDirectory, out List<String> outputFilenames, out LEDPositionList leds, out LEDCandidateList candidates)
 		{
 			outputFilenames = new List<string>();
 			leds = new LEDPositionList();
-
 
 			if(Directory.Exists(outputDirectory) == false)
 			{
@@ -158,7 +160,6 @@ namespace RaspiCommon.Devices.Optics
 			Height = image.Height;
 
 			outputFilenames.Add(fullImage);
-			//			Log.SysLogText(LogLevel.DEBUG, "Saved {0}  Low Threshold: {1} High Threshold {2}", fullImage, lowThreshold, highThreshold);
 
 			Mat blue, green, red;
 			//
@@ -168,7 +169,7 @@ namespace RaspiCommon.Devices.Optics
 			green = SplitColor(image, outputDirectory, Color.Green, outputFilenames);
 			red = SplitColor(image, outputDirectory, Color.Red, outputFilenames);
 
-			leds = FindLEDs(blue, green, red);
+			leds = FindLEDs(blue, green, red, out candidates);
 		}
 
 		static Mat SplitColor(Mat image, String outputDirectory, Color color, List<String> filenames)
@@ -192,27 +193,46 @@ namespace RaspiCommon.Devices.Optics
 			return outputImage;
 		}
 
-		public static LEDPositionList FindLEDs(Mat blue, Mat green, Mat red)
+		public static LEDPositionList FindLEDs(Mat blue, Mat green, Mat red, out LEDCandidateList candidates)
 		{
 			LEDPositionList leds = new LEDPositionList();
 			LEDPosition position;
-			if(TryFindPosition(blue, Color.Blue, out position))
+
+			candidates = new LEDCandidateList();
+			LEDCandidateList additionalCandidates;
+			if(TryFindPosition(blue, Color.Blue, out additionalCandidates, out position))
+			{
 				leds.Add(position);
-			if(TryFindPosition(red, Color.Red, out position))
+				candidates.AddRange(additionalCandidates);
+			}
+			if(TryFindPosition(red, Color.Red, out additionalCandidates, out position))
+			{
 				leds.Add(position);
-			if(TryFindPosition(green, Color.Green, out position))
+				candidates.AddRange(additionalCandidates);
+			}
+			if(TryFindPosition(green, Color.Green, out additionalCandidates, out position))
+			{
 				leds.Add(position);
+				candidates.AddRange(additionalCandidates);
+			}
 			return leds;
 		}
 
-		public static bool TryFindPosition(Mat bitmap, Color color, out LEDPosition position)
+		public static bool TryFindPosition(Mat bitmap, Color color, out LEDCandidateList candidates, out LEDPosition position)
 		{
 			position = null;
+			candidates = new LEDCandidateList();
 
-			LEDCandidateList candidates;
-			if(bitmap.FindMatrix(new Size(6, 6), out candidates))
+			LEDCandidateList allCandidates;
+			if(bitmap.FindLEDMatrix(color, new Size(6, 6), out allCandidates))
 			{
-				LEDCandidate winner = candidates.Find(c => c.Concentration == candidates.Max(c1 => c1.Concentration));
+				candidates = allCandidates;
+				LEDCandidate winner = candidates.Find(c => c.Concentration == allCandidates.Max(c1 => c1.Concentration));
+				if(winner == null)
+				{
+					Log.SysLogText(LogLevel.DEBUG, "THERE IS NO WINNER in {0} elements", allCandidates.Count);
+					allCandidates.DumpToLog();
+				}
 				position = new LEDPosition()
 				{
 					Color = color,

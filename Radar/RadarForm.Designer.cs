@@ -33,7 +33,7 @@ namespace Radar
 			this.cmenuRadar = new System.Windows.Forms.ContextMenuStrip(this.components);
 			this.saveToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.saveBitmapToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-			this.splitContainer1 = new System.Windows.Forms.SplitContainer();
+			this.splitButtons = new System.Windows.Forms.SplitContainer();
 			this.splitTopToBottom = new System.Windows.Forms.SplitContainer();
 			this.splitRadar = new System.Windows.Forms.SplitContainer();
 			this.picLidar = new System.Windows.Forms.PictureBox();
@@ -75,10 +75,10 @@ namespace Radar
 			this.cmenuLandscape = new System.Windows.Forms.ContextMenuStrip(this.components);
 			this.assignLabelToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.cmenuRadar.SuspendLayout();
-			((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
-			this.splitContainer1.Panel1.SuspendLayout();
-			this.splitContainer1.Panel2.SuspendLayout();
-			this.splitContainer1.SuspendLayout();
+			((System.ComponentModel.ISupportInitialize)(this.splitButtons)).BeginInit();
+			this.splitButtons.Panel1.SuspendLayout();
+			this.splitButtons.Panel2.SuspendLayout();
+			this.splitButtons.SuspendLayout();
 			((System.ComponentModel.ISupportInitialize)(this.splitTopToBottom)).BeginInit();
 			this.splitTopToBottom.Panel1.SuspendLayout();
 			this.splitTopToBottom.Panel2.SuspendLayout();
@@ -131,24 +131,25 @@ namespace Radar
 			this.saveBitmapToolStripMenuItem.Text = "S&ave Bitmap";
 			this.saveBitmapToolStripMenuItem.Click += new System.EventHandler(this.OnSaveBitmapClicked);
 			// 
-			// splitContainer1
+			// splitButtons
 			// 
-			this.splitContainer1.Dock = System.Windows.Forms.DockStyle.Fill;
-			this.splitContainer1.FixedPanel = System.Windows.Forms.FixedPanel.Panel2;
-			this.splitContainer1.Location = new System.Drawing.Point(0, 0);
-			this.splitContainer1.Name = "splitContainer1";
+			this.splitButtons.Dock = System.Windows.Forms.DockStyle.Fill;
+			this.splitButtons.FixedPanel = System.Windows.Forms.FixedPanel.Panel2;
+			this.splitButtons.Location = new System.Drawing.Point(0, 0);
+			this.splitButtons.Name = "splitButtons";
 			// 
-			// splitContainer1.Panel1
+			// splitButtons.Panel1
 			// 
-			this.splitContainer1.Panel1.Controls.Add(this.splitTopToBottom);
+			this.splitButtons.Panel1.Controls.Add(this.splitTopToBottom);
 			// 
-			// splitContainer1.Panel2
+			// splitButtons.Panel2
 			// 
-			this.splitContainer1.Panel2.Controls.Add(this.flowBigButtons);
-			this.splitContainer1.Size = new System.Drawing.Size(1053, 702);
-			this.splitContainer1.SplitterDistance = 764;
-			this.splitContainer1.SplitterWidth = 5;
-			this.splitContainer1.TabIndex = 1;
+			this.splitButtons.Panel2.Controls.Add(this.flowBigButtons);
+			this.splitButtons.Size = new System.Drawing.Size(1053, 702);
+			this.splitButtons.SplitterDistance = 763;
+			this.splitButtons.SplitterWidth = 5;
+			this.splitButtons.TabIndex = 1;
+			this.splitButtons.SplitterMoved += new System.Windows.Forms.SplitterEventHandler(this.OnSplitterMoved);
 			// 
 			// splitTopToBottom
 			// 
@@ -165,7 +166,7 @@ namespace Radar
 			// 
 			this.splitTopToBottom.Panel2.AutoScroll = true;
 			this.splitTopToBottom.Panel2.Controls.Add(this.tabAnalysis);
-			this.splitTopToBottom.Size = new System.Drawing.Size(764, 702);
+			this.splitTopToBottom.Size = new System.Drawing.Size(763, 702);
 			this.splitTopToBottom.SplitterDistance = 399;
 			this.splitTopToBottom.SplitterWidth = 5;
 			this.splitTopToBottom.TabIndex = 0;
@@ -187,8 +188,8 @@ namespace Radar
 			this.splitRadar.Panel2.AutoScroll = true;
 			this.splitRadar.Panel2.Controls.Add(this.tabControl1);
 			this.splitRadar.Panel2.Controls.Add(this.flowBitmap);
-			this.splitRadar.Size = new System.Drawing.Size(764, 399);
-			this.splitRadar.SplitterDistance = 374;
+			this.splitRadar.Size = new System.Drawing.Size(763, 399);
+			this.splitRadar.SplitterDistance = 373;
 			this.splitRadar.TabIndex = 0;
 			this.splitRadar.SplitterMoved += new System.Windows.Forms.SplitterEventHandler(this.OnSplitterMoved);
 			// 
@@ -200,7 +201,7 @@ namespace Radar
 			this.picLidar.Dock = System.Windows.Forms.DockStyle.Fill;
 			this.picLidar.Location = new System.Drawing.Point(0, 0);
 			this.picLidar.Name = "picLidar";
-			this.picLidar.Size = new System.Drawing.Size(374, 375);
+			this.picLidar.Size = new System.Drawing.Size(373, 375);
 			this.picLidar.TabIndex = 0;
 			this.picLidar.TabStop = false;
 			this.picLidar.MouseMove += new System.Windows.Forms.MouseEventHandler(this.OnRadarMouseMove);
@@ -212,7 +213,7 @@ namespace Radar
             this.textLandscapeCoords});
 			this.statusRadar.Location = new System.Drawing.Point(0, 375);
 			this.statusRadar.Name = "statusRadar";
-			this.statusRadar.Size = new System.Drawing.Size(374, 24);
+			this.statusRadar.Size = new System.Drawing.Size(373, 24);
 			this.statusRadar.TabIndex = 1;
 			this.statusRadar.Text = "statusStrip1";
 			// 
@@ -313,7 +314,7 @@ namespace Radar
 			this.tabAnalysis.Location = new System.Drawing.Point(0, 0);
 			this.tabAnalysis.Name = "tabAnalysis";
 			this.tabAnalysis.SelectedIndex = 0;
-			this.tabAnalysis.Size = new System.Drawing.Size(764, 298);
+			this.tabAnalysis.Size = new System.Drawing.Size(763, 298);
 			this.tabAnalysis.TabIndex = 1;
 			this.tabAnalysis.Selected += new System.Windows.Forms.TabControlEventHandler(this.OnTabAnalysisSelected);
 			// 
@@ -324,7 +325,7 @@ namespace Radar
 			this.tabPageAnalysis.Location = new System.Drawing.Point(4, 24);
 			this.tabPageAnalysis.Name = "tabPageAnalysis";
 			this.tabPageAnalysis.Padding = new System.Windows.Forms.Padding(3);
-			this.tabPageAnalysis.Size = new System.Drawing.Size(756, 270);
+			this.tabPageAnalysis.Size = new System.Drawing.Size(755, 270);
 			this.tabPageAnalysis.TabIndex = 0;
 			this.tabPageAnalysis.Text = "Analysis";
 			this.tabPageAnalysis.UseVisualStyleBackColor = true;
@@ -346,7 +347,7 @@ namespace Radar
 			this.tabPageDeadReckoning.Location = new System.Drawing.Point(4, 22);
 			this.tabPageDeadReckoning.Name = "tabPageDeadReckoning";
 			this.tabPageDeadReckoning.Padding = new System.Windows.Forms.Padding(3);
-			this.tabPageDeadReckoning.Size = new System.Drawing.Size(756, 272);
+			this.tabPageDeadReckoning.Size = new System.Drawing.Size(755, 272);
 			this.tabPageDeadReckoning.TabIndex = 1;
 			this.tabPageDeadReckoning.Text = "Dead Reckoning";
 			this.tabPageDeadReckoning.UseVisualStyleBackColor = true;
@@ -366,7 +367,7 @@ namespace Radar
 			this.tabPageImage.Controls.Add(this.tabCameraImages);
 			this.tabPageImage.Location = new System.Drawing.Point(4, 22);
 			this.tabPageImage.Name = "tabPageImage";
-			this.tabPageImage.Size = new System.Drawing.Size(756, 272);
+			this.tabPageImage.Size = new System.Drawing.Size(755, 272);
 			this.tabPageImage.TabIndex = 2;
 			this.tabPageImage.Text = "Image";
 			this.tabPageImage.UseVisualStyleBackColor = true;
@@ -379,7 +380,7 @@ namespace Radar
 			this.tabCameraImages.Location = new System.Drawing.Point(0, 0);
 			this.tabCameraImages.Name = "tabCameraImages";
 			this.tabCameraImages.SelectedIndex = 0;
-			this.tabCameraImages.Size = new System.Drawing.Size(756, 272);
+			this.tabCameraImages.Size = new System.Drawing.Size(755, 272);
 			this.tabCameraImages.TabIndex = 0;
 			// 
 			// tabPage1
@@ -387,7 +388,7 @@ namespace Radar
 			this.tabPage1.Location = new System.Drawing.Point(4, 24);
 			this.tabPage1.Name = "tabPage1";
 			this.tabPage1.Padding = new System.Windows.Forms.Padding(3);
-			this.tabPage1.Size = new System.Drawing.Size(748, 244);
+			this.tabPage1.Size = new System.Drawing.Size(747, 244);
 			this.tabPage1.TabIndex = 0;
 			this.tabPage1.Text = "tabPage1";
 			this.tabPage1.UseVisualStyleBackColor = true;
@@ -397,7 +398,7 @@ namespace Radar
 			this.tabPage2.Location = new System.Drawing.Point(4, 22);
 			this.tabPage2.Name = "tabPage2";
 			this.tabPage2.Padding = new System.Windows.Forms.Padding(3);
-			this.tabPage2.Size = new System.Drawing.Size(749, 246);
+			this.tabPage2.Size = new System.Drawing.Size(748, 246);
 			this.tabPage2.TabIndex = 1;
 			this.tabPage2.Text = "tabPage2";
 			this.tabPage2.UseVisualStyleBackColor = true;
@@ -407,7 +408,7 @@ namespace Radar
 			this.tabPageVideo.Controls.Add(this.picVideo);
 			this.tabPageVideo.Location = new System.Drawing.Point(4, 22);
 			this.tabPageVideo.Name = "tabPageVideo";
-			this.tabPageVideo.Size = new System.Drawing.Size(756, 272);
+			this.tabPageVideo.Size = new System.Drawing.Size(755, 272);
 			this.tabPageVideo.TabIndex = 3;
 			this.tabPageVideo.Text = "Video";
 			this.tabPageVideo.UseVisualStyleBackColor = true;
@@ -418,7 +419,7 @@ namespace Radar
 			this.picVideo.Dock = System.Windows.Forms.DockStyle.Fill;
 			this.picVideo.Location = new System.Drawing.Point(0, 0);
 			this.picVideo.Name = "picVideo";
-			this.picVideo.Size = new System.Drawing.Size(756, 272);
+			this.picVideo.Size = new System.Drawing.Size(755, 272);
 			this.picVideo.TabIndex = 0;
 			this.picVideo.TabStop = false;
 			// 
@@ -451,14 +452,14 @@ namespace Radar
 			this.flowBigButtons.FlowDirection = System.Windows.Forms.FlowDirection.TopDown;
 			this.flowBigButtons.Location = new System.Drawing.Point(0, 0);
 			this.flowBigButtons.Name = "flowBigButtons";
-			this.flowBigButtons.Size = new System.Drawing.Size(284, 702);
+			this.flowBigButtons.Size = new System.Drawing.Size(285, 702);
 			this.flowBigButtons.TabIndex = 0;
 			// 
 			// btnGrabInitial
 			// 
 			this.btnGrabInitial.Location = new System.Drawing.Point(3, 3);
 			this.btnGrabInitial.Name = "btnGrabInitial";
-			this.btnGrabInitial.Size = new System.Drawing.Size(278, 46);
+			this.btnGrabInitial.Size = new System.Drawing.Size(279, 46);
 			this.btnGrabInitial.TabIndex = 0;
 			this.btnGrabInitial.Text = "&Grab Initial Landmarks";
 			this.btnGrabInitial.UseVisualStyleBackColor = true;
@@ -468,7 +469,7 @@ namespace Radar
 			// 
 			this.btnLoadLandmarks.Location = new System.Drawing.Point(3, 55);
 			this.btnLoadLandmarks.Name = "btnLoadLandmarks";
-			this.btnLoadLandmarks.Size = new System.Drawing.Size(278, 46);
+			this.btnLoadLandmarks.Size = new System.Drawing.Size(279, 46);
 			this.btnLoadLandmarks.TabIndex = 0;
 			this.btnLoadLandmarks.Text = "&Load Landmarks";
 			this.btnLoadLandmarks.UseVisualStyleBackColor = true;
@@ -480,7 +481,7 @@ namespace Radar
 			this.listLandmarks.HideSelection = false;
 			this.listLandmarks.Location = new System.Drawing.Point(3, 107);
 			this.listLandmarks.Name = "listLandmarks";
-			this.listLandmarks.Size = new System.Drawing.Size(278, 97);
+			this.listLandmarks.Size = new System.Drawing.Size(279, 97);
 			this.listLandmarks.TabIndex = 1;
 			this.listLandmarks.UseCompatibleStateImageBehavior = false;
 			this.listLandmarks.View = System.Windows.Forms.View.Details;
@@ -489,7 +490,7 @@ namespace Radar
 			// 
 			this.btnPullBitmap.Location = new System.Drawing.Point(3, 210);
 			this.btnPullBitmap.Name = "btnPullBitmap";
-			this.btnPullBitmap.Size = new System.Drawing.Size(278, 42);
+			this.btnPullBitmap.Size = new System.Drawing.Size(279, 42);
 			this.btnPullBitmap.TabIndex = 0;
 			this.btnPullBitmap.Text = "Pull";
 			this.btnPullBitmap.UseVisualStyleBackColor = true;
@@ -499,7 +500,7 @@ namespace Radar
 			// 
 			this.btnSavePointMarkers.Location = new System.Drawing.Point(3, 258);
 			this.btnSavePointMarkers.Name = "btnSavePointMarkers";
-			this.btnSavePointMarkers.Size = new System.Drawing.Size(278, 46);
+			this.btnSavePointMarkers.Size = new System.Drawing.Size(279, 46);
 			this.btnSavePointMarkers.TabIndex = 0;
 			this.btnSavePointMarkers.Text = "&Fetch Image";
 			this.btnSavePointMarkers.UseVisualStyleBackColor = true;
@@ -509,7 +510,7 @@ namespace Radar
 			// 
 			this.btnParms.Location = new System.Drawing.Point(3, 310);
 			this.btnParms.Name = "btnParms";
-			this.btnParms.Size = new System.Drawing.Size(278, 42);
+			this.btnParms.Size = new System.Drawing.Size(279, 42);
 			this.btnParms.TabIndex = 0;
 			this.btnParms.Text = "Change Corner Parms";
 			this.btnParms.UseVisualStyleBackColor = true;
@@ -519,7 +520,7 @@ namespace Radar
 			// 
 			this.btnAnalyze.Location = new System.Drawing.Point(3, 358);
 			this.btnAnalyze.Name = "btnAnalyze";
-			this.btnAnalyze.Size = new System.Drawing.Size(278, 42);
+			this.btnAnalyze.Size = new System.Drawing.Size(279, 42);
 			this.btnAnalyze.TabIndex = 0;
 			this.btnAnalyze.Text = "Analyze";
 			this.btnAnalyze.UseVisualStyleBackColor = true;
@@ -535,7 +536,7 @@ namespace Radar
 			this.botDash.Name = "botDash";
 			this.botDash.RearPrimaryRange = 0D;
 			this.botDash.RearSecondaryRange = 0D;
-			this.botDash.Size = new System.Drawing.Size(278, 182);
+			this.botDash.Size = new System.Drawing.Size(279, 182);
 			this.botDash.TabIndex = 7;
 			this.botDash.TankBitmap = null;
 			// 
@@ -546,7 +547,7 @@ namespace Radar
 			this.panel2.Controls.Add(this.btnCommand);
 			this.panel2.Location = new System.Drawing.Point(3, 594);
 			this.panel2.Name = "panel2";
-			this.panel2.Size = new System.Drawing.Size(278, 23);
+			this.panel2.Size = new System.Drawing.Size(279, 23);
 			this.panel2.TabIndex = 6;
 			// 
 			// textCommand
@@ -554,13 +555,13 @@ namespace Radar
 			this.textCommand.Dock = System.Windows.Forms.DockStyle.Fill;
 			this.textCommand.Location = new System.Drawing.Point(0, 0);
 			this.textCommand.Name = "textCommand";
-			this.textCommand.Size = new System.Drawing.Size(250, 23);
+			this.textCommand.Size = new System.Drawing.Size(251, 23);
 			this.textCommand.TabIndex = 4;
 			// 
 			// btnCommand
 			// 
 			this.btnCommand.Dock = System.Windows.Forms.DockStyle.Right;
-			this.btnCommand.Location = new System.Drawing.Point(250, 0);
+			this.btnCommand.Location = new System.Drawing.Point(251, 0);
 			this.btnCommand.Name = "btnCommand";
 			this.btnCommand.Size = new System.Drawing.Size(28, 23);
 			this.btnCommand.TabIndex = 5;
@@ -588,7 +589,7 @@ namespace Radar
 			this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
 			this.ClientSize = new System.Drawing.Size(1053, 702);
-			this.Controls.Add(this.splitContainer1);
+			this.Controls.Add(this.splitButtons);
 			this.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
 			this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
 			this.Name = "RadarForm";
@@ -598,10 +599,10 @@ namespace Radar
 			this.ResizeEnd += new System.EventHandler(this.OnFormResizeEnd);
 			this.Move += new System.EventHandler(this.OnWindowMoved);
 			this.cmenuRadar.ResumeLayout(false);
-			this.splitContainer1.Panel1.ResumeLayout(false);
-			this.splitContainer1.Panel2.ResumeLayout(false);
-			((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).EndInit();
-			this.splitContainer1.ResumeLayout(false);
+			this.splitButtons.Panel1.ResumeLayout(false);
+			this.splitButtons.Panel2.ResumeLayout(false);
+			((System.ComponentModel.ISupportInitialize)(this.splitButtons)).EndInit();
+			this.splitButtons.ResumeLayout(false);
 			this.splitTopToBottom.Panel1.ResumeLayout(false);
 			this.splitTopToBottom.Panel2.ResumeLayout(false);
 			((System.ComponentModel.ISupportInitialize)(this.splitTopToBottom)).EndInit();
@@ -639,7 +640,7 @@ namespace Radar
 		}
 
 		#endregion
-		private System.Windows.Forms.SplitContainer splitContainer1;
+		private System.Windows.Forms.SplitContainer splitButtons;
 		private System.Windows.Forms.SplitContainer splitTopToBottom;
 		private StackPanel flowBigButtons;
 		private System.Windows.Forms.PictureBox picFullEnvironment;

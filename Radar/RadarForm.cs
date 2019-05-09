@@ -30,6 +30,7 @@ using RaspiCommon.Data.Entities;
 using RaspiCommon.Devices.Chassis;
 using RaspiCommon.Devices.Optics;
 using RaspiCommon.Extensions;
+using RaspiCommon.GraphicalHelp;
 using RaspiCommon.Lidar;
 using RaspiCommon.Lidar.Environs;
 using RaspiCommon.Network;
@@ -144,6 +145,7 @@ namespace Radar
 				{
 					Size = Program.Config.LastRadarWindowSize;
 					splitTopToBottom.SplitterDistance = Program.Config.SplitTopToBottomPosition;
+					splitButtons.SplitterDistance = Program.Config.SplitLeftToRightPosition;
 					splitRadar.SplitterDistance = Program.Config.SplitRadarPosition;
 					Location = Program.Config.LastRadarWindowLocation;
 				}
@@ -264,7 +266,8 @@ namespace Radar
 			Mat tank = imageCV.Mat;
 			tank = tank.Rotate(_client.Bearing);
 			bitmap.DrawCenteredImage(tank, new PointD(250, 250));
-			picLidar.BackgroundImage = bitmap.Bitmap;
+			Bitmap bm = new Bitmap(bitmap.Bitmap);
+			picLidar.BackgroundImage = bm;
 
 			if(_redrawDR)
 			{
@@ -341,6 +344,8 @@ namespace Radar
 			}));
 		}
 
+		#region Drawing Stuff
+
 		void DrawImages(ImageAnalysis analysis)
 		{
 			String TEMP_IMAGE_DIRECTORY = @"c:\pub\tmp\junk";
@@ -376,7 +381,7 @@ namespace Radar
 				else
 				{
 					tabPageName = TAB_FULL_IMAGE;
-					DrawLEDPositions(bitmap, analysis.LEDs);
+					DrawLEDPositions(bitmap, analysis.LEDs, analysis.Candidates);
 					FullImage = destFile;
 				} 
 
@@ -384,14 +389,47 @@ namespace Radar
 			}
 		}
 
-		void DrawLEDPositions(Mat image, LEDPositionList leds)
+		void DrawLEDPositions(Mat image, LEDPositionList leds, LEDCandidateList candidates)
 		{
 			foreach(LEDPosition led in leds)
 			{
 				Size size = led.Size != Size.Empty ? led.Size : new Size(20, 20);
 				size = size.Grow(10);
 				Rectangle rectangle = RectangleExtensions.GetFromPoint(image.Size, led.Location.ToPoint(), size);
-				image.DrawRectangle(rectangle, led.Color, 2);
+				led.Tag = rectangle;
+				image.DrawRectangle(rectangle, led.Color, 1);
+
+				LEDCandidate candidate;
+				if(candidates.TryGetCandidateAtPoint(led.Location, out candidate))
+				{
+					DrawTextForRectangle(image, String.Format("{0:0.000}", candidate.Concentration), candidate.BoundingRectangle, FontFace.HersheyPlain, Color.Yellow, .5);
+				}
+			}
+
+			foreach(LEDCandidate candidate in candidates)
+			{
+				if(candidate.BoundingRectangle.ContainsAny(leds.Points))
+				{
+					continue;
+				}
+				image.DrawRectangle(candidate.BoundingRectangle, candidate.Color, 1);
+				DrawTextForRectangle(image, String.Format("{0:0.000}", candidate.Concentration), candidate.BoundingRectangle, FontFace.HersheyPlain, Color.White, .5);
+			}
+		}
+
+		void DrawTextForRectangle(Mat image, String text, Rectangle rectangle, FontFace font, Color color, Double scale)
+		{
+			if(rectangle.Top > 20)
+			{
+				image.DrawTextAboveLine(text, FontFace.HersheyPlain, color, rectangle.TopLine(), 4, 1, scale);
+			}
+			else if(rectangle.Bottom < image.Height - 20)
+			{
+				image.DrawTextBelowLine(text, FontFace.HersheyPlain, color, rectangle.BottomLine(), 4, 1, scale);
+			}
+			else
+			{
+				image.DrawTextAboveLine(text, FontFace.HersheyPlain, color, rectangle.BottomLine(), 4, 1, scale);
 			}
 		}
 
@@ -451,6 +489,8 @@ namespace Radar
 				tabCameraImages.TabPages.Add(page);
 			}
 		}
+
+		#endregion
 
 		private void OnCameraImageReceived(List<String> filenames)
 		{
@@ -514,6 +554,7 @@ namespace Radar
 			if(_layoutComplete)
 			{
 				Program.Config.SplitTopToBottomPosition = splitTopToBottom.SplitterDistance;
+				Program.Config.SplitLeftToRightPosition = splitButtons.SplitterDistance;
 				Program.Config.SplitRadarPosition = splitRadar.SplitterDistance;
 				Program.Config.Save();
 			}
@@ -695,30 +736,17 @@ namespace Radar
 
 		private void OnAnalyzeClicked(object sender, EventArgs e)
 		{
-			//Mat bitmap = new Mat(@"c:\pub\tmp\fullimage.bmp");
-
-			//int lowThreshold = 100;
-			//int highThreshold = 65;
-
-			//Mat blur = new Mat();
-			//CvInvoke.GaussianBlur(bitmap, blur, new Size(11, 11), 0);
-			//blur.Save(@"c:\pub\tmp\blur.bmp");
-
-			//MCvScalar lowRange = new MCvScalar(lowThreshold, 0, 0);
-			//MCvScalar topRange = new MCvScalar(255, highThreshold, highThreshold);
-			//Mat outputImage = new Mat(bitmap.Size, DepthType.Cv8U, 1);
-			//CvInvoke.InRange(bitmap, new ScalarArray(lowRange), new ScalarArray(topRange), outputImage);
-			//int totalcount = CvInvoke.CountNonZero(outputImage);
-			//outputImage.Save(@"c:\pub\tmp\green.png");
 #if !LIVE
 			LEDImageAnalysis.DebugAnalysis = true;
 			List<String> filenames = new List<string>();
+			LEDImageAnalysis.Width = 800;
+			LEDImageAnalysis.Height = 600;
+			LEDImageAnalysis.ColorThresholds[Color.Blue] = Program.Config.BlueThresholds;
+			LEDImageAnalysis.ColorThresholds[Color.Green] = Program.Config.GreenThresholds;
+			LEDImageAnalysis.ColorThresholds[Color.Red] = Program.Config.RedThresholds;
 			LEDPositionList leds;
-			LEDImageAnalysis.SetThreshold(Color.Blue, 150, 100);
-			LEDImageAnalysis.SetThreshold(Color.Green, 150, 100);
-			LEDImageAnalysis.SetThreshold(Color.Red, 150, 70);
-			LEDImageAnalysis.AnalyzeImage(FullImage, @"c:\pub\tmp\analysis", out filenames, out leds);
-
+			LEDCandidateList candidates;
+			LEDImageAnalysis.AnalyzeImage(FullImage, @"c:\pub\tmp\analysis", out filenames, out leds, out candidates);
 #else
 			if( String.IsNullOrEmpty(BlueImage) == false &&
 				String.IsNullOrEmpty(GreenImage) == false &&

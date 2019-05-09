@@ -95,7 +95,9 @@
     <Compile Include="TTY\GoCommand.cs" />
     <Compile Include="TTY\GrabImage.cs" />
     <Compile Include="TTY\LandmarkCommand.cs" />
+    <Compile Include="TTY\MotorLeftCommand.cs" />
     <Compile Include="TTY\LiftMove.cs" />
+    <Compile Include="TTY\MotorRightCommand.cs" />
     <Compile Include="TTY\NextCommand.cs" />
     <Compile Include="TTY\Pins.cs" />
     <Compile Include="TTY\Render.cs" />
