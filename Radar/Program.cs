@@ -11,6 +11,7 @@ using Emgu.CV.CvEnum;
 using Emgu.CV.Structure;
 using Emgu.CV.Util;
 using KanoopCommon.Database;
+using KanoopCommon.Extensions;
 using KanoopCommon.Geometry;
 using KanoopCommon.Logging;
 using KanoopCommon.PersistentConfiguration;
@@ -60,6 +61,7 @@ namespace Radar
 
 		static void Test()
 		{
+			Double diff = (Double)(67.024).AngularDifference(77.674, SpinDirection.CounterClockwise);
 			//TestImage();
 
 			//Program.Config.RemoteImageDirectory = @"\\raspi\pi\images";

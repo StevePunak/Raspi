@@ -430,6 +430,16 @@ namespace KanoopCommon.Extensions
 		}
 
 		/// <summary>
+		/// REturn reciprocal bearing for given value
+		/// </summary>
+		/// <param name="value"></param>
+		/// <returns></returns>
+		public static Double Reciprocal(this Double value)
+		{
+			return value.AddDegrees(180);
+		}
+
+		/// <summary>
 		/// Add the given number of degrees to the given angle
 		/// </summary>
 		/// <param name="value"></param>
@@ -467,9 +477,24 @@ namespace KanoopCommon.Extensions
 		/// <param name="value"></param>
 		/// <param name="other"></param>
 		/// <returns></returns>
-		public static Double AngularDifference(this Double value, Double other)
+		public static Double AngularDifference(this Double value, Double other, SpinDirection direction = SpinDirection.None)
 		{
-			return Degrees.AngularDifference(value, other);
+			Double diff = 0;
+			if(direction == SpinDirection.None)
+				diff = Degrees.AngularDifference(value, other);
+			else if(direction == SpinDirection.Clockwise)
+			{
+				diff = other - value;
+				if(diff < 0)
+					diff += 360;
+			}
+			else if(direction == SpinDirection.CounterClockwise)
+			{
+				diff = value - other;
+				if(diff < 0)
+					diff += 360;
+			}
+			return diff;
 		}
 
 		/// <summary>

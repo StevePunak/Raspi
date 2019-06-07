@@ -9,6 +9,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using AForge.Video;
 using Emgu.CV;
 using Emgu.CV.CvEnum;
 using Emgu.CV.Structure;
@@ -28,6 +29,8 @@ using RaspiCommon;
 using RaspiCommon.Data.DataSource;
 using RaspiCommon.Data.Entities;
 using RaspiCommon.Devices.Chassis;
+using RaspiCommon.Devices.GamePads;
+using RaspiCommon.Devices.Locomotion;
 using RaspiCommon.Devices.Optics;
 using RaspiCommon.Extensions;
 using RaspiCommon.GraphicalHelp;
@@ -37,7 +40,10 @@ using RaspiCommon.Network;
 using RaspiCommon.Spatial;
 using RaspiCommon.Spatial.DeadReckoning;
 using RaspiCommon.Spatial.LidarImaging;
+using SharpDX.DirectInput;
 using TrackBotCommon.Environs;
+using TrackBotCommon.InputDevices;
+using TrackBotCommon.InputDevices.GamePads;
 
 namespace Radar
 {
@@ -56,6 +62,9 @@ namespace Radar
 		const String DR_NAME = "ManCave";
 
 		const Double METERS_SQUARE = 10;
+
+		const Double SPIN_STEP_DEGREES = 3;
+
 		Double PixelsPerMeterImage
 		{
 			get
@@ -109,12 +118,22 @@ namespace Radar
 		public String GreenImage { get; set; }
 		public String RedImage { get; set; }
 
+		MJPEGStream _videoStream;
+
+		BotArmImage _robotArm;
 		VideoCapture _capture;
 		Mat _captureFrame;
 
+		GamePadBase _gamepad;
+		ClawControl _clawControl;
+		SpeedAndBearing _speedAndBearing;
+
 		public RadarForm()
 		{
+			_capture = null;
+			_captureFrame = null;
 			_client = null;
+
 			Host = String.IsNullOrEmpty(Program.Config.RadarHost) ? "raspi" : Program.Config.RadarHost;
 			InitializeComponent();
 
@@ -128,9 +147,8 @@ namespace Radar
 			try
 			{
 				SetupBitmap();
-
 				GetConnected();
-				Log.SysLogText(LogLevel.DEBUG, "Got connectd");
+				Log.SysLogText(LogLevel.DEBUG, "Got connected");
 
 				_drawTimer = new Timer();
 				_drawTimer.Interval = 500;
@@ -158,17 +176,39 @@ namespace Radar
 				picWorkBitmap.Size = tabPageAnalysis.Size;
 				picWorkBitmap.Location = Point.Empty;
 
+				textAnalysisCoordinates.Text = String.Empty;
+
 				SetupImageTabs();
 
-				_capture = new VideoCapture(0);
-				if(_capture != null)
-				{
-					_capture.SetCaptureProperty(CapProp.FrameWidth, 1280);
-					_capture.SetCaptureProperty(CapProp.FrameHeight, 1024);
-					_captureFrame = new Mat();
-					_capture.ImageGrabbed += OnCaptureImageGrabbed;
-					_capture.Start();
-				}
+				LoadOptions();
+
+				StartVideoFeed();
+
+				trackBarRotation.Value = 50;
+				trackBarElevation.Value = 50;
+				trackBarClaw.Value = 50;
+				trackBarThrust.Value = 50;
+				_mqqtController.SendPercentage(MqttTypes.ArmRotationTopic, 50);
+				_mqqtController.SendPercentage(MqttTypes.ArmElevationTopic, 50);
+				_mqqtController.SendPercentage(MqttTypes.ArmThrustTopic, 50);
+				_mqqtController.SendPercentage(MqttTypes.ArmClawTopic, 50);
+
+				_gamepad = GamePadBase.Create(Program.Config.GamePadType);
+				_gamepad.X.Continuous = true;
+				_gamepad.B.Continuous = true;
+				_gamepad.GamepadEvent += OnGamepadEvent;
+				_gamepad.HatChanged += OnGampadHatChanged;
+				_gamepad.XButtonChanged += OnGamepadXButtonChanged;
+				_gamepad.BButtonChanged += OnGamepadBButtonChanged;
+				_gamepad.AButtonChanged += OnGampadAButtonChanged;
+				_gamepad.YButtonChanged += OnGamepadYButtonChanged;
+				_gamepad.LeftStickPressedChanged += OnGamepadLeftStickPressedChanged;
+				_gamepad.RightStickPressedChanged += OnGamepadRightStickPressedChanged;
+				_gamepad.LeftIndexButtonChanged += OnGamepadLeftIndexButtonChanged;
+				_gamepad.RightIndexButtonChanged += OnGamepadRightIndexButtonChanged;
+				_gamepad.LeftTriggerChanged += OnGamepadLeftTriggerChanged;
+				_gamepad.RightTriggerChanged += OnGampadRightTriggerChanged;
+				_gamepad.Start();
 
 				_layoutComplete = true;
 			}
@@ -179,14 +219,101 @@ namespace Radar
 			}
 		}
 
+		void StartVideoFeed()
+		{
+			// create MJPEG video source
+			_videoStream = new MJPEGStream("http://thufir:8080/mjpeg");
+
+			// set event handlers
+			_videoStream.NewFrame += OnStream_NewFrame;
+			// start the video source
+			_videoStream.Start();
+		}
 
 		void LoadOptions()
 		{
 			checkFullScaleImages.Checked = Program.Config.FullScaleImages;
+			textImageDelay.Text = Program.Config.CameraParameters.SnapshotDelay.TotalMilliseconds.ToString();
+			textImageWidth.Text = Program.Config.CameraParameters.Width.ToString();
+			textImageHeight.Text = Program.Config.CameraParameters.Height.ToString();
+			textImageBrightness.Text = Program.Config.CameraParameters.Brightness.ToString();
+			textImageContrast.Text = Program.Config.CameraParameters.Contrast.ToString();
+			textImageSaturation.Text = Program.Config.CameraParameters.Saturation.ToString();
+			textImageColorEffect.Text = Program.Config.CameraParameters.ColorEffect;
+			listImageEffect.Items.AddRange(
+				new List<String>()
+				{
+					"none",
+					"negative",
+					"solarise",
+					"sketch",
+					"denoise",
+					"emboss",
+					"oilpaint",
+					"hatch",
+					"gpen",
+					"pastel",
+					"watercolour",
+					"film",
+					"blur",
+					"saturation",
+					"colourswap",
+					"washedout",
+					"posterise",
+					"colourpoint",
+					"colourbalance",
+					"cartoon",
+				}.ToArray());
+			listImageMetering.Items.AddRange(
+				new List<String>()
+				{
+					"average",
+					"spot",
+					"backlit",
+					"matrix",
+				}.ToArray());
+			listImageAutoWhite.Items.AddRange(
+				new List<String>()
+				{
+					"off",
+					"auto",
+					"sun",
+					"cloud",
+					"shade",
+					"tungsten",
+					"fluorescent",
+					"incandescent",
+					"flash",
+					"horizon",
+				}.ToArray());
+			listImageExposure.Items.AddRange(
+				new List<String>()
+				{
+					"off",
+					"auto",
+					"night",
+					"nightpreview",
+					"backlight",
+					"spotlight",
+					"sports",
+					"snow",
+					"beach",
+					"verylong",
+					"fixedfps",
+					"antishake",
+					"fireworks",
+				}.ToArray());
+			listImageEffect.Text = Program.Config.CameraParameters.ImageEffect;
+			listImageMetering.Text = Program.Config.CameraParameters.MeteringMode;
+			listImageAutoWhite.Text = Program.Config.CameraParameters.AutoWhiteBalance;
+			listImageExposure.Text = Program.Config.CameraParameters.Exposure;
+			checkFlipHorizontal.Checked = Program.Config.CameraParameters.FlipHorizontal;
+			checkFlipVertical.Checked = Program.Config.CameraParameters.FlipVertical;
 		}
 
 		void RepopulateLandmarks()
 		{
+#if zero
 			listLandmarks.Clear();
 			listLandmarks.AddColumnHeader(COL_POSITION, 80);
 			listLandmarks.AddColumnHeader(COL_LABEL, 80);
@@ -200,6 +327,7 @@ namespace Radar
 				//listLandmarks.SetListViewColumn(item, COL_RANGE, landmark.Label);
 				//listLandmarks.SetListViewColumn(item, COL_LABEL, landmark.Label);
 			}
+#endif
 		}
 
 		void LoadLandscape()
@@ -237,6 +365,13 @@ namespace Radar
 				g.DrawLine(new Pen(Color.Green), new Point(center.X, center.Y - 5), new Point(center.X, center.Y + 5));
 				picLidar.BackgroundImage = _radarBitmap;
 			}
+
+			Mat armBase = new Image<Bgr, byte>(Properties.Resources.arm_base).Mat;
+			Mat armLower = new Image<Bgr, byte>(Properties.Resources.arm_rear).Mat;
+			Mat armUpper = new Image<Bgr, byte>(Properties.Resources.arm_fore).Mat;
+			Mat armClaw = new Image<Bgr, byte>(Properties.Resources.arm_claw).Mat;
+
+			_robotArm = new BotArmImage(armBase, armLower, armUpper, armClaw);
 		}
 
 		private void OnDrawTimer(object sender, EventArgs e)
@@ -311,6 +446,7 @@ namespace Radar
 					MqttTypes.DeadReckoningCompleteLandscapeTopic,
 					MqttTypes.CameraLastImageTopic,
 					MqttTypes.CameraLastAnalysisTopic,
+					MqttTypes.SpeedAndBearingTopic,
 				});
 			_client.LandscapeMetricsReceived += OnLandscapeMetricsReceived;
 			_client.ImageMetricsReceived += OnImageMetricsReceived;
@@ -319,9 +455,16 @@ namespace Radar
 			_client.DeadReckoningEnvironmentReceived += OnDeadReckoningEnvironmentReceived;
 			_client.CameraImageReceived += OnCameraImageReceived;
 			_client.CameraImageAnalyzed += OnCameraImageAnalyzed;
+			_client.SpeedAndBearing += OnSpeedAndBearingReceived;
 			_client.Start();
 
 			_mqqtController = new RadarController(Program.Config.RadarHost, MqttClient.MakeRandomID(Text));
+			_clawControl = new ClawControl(_mqqtController);
+		}
+
+		private void OnSpeedAndBearingReceived(SpeedAndBearing speedAndBearing)
+		{
+			_speedAndBearing = speedAndBearing;
 		}
 
 		private void OnCameraImageAnalyzed(ImageAnalysis analysis)
@@ -344,48 +487,55 @@ namespace Radar
 			}));
 		}
 
-		#region Drawing Stuff
+#region Drawing Stuff
 
 		void DrawImages(ImageAnalysis analysis)
 		{
-			String TEMP_IMAGE_DIRECTORY = @"c:\pub\tmp\junk";
-
-			foreach(String filename in analysis.FileNames)
+			try
 			{
-				String sourceFile = Path.Combine(Program.Config.RemoteImageDirectory, filename);
-				String destFile = Path.Combine(TEMP_IMAGE_DIRECTORY, String.Format("{0}-{1}", _tempImageCount++, filename));
-				if(File.Exists(sourceFile) == false)
-					continue;
-				File.Copy(sourceFile, destFile, true);
-				Log.SysLogText(LogLevel.DEBUG, "Copied {0} to {1}", sourceFile, destFile);
+				String TEMP_IMAGE_DIRECTORY = @"c:\pub\tmp\junk";
 
-				Mat bitmap = new Mat(destFile);
-
-				String tabPageName = String.Empty;
-
-				if(filename.Contains("blue"))
+				foreach(String filename in analysis.FileNames)
 				{
-					tabPageName = TAB_BLUE;
-					BlueImage = destFile;
+					String sourceFile = Path.Combine(Program.Config.RemoteImageDirectory, filename);
+					String destFile = Path.Combine(TEMP_IMAGE_DIRECTORY, String.Format("{0}-{1}", _tempImageCount++, filename));
+					if(File.Exists(sourceFile) == false)
+						continue;
+					File.Copy(sourceFile, destFile, true);
+					Log.SysLogText(LogLevel.DEBUG, "Copied {0} to {1}", sourceFile, destFile);
+
+					Mat bitmap = new Mat(destFile);
+
+					String tabPageName = String.Empty;
+
+					if(filename.Contains("blue"))
+					{
+						tabPageName = TAB_BLUE;
+						BlueImage = destFile;
+					}
+					else if(filename.Contains("red"))
+					{
+						tabPageName = TAB_RED;
+						RedImage = destFile;
+					}
+					else if(filename.Contains("green"))
+					{
+						tabPageName = TAB_GREEN;
+						GreenImage = destFile;
+					}
+					else
+					{
+						tabPageName = TAB_FULL_IMAGE;
+						DrawLEDPositions(bitmap, analysis.LEDs, analysis.Candidates);
+						FullImage = destFile;
+					} 
+
+					SetImage(bitmap, tabPageName);
 				}
-				else if(filename.Contains("red"))
-				{
-					tabPageName = TAB_RED;
-					RedImage = destFile;
-				}
-				else if(filename.Contains("green"))
-				{
-					tabPageName = TAB_GREEN;
-					GreenImage = destFile;
-				}
-				else
-				{
-					tabPageName = TAB_FULL_IMAGE;
-					DrawLEDPositions(bitmap, analysis.LEDs, analysis.Candidates);
-					FullImage = destFile;
-				} 
-
-				SetImage(bitmap, tabPageName);
+			}
+			catch(Exception e)
+			{
+				MessageBox.Show(e.Message);
 			}
 		}
 
@@ -485,12 +635,18 @@ namespace Radar
 					Location = Point.Empty,
 					Name = name,
 				};
+				pic.MouseMove += OnAnalysisPicMouseMove;
 				page.Controls.Add(pic);
 				tabCameraImages.TabPages.Add(page);
 			}
 		}
 
-		#endregion
+		private void OnAnalysisPicMouseMove(object sender, MouseEventArgs e)
+		{
+			textAnalysisCoordinates.Text = String.Format("{0}, {1}", e.Location.X, e.Location.Y);
+		}
+
+#endregion
 
 		private void OnCameraImageReceived(List<String> filenames)
 		{
@@ -530,10 +686,18 @@ namespace Radar
 
 		private void OnFormClosing(object sender, FormClosingEventArgs e)
 		{
+			if(_videoStream != null)
+			{
+				_videoStream.Stop();
+			}
 			if(_client != null)
 			{
 				_client.Disconnect();
 				_client = null;
+			}
+			if(_gamepad != null)
+			{
+				_gamepad.Stop();
 			}
 
 			ThreadBase.AbortAllRunningThreads();
@@ -598,6 +762,19 @@ namespace Radar
 
 		private void OnFetchImageClicked(object sender, EventArgs e)
 		{
+#if zero
+			Mat image = _lastFrame.Clone();
+			ObjectDetect detect = new ObjectDetect(image, imageCanny, imageTriangles, imageRectangles, imageCircle, imageAllDetected, labelTriangles, labelRectangles, labelCircles);
+			detect.Detect();
+#endif
+		}
+
+		private void OnStream_NewFrame(object sender, NewFrameEventArgs eventArgs)
+		{
+			pictureTempVideo.BackgroundImage = eventArgs.Frame.Clone() as Bitmap;
+			//_lastFrame = new Image<Bgr, byte>(eventArgs.Frame.Clone() as Bitmap).Mat;
+			//Log.SysLogText(LogLevel.DEBUG, "Setting frame");
+			//liveView.SetBitmap(_lastFrame, _speedAndBearing, 0, 0);
 		}
 
 		private void OnRunAnalysisClicked(object sender, EventArgs e)
@@ -746,7 +923,10 @@ namespace Radar
 			LEDImageAnalysis.ColorThresholds[Color.Red] = Program.Config.RedThresholds;
 			LEDPositionList leds;
 			LEDCandidateList candidates;
-			LEDImageAnalysis.AnalyzeImage(FullImage, @"c:\pub\tmp\analysis", out filenames, out leds, out candidates);
+			LEDImageAnalysis.AnalyzeImage(FullImage, LEDImageAnalysis.AllLEDColors, @"c:\pub\tmp\analysis", out filenames, out leds, out candidates);
+			Mat image = new Mat(FullImage);
+			DrawLEDPositions(image, leds, candidates);
+			SetImage(image, TAB_FULL_IMAGE);
 #else
 			if( String.IsNullOrEmpty(BlueImage) == false &&
 				String.IsNullOrEmpty(GreenImage) == false &&
@@ -880,7 +1060,7 @@ namespace Radar
 				lock(_capture)
 				{
 					_capture.Retrieve(_captureFrame, 0);
-					picVideo.Image = _captureFrame.Bitmap;
+					// picVideo.Image = _captureFrame.Bitmap;
 				}
 			}
 		}
@@ -913,6 +1093,192 @@ namespace Radar
 				Program.Config.FullScaleImages = checkFullScaleImages.Checked;
 				Program.Config.Save();
 			}
+		}
+
+		private void OnRotationChange(object sender, EventArgs e)
+		{
+			_mqqtController.SendPercentage(MqttTypes.ArmRotationTopic, ((TrackBar)sender).Value);
+		}
+
+		private void OnElevationChange(object sender, EventArgs e)
+		{
+			_mqqtController.SendPercentage(MqttTypes.ArmElevationTopic, ((TrackBar)sender).Value);
+		}
+
+		private void OnThrustChange(object sender, EventArgs e)
+		{
+			_mqqtController.SendPercentage(MqttTypes.ArmThrustTopic, ((TrackBar)sender).Value);
+		}
+
+		private void OnClawChange(object sender, EventArgs e)
+		{
+			_mqqtController.SendPercentage(MqttTypes.ArmClawTopic, ((TrackBar)sender).Value);
+		}
+
+		private void OnTestArmClicked(object sender, EventArgs e)
+		{
+			Mat image = _robotArm.GetImage();
+			picRobotArm.BackgroundImage = new Bitmap(image.Bitmap.Clone() as Bitmap);
+		}
+
+		private void OnImageParametersCheckChanged(object sender, EventArgs e)
+		{
+			if(_layoutComplete)
+			{
+				RaspiCameraParameters parameters = new RaspiCameraParameters()
+				{
+					SnapshotDelay = TimeSpan.FromMilliseconds(int.Parse(textImageDelay.Text)),
+					Width = int.Parse(textImageWidth.Text),
+					Height = int.Parse(textImageHeight.Text),
+					Brightness = int.Parse(textImageBrightness.Text),
+					Contrast = int.Parse(textImageContrast.Text),
+					Saturation = int.Parse(textImageSaturation.Text),
+					ImageEffect = listImageEffect.Text,
+					MeteringMode = listImageMetering.Text,
+					AutoWhiteBalance = listImageAutoWhite.Text,
+					Exposure = listImageExposure.Text,
+					FlipHorizontal = checkFlipHorizontal.Checked,
+					FlipVertical = checkFlipVertical.Checked,
+				};
+
+				if(parameters.Equals(Program.Config.CameraParameters) == false)
+				{
+					Program.Config.CameraParameters = parameters;
+					Program.Config.Save();
+					_mqqtController.SendCameraParameters(Program.Config.CameraParameters);
+				}
+			}
+		}
+
+		private void OnJoystickSpeedChanged(int left, int right)
+		{
+			Log.SysLogText(LogLevel.DEBUG, "Left {0} Right: {1}", left, right);
+			//if(_mqqtController != null && _mqqtController.Client != null && _mqqtController.Client.Connected)
+			//{
+			//	Log.SysLogText(LogLevel.DEBUG, "Left {0} Right: {1}", left, right);
+			//	_mqqtController.SendSpeed(left, right);
+			//}
+		}
+
+		private void OnGamepadEvent(GamePadBase gamePad)
+		{
+			const int CLAW_ZONE = 3000;
+
+			if(gamePad.LeftStick.Press == false && gamePad.RightStick.Press == false)
+			{
+				Double leftSpeed = (int)(((Double)gamePad.LeftStick.Y / 65535 * 200 - 100) * -1);
+				Double rightSpeed = (int)(((Double)gamePad.RightStick.Y / 65535 * 200 - 100) * -1);
+
+				if(gamePad.RightStick.X > GamePadTypes.MAX_ANALOG - CLAW_ZONE)
+				{
+					_clawControl.SetClaw(100);
+				}
+				else if(gamePad.RightStick.X < CLAW_ZONE)
+				{
+					_clawControl.SetClaw(0);
+				}
+				//Log.SysLogText(LogLevel.DEBUG, "Would set L: {0}  R: {1}", leftSpeed, rightSpeed);
+				_mqqtController.SendSpeed((int)leftSpeed, (int)rightSpeed);
+			}
+
+		}
+
+		private void OnGamepadLeftStickPressedChanged(GamePadBase gamePad, RaspiCommon.Devices.GamePads.Button state)
+		{
+			_clawControl.Rotation = 50;
+		}
+
+		private void OnGamepadRightStickPressedChanged(GamePadBase gamePad, RaspiCommon.Devices.GamePads.Button state)
+		{
+		}
+
+		const int CLAW_CONTROL_QUANTUM = 2;
+		private void OnGamepadXButtonChanged(GamePadBase gamePad, RaspiCommon.Devices.GamePads.Button button)
+		{
+			if(button.State)
+				_clawControl.ChangeRotation(-CLAW_CONTROL_QUANTUM);
+		}
+
+		private void OnGamepadBButtonChanged(GamePadBase gamePad, RaspiCommon.Devices.GamePads.Button button)
+		{
+			if(button.State)
+				_clawControl.ChangeRotation(CLAW_CONTROL_QUANTUM);
+		}
+
+		private void OnGamepadLeftIndexButtonChanged(GamePadBase gamePad, RaspiCommon.Devices.GamePads.Button button)
+		{
+			if(button.State)
+				_mqqtController.SendSpinStepLeftTime(TimeSpan.FromMilliseconds(50));
+		}
+
+		private void OnGamepadRightIndexButtonChanged(GamePadBase gamePad, RaspiCommon.Devices.GamePads.Button button)
+		{
+			if(button.State)
+				_mqqtController.SendSpinStepRightTime(TimeSpan.FromMilliseconds(50));
+		}
+
+		private void OnGampadHatChanged(GamePadBase gamePad, Hat hat)
+		{
+			if(hat.Up.State)
+				_clawControl.ChangeElevation(-CLAW_CONTROL_QUANTUM);
+			if(hat.Down.State)
+				_clawControl.ChangeElevation(CLAW_CONTROL_QUANTUM);
+			if(hat.Right.State)
+				_clawControl.ChangeThrust(-CLAW_CONTROL_QUANTUM);
+			if(hat.Left.State)
+				_clawControl.ChangeThrust(CLAW_CONTROL_QUANTUM);
+		}
+
+		private void OnGamepadLeftTriggerChanged(GamePadBase gamePad, AnalogControl control)
+		{
+			int value = AdjustToPercent(control.Value, false);
+			Log.SysLogText(LogLevel.DEBUG, "Set Left To {0}", value);
+			_clawControl.Elevation = value;
+		}
+
+		private void OnGampadRightTriggerChanged(GamePadBase gamePad, AnalogControl control)
+		{
+			int value = AdjustToPercent(control.Value, true);
+			Log.SysLogText(LogLevel.DEBUG, "Set Right To {0}", value);
+			_clawControl.Thrust = value;
+		}
+
+		int AdjustToPercent(Double value, bool reverse)
+		{
+			Double v = value / (Double)GamePadTypes.MAX_ANALOG * (Double)100;
+			if(reverse)
+				v = Math.Abs(100 - v);
+			return (int)v;
+		}
+
+		/// <summary>
+		/// Y - Step Forward
+		/// </summary>
+		/// <param name="gamePad"></param>
+		/// <param name="button"></param>
+		private void OnGamepadYButtonChanged(GamePadBase gamePad, RaspiCommon.Devices.GamePads.Button button)
+		{
+			Log.SysLogText(LogLevel.DEBUG, "YButton {0}", button);
+			if(button.State)
+				_mqqtController.SendMoveStep(Direction.Forward, TimeSpan.FromMilliseconds(50), 80);
+		}
+
+		/// <summary>
+		/// A - Step backward
+		/// </summary>
+		/// <param name="gamePad"></param>
+		/// <param name="button"></param>
+		private void OnGampadAButtonChanged(GamePadBase gamePad, RaspiCommon.Devices.GamePads.Button button)
+		{
+			Log.SysLogText(LogLevel.DEBUG, "AButton {0}", button);
+			if(button.State)
+				_mqqtController.SendMoveStep(Direction.Backward, TimeSpan.FromMilliseconds(50), 80);
+		}
+
+		private void OnPreferencesClicked(object sender, EventArgs e)
+		{
+			PreferencesForm dlg = new PreferencesForm();
+			dlg.ShowDialog();
 		}
 	}
 }

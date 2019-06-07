@@ -6,8 +6,11 @@ using System.Text;
 using System.Threading.Tasks;
 using KanoopCommon.CommonObjects;
 using KanoopCommon.Extensions;
+using KanoopCommon.Geometry;
 using KanoopCommon.Logging;
 using MQTT;
+using RaspiCommon.Devices.Locomotion;
+using RaspiCommon.Devices.Optics;
 using RaspiCommon.Network;
 
 namespace RaspiCommon.Network
@@ -20,7 +23,7 @@ namespace RaspiCommon.Network
 
 		public String MqqtClientID { get; set; }
 
-		MqttClient Client { get; set; }
+		public MqttClient Client { get; set; }
 
 		#endregion
 
@@ -46,12 +49,53 @@ namespace RaspiCommon.Network
 		public void SendCommand(String command)
 		{
 			Send(MqttTypes.CommandsTopic, command, false);
-
 		}
 
-		private void Send(object mqqtTypes)
+		public void SendSpeed(int left, int right)
 		{
-			throw new NotImplementedException();
+			TrackSpeed speed = new TrackSpeed() { LeftSpeed = left, RightSpeed = right };
+			Send(MqttTypes.BotSpeedTopic, speed.Serialize(), false);
+		}
+
+		public void SendSpinStepLeftDegrees(Double degrees)
+		{
+			byte[] payload = BitConverter.GetBytes(degrees);
+			Send(MqttTypes.BotSpinStepLeftDegreesTopic, payload);
+		}
+
+		public void SendSpinStepRightDegrees(Double degrees)
+		{
+			byte[] payload = BitConverter.GetBytes(degrees);
+			Send(MqttTypes.BotSpinStepRightDegreesTopic, payload);
+		}
+
+		public void SendSpinStepLeftTime(TimeSpan time)
+		{
+			byte[] payload = BitConverter.GetBytes((int)time.TotalMilliseconds);
+			Send(MqttTypes.BotSpinStepLeftTimeTopic, payload);
+		}
+
+		public void SendSpinStepRightTime(TimeSpan time)
+		{
+			byte[] payload = BitConverter.GetBytes((int)time.TotalMilliseconds);
+			Send(MqttTypes.BotSpinStepRightTimeTopic, payload);
+		}
+
+		public void SendMoveStep(Direction direction, TimeSpan time, int speed)
+		{
+			MoveStep move = new MoveStep(direction, time, speed);
+			byte[] payload = move.Serialize();
+			Send(MqttTypes.BotMoveTimeTopic, payload);
+		}
+
+		public void SendPercentage(String topic, int value)
+		{
+			Send(topic, BitConverter.GetBytes(value));
+		}
+
+		public void SendCameraParameters(RaspiCameraParameters parameters)
+		{
+			Send(MqttTypes.RaspiCameraSetParametersTopic, parameters.Serialize());
 		}
 
 		#endregion
@@ -63,7 +107,7 @@ namespace RaspiCommon.Network
 			Send(topic, ASCIIEncoding.UTF8.GetBytes(what), retain);
 		}
 
-		private void Send(String topic, byte[] what, bool retain = false)
+		private void Send(String topic, byte[] what = null, bool retain = false)
 		{
 			if(Client == null || Client.Connected == false)
 			{

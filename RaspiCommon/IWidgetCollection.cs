@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using RaspiCommon.Devices.Chassis;
 using RaspiCommon.Devices.Compass;
+using RaspiCommon.Devices.Locomotion;
 using RaspiCommon.Devices.Optics;
 using RaspiCommon.Network;
 using RaspiCommon.Spatial;
@@ -33,5 +34,6 @@ namespace RaspiCommon
 		ILandscape Landscape { get; }
 		Chassis Chassis { get; }
 		Camera Camera { get; }
+		TrackSpeed TrackSpeed { get; }
 	}
 }

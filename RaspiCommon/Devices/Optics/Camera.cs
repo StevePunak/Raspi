@@ -32,7 +32,6 @@ namespace RaspiCommon.Devices.Optics
 		public static string ImageDirectory = "/var/robo/images";
 
 		protected const String DELETE_WILDCARD = "*-snap*";
-		protected const String SAVE_NAME_END = "snap.img";
 
 		const int COUNT_TO_KEEP = 10;
 
@@ -49,22 +48,13 @@ namespace RaspiCommon.Devices.Optics
 
 		public Double AngleOffset { get; set; }
 
-		public TimeSpan SnapshotDelay { get; set; }
-		public int Width { get; set; }
-		public int Height { get; set; }
-		public ImageType ImageType { get; set; }
-		public bool FlipHorizontal { get; set; }
-		public bool FlipVertical { get; set; }
-		public int Brightness { get; set; }
-		public String ImageEffect { get; set; }
-		public String ColorEffect { get; set; }
-		public String Exposure { get; set; }
-		public int Contrast { get; set; }
-		public int Saturation { get; set; }
+		public RaspiCameraParameters Parameters { get; set; }
 
 		public ImageType ConvertTo { get; set; }
 
 		public bool AutoSnap { get; set; }
+
+		protected String SaveNameEnd { get; set; }
 
 		public int ImageNumber { get; protected set; }
 
@@ -76,6 +66,7 @@ namespace RaspiCommon.Devices.Optics
 			: base(name)
 		{
 			Log.SysLogText(LogLevel.INFO, "Creating camera object");
+			SaveNameEnd = "snap.img";
 
 			if(Directory.Exists(ImageDirectory) == false)
 			{
@@ -92,14 +83,14 @@ namespace RaspiCommon.Devices.Optics
 			{
 				ImageNumber = 0;
 			}
-
-			SnapshotDelay = TimeSpan.FromMilliseconds(1000);
-			Width = 800;
-			Height = 600;
-			ImageType = ImageType.RawRGB;
-			FlipHorizontal = true;
-			FlipVertical = true;
-			Brightness = 30;
+			Parameters = new RaspiCameraParameters();
+			Parameters.SnapshotDelay = TimeSpan.FromMilliseconds(1000);
+			Parameters.Width = 800;
+			Parameters.Height = 600;
+			Parameters.ImageType = ImageType.RawRGB;
+			Parameters.FlipHorizontal = true;
+			Parameters.FlipVertical = true;
+			Parameters.Brightness = 30;
 
 			ConvertTo = ImageType.Unknown;
 
@@ -139,7 +130,7 @@ namespace RaspiCommon.Devices.Optics
 		{
 			bool foundAny = false;
 			last = 0;
-			List<String> files = new List<String>(Directory.GetFiles(ImageDirectory, "*" + SAVE_NAME_END));
+			List<String> files = new List<String>(Directory.GetFiles(ImageDirectory, "*" + SaveNameEnd));
 			Log.SysLogText(LogLevel.DEBUG, "Files are:\n{0}", files.GetString());
 			String name = null;
 			do

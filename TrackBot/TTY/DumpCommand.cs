@@ -18,6 +18,10 @@ namespace TrackBot.TTY
 		{
 			Log.SysLogText(LogLevel.DEBUG, "----------   LED Positions   ----------");
 			Program.Config.LEDTravelHistory.DumpToLog();
+			Log.SysLogText(LogLevel.DEBUG, "----------   Color Thresholds   ----------");
+			Log.SysLogText(LogLevel.DEBUG, "Blue: {0}  Green: {1}  Red: {2}", Program.Config.BlueThresholds, Program.Config.GreenThresholds, Program.Config.RedThresholds);
+			Log.SysLogText(LogLevel.DEBUG, "----------   Camera Parameters   ----------");
+			Log.SysLogText(LogLevel.DEBUG, "{0}", Program.Config.CameraParameters);
 			return true;
 		}
 

@@ -12,6 +12,25 @@ namespace KanoopCommon.Extensions
 	{
 		public static int ByteArraySize = PointExtensions.ByteArraySize + SizeExtensions.ByteArraySize;
 
+		public static Rectangle Grow(this Rectangle rectangle, int count)
+		{
+			Rectangle newRect = rectangle;
+			newRect = new Rectangle(new Point(rectangle.X - count, rectangle.Y - count), new Size(rectangle.Width + count * 2, rectangle.Height + count * 2));
+			return newRect;
+		}
+
+		public static Rectangle Shrink(this Rectangle rectangle, int count)
+		{
+			Rectangle newRect = rectangle;
+			newRect = new Rectangle(new Point(rectangle.X + count, rectangle.Y + count), new Size(rectangle.Width - count * 2, rectangle.Height - count * 2));
+			return newRect;
+		}
+
+		public static Rectangle GetCenteredRectangle(Point centerPoint, Size size)
+		{
+			return new Rectangle(new Point(centerPoint.X - size.Width / 2, centerPoint.Y - size.Height / 2), size);
+		}
+
 		public static byte[] Serialize(this Rectangle rectangle)
 		{
 			byte[] serialized = new byte[ByteArraySize];

@@ -381,6 +381,12 @@ namespace RaspiCommon.Extensions
 			CvInvoke.Rectangle(image, rectangle, color.ToMCvScalar(), lineWidth);
 		}
 
+		public static void DrawCenteredRectangle(this Mat image, Point center, Size size, Color color, int lineWidth = 1)
+		{
+			Rectangle rectangle = new Rectangle(new Point(center.X - size.Width / 2, center.Y - size.Height / 2), size);
+			CvInvoke.Rectangle(image, rectangle, color.ToMCvScalar(), lineWidth);
+		}
+
 		public static void DrawCircle(this Mat image, PointD where, int radius, MCvScalar color, int lineWidth = 1)
 		{
 			CvInvoke.Circle(image, where.ToPoint(), radius, color, lineWidth);
@@ -418,5 +424,20 @@ namespace RaspiCommon.Extensions
 		{
 			CvInvoke.Line(image, line.P1.ToPoint(), line.P2.ToPoint(), color, lineWidth);
 		}
+
+		public static Mat ToGrayscaleImage(this Mat inputImage)
+		{
+			Mat uimage = new Mat();
+			CvInvoke.CvtColor(inputImage, uimage, ColorConversion.Bgr2Gray);
+			return uimage;
+		}
+
+		public static Mat ToCannyImage(this Mat inputImage)
+		{
+			return new Mat();
+			//var outputImage = CvInvoke.Canny(inputImage, inputImage.Canny(400, 20);
+			//return outputImage.ToUMat().ToImage<Bgr, byte>();
+		}
+
 	}
 }

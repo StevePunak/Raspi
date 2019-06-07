@@ -59,6 +59,16 @@ namespace KanoopCommon.Geometry
 
 		#region Public Geometery Methods
 
+		public bool Contains(PointD point)
+		{
+			return point.DistanceTo(Center) < Radius;
+		}
+
+		public bool Contains(Point point)
+		{
+			return new PointD(point).DistanceTo(Center) < Radius;
+		}
+
 		public Relationship RelationTo(Circle otherCircle)
 		{
 			Relationship	ret = Relationship.NoRelation;
@@ -116,7 +126,34 @@ namespace KanoopCommon.Geometry
 			return bRet;
 		}
 
-// Find the points where the two circles intersect.
+		/// <summary>
+		/// Return the closest point on the edge of the circle to the given point
+		/// </summary>
+		/// <param name="to"></param>
+		/// <returns></returns>
+		public PointD ClosestPointOnEdge(PointD to)
+		{
+			PointD closest = Center.GetPointAt(Center.BearingTo(to), Radius);
+			return closest;
+		}
+
+		/// <summary>
+		/// Return the closest point on the edge of the circle to the given point
+		/// </summary>
+		/// <param name="to"></param>
+		/// <returns></returns>
+		public PointD ClosestPointOnEdge(Point to)
+		{
+			return ClosestPointOnEdge(new PointD(to));
+		}
+
+		/// <summary>
+		/// Find the points where the two circles intersect.
+		/// </summary>
+		/// <param name="other"></param>
+		/// <param name="intersection1"></param>
+		/// <param name="intersection2"></param>
+		/// <returns></returns>
 		public IntersectionResult FindIntersections(Circle other, out PointD intersection1, out PointD intersection2)
 		{
 			IntersectionResult result = IntersectionResult.Invalid;

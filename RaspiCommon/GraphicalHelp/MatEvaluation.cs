@@ -19,6 +19,18 @@ namespace RaspiCommon.GraphicalHelp
 		public int Diff2 { get; private set; }
 		public int TotalDiff { get; private set; }
 
+		public int ColorLevel(Color color)
+		{
+			if(color == Color.Blue)
+				return Blue;
+			else if(color == Color.Green)
+				return Green;
+			else if(color == Color.Red)
+				return Red;
+			else
+				throw new Exception("Invalid color choice");
+		}
+
 		public PixelDefinition()
 			: this(Point.Empty, Color.Black, 0, 0, 0) { }
 
@@ -105,7 +117,7 @@ namespace RaspiCommon.GraphicalHelp
 
 		public override string ToString()
 		{
-			return DiffPixel.ToString();
+			return String.Format("At {0}", DiffPixel);
 		}
 
 	}

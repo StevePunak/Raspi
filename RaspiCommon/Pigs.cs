@@ -56,7 +56,7 @@ namespace RaspiCommon
 
 		public static void SetHardwarePWM(GpioPin gpioPin, UInt32 frequency, UInt32 dutyCyclePercent)
 		{
-			Log.SysLogText(LogLevel.DEBUG, "PIGS set Hardware PWM {0} freq {1}  duty cycle {2}", gpioPin, frequency, dutyCyclePercent);
+//			Log.SysLogText(LogLevel.DEBUG, "PIGS set Hardware PWM {0} freq {1}  duty cycle {2}", gpioPin, frequency, dutyCyclePercent);
 			if(dutyCyclePercent > 100)
 			{
 				throw new RaspiException("Duty cycle must be 0-100");
@@ -68,7 +68,7 @@ namespace RaspiCommon
 
 		public static void SetPWM(GpioPin gpioPin, UInt32 dutyCycle)
 		{
-			Log.SysLogText(LogLevel.DEBUG, "PIGS set PWM duty cycle {0} {1}", gpioPin, dutyCycle);
+//			Log.SysLogText(LogLevel.DEBUG, "PIGS set PWM duty cycle {0} {1}", gpioPin, dutyCycle);
 
 			PigCommand command = new PigCommand(PigCommand.CommandType.PWM, gpioPin, dutyCycle);
 			SendCommand(command);
@@ -81,7 +81,7 @@ namespace RaspiCommon
 
 		public static void SetServoPosition(GpioPin gpioPin, UInt32 position)
 		{
-//			Console.WriteLine("Set servo {0} to {1}", gpioPin, position);
+			//Log.SysLogText(LogLevel.DEBUG, "Set servo {0} to {1}", gpioPin, position);
 
 			PigCommand command = new PigCommand(PigCommand.CommandType.SERVO, gpioPin, position);
 			SendCommand(command);
@@ -89,7 +89,7 @@ namespace RaspiCommon
 
 		public static void SetOutputPin(GpioPin gpioPin, PinState value)
 		{
-			Log.SysLogText(LogLevel.DEBUG, "*********** PIGS output pin {0} {1}", gpioPin, value);
+//			Log.SysLogText(LogLevel.DEBUG, "*********** PIGS output pin {0} {1}", gpioPin, value);
 
 			PigCommand command = new PigCommand(PigCommand.CommandType.WRITE, gpioPin, (UInt32)value);
 			SendCommand(command);
@@ -97,7 +97,7 @@ namespace RaspiCommon
 
 		public static void SetOutputPin(GpioPin gpioPin, bool value)
 		{
-			Log.SysLogText(LogLevel.DEBUG, ">>>>>>>>>>>>>>>> PIGS output pin {0} {1}", gpioPin, value);
+//			Log.SysLogText(LogLevel.DEBUG, ">>>>>>>>>>>>>>>> PIGS output pin {0} {1}", gpioPin, value);
 
 			PigCommand command = new PigCommand(PigCommand.CommandType.WRITE, gpioPin, value ? (UInt32)1 : (UInt32)0);
 			SendCommand(command);

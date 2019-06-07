@@ -17,7 +17,9 @@ using RaspiCommon.Data.DataSource;
 using RaspiCommon.Data.Entities;
 using RaspiCommon.Devices.Chassis;
 using RaspiCommon.Devices.Compass;
+using RaspiCommon.Devices.Locomotion;
 using RaspiCommon.Devices.Optics;
+using RaspiCommon.Devices.RobotArms;
 using RaspiCommon.Devices.Spatial;
 using RaspiCommon.Lidar.Environs;
 using RaspiCommon.Network;
@@ -26,6 +28,7 @@ using RaspiCommon.Spatial.DeadReckoning;
 using RaspiCommon.Spatial.LidarImaging;
 using TrackBot.ForkLift;
 using TrackBot.Network;
+using TrackBot.Servos;
 using TrackBot.Spatial;
 using TrackBot.Tracks;
 using TrackBotCommon.Environs;
@@ -49,6 +52,7 @@ namespace TrackBot
 		public event CameraImagesAnalyzedHandler CameraImagesAnalyzed;
 
 		public BotTracks Tracks { get; private set; }
+		public TrackSpeed TrackSpeed { get { return new TrackSpeed() { LeftSpeed = Tracks.LeftSpeed, RightSpeed = Tracks.RightSpeed }; } } 
 		public Dictionary<RFDir, HCSR04_RangeFinder> RangeFinders { get; private set; }
 		public Lift Lift { get; private set; }
 
@@ -59,16 +63,19 @@ namespace TrackBot
 
 		public SaveImageThread SaveImageThread { get; set; }
 		public TelemetryServer Server { get; private set; }
+		public ServoController ServoController { get; private set; }
 
 		public DeadReckoningEnvironment DeadReckoningEnvironment { get; private set; }
 
 		public TrackDataSource DataSource { get; private set; }
 
-		public CommandServer CommandServer { get; private set; }
+		public RemoteMqttController CommandServer { get; private set; }
 
 		public ICompass Compass { get { return GyMag; } }
 
 		public Chassis Chassis { get; private set; }
+
+		public MeArm RobotArm { get; private set; }
 
 		public Camera Camera { get; private set; }
 		public LEDImageAnalysis LEDImageAnalysis { get; private set; }
@@ -105,8 +112,10 @@ namespace TrackBot
 
 		public void StartWidgets()
 		{
+			StartServoController();
 			StartChassis();
 			StartDatabase();
+			StartCommandServer();
 			StartRangeFinders();
 			StartTracks();
 			StartSpatial();
@@ -115,12 +124,13 @@ namespace TrackBot
 			StartCamera();
 			StartSaveImageThread();
 			StartSpatialPolling();
-			StartCommandServer();
 			StartDeadReckoningEnvironment();
+			StartRobotArm();
 		}
 
 		public void StopWidgets()
 		{
+			StopRobotArm();
 			StopDeadReckoningEnvironment();
 			StopCamera();
 			StopCommandServer();
@@ -134,11 +144,23 @@ namespace TrackBot
 			StopSaveImageThread();
 			StopDatabase();
 			StopChassis();
+			StopServoController();
 
 			foreach(ThreadBase thread in ThreadBase.GetRunningThreads())
 			{
 				Log.SysLogText(LogLevel.DEBUG, "Remaining: {0}", thread);
 			}
+		}
+
+		private void StartServoController()
+		{
+			ServoController = new ServoController();
+			ServoController.Start();
+		}
+
+		private void StopServoController()
+		{
+			ServoController.Stop();
 		}
 
 		private void StartDeadReckoningEnvironment()
@@ -166,17 +188,11 @@ namespace TrackBot
 
 		private void StartCamera()
 		{
-			Log.SysLogText(LogLevel.DEBUG, "Exposre setting is '{0}'", Program.Config.CameraExposureType);
-			Camera = new CommandLineCamera()
+			Log.SysLogText(LogLevel.DEBUG, "INIT WIDGETS PARAMETERS: {0}", Program.Config.CameraParameters);
+			Camera = new MotionDaemonCamera()
 			{
 				ConvertTo = ImageType.Bitmap,
-				Brightness = Program.Config.CameraBrightness,
-				ImageEffect = Program.Config.CameraImageEffect,
-				Exposure = Program.Config.CameraExposureType,
-				ColorEffect = Program.Config.CameraColorEffect,
-				Saturation = Program.Config.CameraSaturation,
-				Contrast = Program.Config.CameraContrast,
-				SnapshotDelay = Program.Config.CameraImageDelay,
+				Parameters = Program.Config.CameraParameters,
 			};
 			LEDImageAnalysis = new LEDImageAnalysis(Camera);
 			LEDImageAnalysis.SetThreshold(Program.Config.BlueThresholds);
@@ -188,6 +204,7 @@ namespace TrackBot
 			Log.SysLogText(LogLevel.DEBUG, "Setting dir to '{0}'", Program.Config.RemoteImageDirectory);
 			LEDImageAnalysis.ImageAnalysisDirectory = Program.Config.RemoteImageDirectory;
 			Camera.Start();
+			CommandServer.RaspiCameraParameters += OnRaspiCameraParametersReceived;
 		}
 
 		private void StopCamera()
@@ -209,10 +226,38 @@ namespace TrackBot
 
 		}
 
+		private void StartRobotArm()
+		{
+			Log.SysLogText(LogLevel.DEBUG, "Starting robot arm");
+			RobotArm = new MeArm(ServoController, Program.Config.ClawRotationPin, Program.Config.ClawLeftPin, Program.Config.ClawRightPin, Program.Config.ClawPin)
+			{
+				ClawPinMin = Program.Config.ClawPinMin,
+				ClawPinMax = Program.Config.ClawPinMax,
+				ElevationPinMin = Program.Config.ClawLeftPinMin,
+				ElevationPinMax = Program.Config.ClawLeftPinMax,
+				RotationPinMin = Program.Config.ClawRotationPinMin,
+				RotationPinMax = Program.Config.ClawRotationPinMax,
+				ThrustPinMin = Program.Config.ClawRightPinMin,
+				ThrustPinMax = Program.Config.ClawRightPinMax,
+			};
+			CommandServer.ArmRotation += OnArmRotationCommand;
+			CommandServer.ArmElevation += OnArmElevationCommand;
+			CommandServer.ArmThrust += OnArmThrustCommand;
+			CommandServer.ArmClaw += OnArmClawCommand;
+
+			RobotArm.Home();
+		}
+
+		private void StopRobotArm()
+		{
+			Log.SysLogText(LogLevel.DEBUG, "Stopping robot arm");
+			RobotArm.Stop();
+		}
+
 		private void StartCommandServer()
 		{
 			Console.WriteLine("Starting Mqqt Command Client");
-			CommandServer = new CommandServer(String.Format("raspi.{0}", Environment.MachineName));
+			CommandServer = new RemoteMqttController(String.Format("raspi.{0}", Environment.MachineName));
 			CommandServer.Start();
 		}
 
@@ -313,7 +358,6 @@ namespace TrackBot
 				ImageEnvironment.BarriersChanged += OnImageEnvironment_BarriersChanged;
 				ImageEnvironment.LandmarksChanged += OnImageEnvironment_LandmarksChanged;
 				ImageEnvironment.FuzzyPathChanged += OnImageEnvironment_FuzzyPathChanged;
-				StartTelemetryServer();
 			}
 			else
 			{
@@ -321,7 +365,7 @@ namespace TrackBot
 				ImageEnvironment = new VirtualEnvironment();
 			}
 
-
+			StartTelemetryServer();
 
 			ImageEnvironment.Start();
 		}
@@ -392,6 +436,8 @@ namespace TrackBot
 
 			Tracks.LeftSpeed = 0;
 			Tracks.RightSpeed = 0;
+
+			Tracks.StartTracks();
 		}
 
 		public void SetForwardSecondaryRange(Double range)
@@ -408,6 +454,8 @@ namespace TrackBot
 		{
 			Tracks.LeftSpeed = 0;
 			Tracks.RightSpeed = 0;
+
+			Tracks.StopTracks();
 		}
 
 		private void OnForwardPrimaryRange(double range)
@@ -506,5 +554,31 @@ namespace TrackBot
 			CameraImagesAnalyzed(analysis);
 		}
 
+		private void OnArmClawCommand(int percent)
+		{
+			RobotArm.Claw = percent;
+		}
+
+		private void OnArmThrustCommand(int percent)
+		{
+			RobotArm.Thrust = percent;
+		}
+
+		private void OnArmElevationCommand(int percent)
+		{
+			RobotArm.Elevation = percent;
+		}
+
+		private void OnArmRotationCommand(int percent)
+		{
+			RobotArm.Rotation = percent;
+		}
+
+		private void OnRaspiCameraParametersReceived(RaspiCameraParameters parameters)
+		{
+			Log.SysLogText(LogLevel.DEBUG, "Received new camera parameters {0}", parameters);
+			Program.Config.CameraParameters = Camera.Parameters = parameters;
+			Program.Config.Save();
+		}
 	}
 }

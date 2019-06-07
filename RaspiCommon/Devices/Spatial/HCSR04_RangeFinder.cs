@@ -103,8 +103,6 @@ namespace RaspiCommon.Devices.Spatial
 			{
 				_rangeFinders[_echoPin] = this;
 			}
-			Interval = TimeSpan.FromMilliseconds(1000);
-
 			_lock.Unlock();
 		}
 
@@ -125,7 +123,10 @@ namespace RaspiCommon.Devices.Spatial
 					{
 						Double meters = (Double)(nanoseconds - rangeFinder._startSweep);
 						meters = meters / 5800000;
-						rangeFinder.Range = meters;
+						if(meters < 1)
+						{
+							rangeFinder.Range = meters;
+						}
 					}
 				}
 			}

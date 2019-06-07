@@ -41,8 +41,7 @@ namespace RaspiCommon.Devices.Locomotion
 		{
 			set
 			{
-				_leftspeed = value;// AdjustedSpeed(value, LeftAdjust);
-				Log.SysLogText(LogLevel.DEBUG, "Setting LEFT to {0}", _leftspeed);
+				_leftspeed = AdjustedSpeed(value, LeftAdjust);
 				SetValue(Motors[LEFT_MOTOR], _leftspeed);
 			}
 			get { return _leftspeed; }
@@ -53,8 +52,7 @@ namespace RaspiCommon.Devices.Locomotion
 		{
 			set
 			{
-				_rightspeed = value; // AdjustedSpeed(value, RightAdjust);
-				Log.SysLogText(LogLevel.DEBUG, "Setting RIGHT to {0}", _rightspeed);
+				_rightspeed = AdjustedSpeed(value, RightAdjust);
 				SetValue(Motors[RIGHT_MOTOR], _rightspeed);
 			}
 			get { return _rightspeed; }

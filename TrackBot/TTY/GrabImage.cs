@@ -28,11 +28,20 @@ namespace TrackBot.TTY
 				throw new CommandException("Could not retrieve camera image");
 			}
 
-			Widgets.Instance.LEDImageAnalysis.AnalyzeImage(image);
-			Double ledBearing;
-			if(Widgets.Instance.LEDImageAnalysis.TryGetBearing(Color.Green, Widgets.Instance.Compass.Bearing, out ledBearing))
+			Color color;
+			if(commandParts.Count > 1 && (color = Color.FromName(commandParts[1])).ToArgb() != 0)
 			{
-				Log.SysLogText(LogLevel.DEBUG, "LED Bearing is {0}", ledBearing.ToAngleString());
+				Widgets.Instance.LEDImageAnalysis.AnalyzeImage(image, color);
+
+				Double ledBearing;
+				if(Widgets.Instance.LEDImageAnalysis.TryGetBearing(color, Widgets.Instance.Compass.Bearing, out ledBearing))
+				{
+					Log.SysLogText(LogLevel.DEBUG, "LED Bearing is {0}", ledBearing.ToAngleString());
+				}
+			}
+			else
+			{
+				Widgets.Instance.LEDImageAnalysis.AnalyzeImage(image);
 			}
 
 			LEDImageAnalysis.DebugAnalysis = false;

@@ -24,5 +24,20 @@ namespace KanoopCommon.Extensions
 			return value >= min && value <= max;
 		}
 
+		public static int AbsoluteDifference(this int value, int other)
+		{
+			return Math.Abs(value - other);
+		}
+
+		public static int EnsureBetween(this int value, int minimum, int maximum)
+		{
+			if(value < minimum)
+				return minimum;
+			else if(value > maximum)
+				return maximum;
+			else
+				return value;
+		}
+
 	}
 }

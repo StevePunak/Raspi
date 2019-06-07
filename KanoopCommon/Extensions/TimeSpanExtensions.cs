@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 
@@ -242,6 +243,8 @@ namespace KanoopCommon.Extensions
 			return TimeSpan.FromSeconds(Math.Abs(span.TotalSeconds));
 		}
 
+		public static int ByteArraySize { get { return sizeof(UInt64); } }
+
 		public static TimeSpan Average(List<TimeSpan> timeSpans)
 		{
 			Double value = 0.0;
@@ -252,5 +255,20 @@ namespace KanoopCommon.Extensions
 			return new TimeSpan (0, 0, Convert.ToInt32 (value/(1000.0 * Convert.ToDouble (timeSpans.Count))));
 		}
 
+		public static byte[] Serialize(this TimeSpan timespan)
+		{
+			byte[] serialized = new byte[ByteArraySize];
+			using(BinaryWriter bw = new BinaryWriter(new MemoryStream(serialized)))
+			{
+				bw.Write(timespan.Ticks);
+			}
+			return serialized;
+		}
+
+		public static TimeSpan Deserialize(BinaryReader br)
+		{
+			UInt64 ticks = br.ReadUInt64();
+			return TimeSpan.FromTicks((long)ticks);
+		}
 	}
 }

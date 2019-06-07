@@ -26,31 +26,39 @@ namespace TrackBot.TTY
 			Color color;
 			if(commandParts[1] == "br" && int.TryParse(commandParts[2], out parm) == true)
 			{
-				Program.Config.CameraBrightness = Widgets.Instance.Camera.Brightness = parm;
+				Program.Config.CameraParameters.Brightness = Widgets.Instance.Camera.Parameters.Brightness = parm;
 			}
 			else if(commandParts[1] == "co" && int.TryParse(commandParts[2], out parm) == true)
 			{
-				Program.Config.CameraContrast = Widgets.Instance.Camera.Contrast = parm;
+				Program.Config.CameraParameters.Contrast = Widgets.Instance.Camera.Parameters.Contrast = parm;
 			}
 			else if(commandParts[1] == "sa" && int.TryParse(commandParts[2], out parm) == true)
 			{
-				Program.Config.CameraSaturation = Widgets.Instance.Camera.Saturation = parm;
+				Program.Config.CameraParameters.Saturation = Widgets.Instance.Camera.Parameters.Saturation = parm;
 			}
 			else if(commandParts[1] == "delay" && int.TryParse(commandParts[2], out parm) == true)
 			{
-				Program.Config.CameraImageDelay = Widgets.Instance.Camera.SnapshotDelay = TimeSpan.FromMilliseconds(parm);
+				Program.Config.CameraParameters.SnapshotDelay = Widgets.Instance.Camera.Parameters.SnapshotDelay = TimeSpan.FromMilliseconds(parm);
 			}
 			else if(commandParts[1] == "ex")
 			{
-				Program.Config.CameraExposureType = Widgets.Instance.Camera.Exposure = commandParts[2];
+				Program.Config.CameraParameters.Exposure = Widgets.Instance.Camera.Parameters.Exposure = commandParts[2];
+			}
+			else if(commandParts[1] == "mm")
+			{
+				Program.Config.CameraParameters.MeteringMode = Widgets.Instance.Camera.Parameters.MeteringMode = commandParts[2];
+			}
+			else if(commandParts[1] == "awb")
+			{
+				Program.Config.CameraParameters.AutoWhiteBalance = Widgets.Instance.Camera.Parameters.AutoWhiteBalance = commandParts[2];
 			}
 			else if(commandParts[1] == "ifx")
 			{
-				Program.Config.CameraImageEffect = Widgets.Instance.Camera.ImageEffect = commandParts[2];
+				Program.Config.CameraParameters.ImageEffect = Widgets.Instance.Camera.Parameters.ImageEffect = commandParts[2];
 			}
 			else if(commandParts[1] == "cfx")
 			{
-				Program.Config.CameraColorEffect = Widgets.Instance.Camera.ColorEffect = commandParts[2];
+				Program.Config.CameraParameters.ColorEffect = Widgets.Instance.Camera.Parameters.ColorEffect = commandParts[2];
 			}
 			else if(commandParts[1] == "low" && int.TryParse(commandParts[2], out parm) && (color = Color.FromName(commandParts[3])).ToArgb() !=  0)
 			{

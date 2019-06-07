@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using KanoopCommon.CommonObjects;
 using KanoopCommon.Database;
 using KanoopCommon.PersistentConfiguration;
+using RaspiCommon.Devices.GamePads;
 using RaspiCommon.Devices.Optics;
 using RaspiCommon.Lidar.Environs;
 using RaspiCommon.Spatial.LidarImaging;
@@ -234,18 +235,41 @@ namespace RaspiCommon
 		public ColorThreshold GreenThresholds { get; set; }
 		public ColorThreshold RedThresholds { get; set; }
 
+		RaspiCameraParameters _cameraParameters;
+		public RaspiCameraParameters CameraParameters
+		{
+			get
+			{
+				if(_cameraParameters == null)
+				{
+					_cameraParameters = new RaspiCameraParameters();
+				}
+				return _cameraParameters;
+			}
+			set { _cameraParameters = value; }
+		}
+
 		public Double CameraBearingOffset { get; set; }
-		public int CameraBrightness { get; set; }
-		public int CameraContrast { get; set; }
-		public int CameraSaturation { get; set; }
-		public String CameraImageEffect { get; set; }
-		public String CameraColorEffect { get; set; }
-		public String CameraExposureType { get; set; }
 		public int IgnoreRows { get; set; }
-		public TimeSpan CameraImageDelay { get; set; }
 
 		public int LeftTrackAdjust { get; set; }
 		public int RightTrackAdjust { get; set; }
+
+		public GpioPin ClawRotationPin { get; set; }
+		public GpioPin ClawLeftPin { get; set; }
+		public GpioPin ClawRightPin { get; set; }
+		public GpioPin ClawPin { get; set; }
+
+		public int ClawRotationPinMin { get; set; }
+		public int ClawRotationPinMax { get; set; }
+		public int ClawLeftPinMin { get; set; }
+		public int ClawLeftPinMax { get; set; }
+		public int ClawRightPinMin { get; set; }
+		public int ClawRightPinMax { get; set; }
+		public int ClawPinMin { get; set; }
+		public int ClawPinMax { get; set; }
+
+		public GamePadType GamePadType { get; set; }
 
 		public LEDTravelHistoryEntryList LEDTravelHistory { get; set; }
 

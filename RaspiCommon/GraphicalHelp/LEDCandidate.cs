@@ -19,19 +19,21 @@ namespace RaspiCommon.GraphicalHelp
 {
 	public class LEDCandidate
 	{
-		public static int ByteArraySize { get { return ColorExtensions.ByteArraySize + PointExtensions.ByteArraySize + RectangleExtensions.ByteArraySize + sizeof(Double); } }
+		public static int ByteArraySize { get { return ColorExtensions.ByteArraySize + PointExtensions.ByteArraySize + RectangleExtensions.ByteArraySize + sizeof(Double) + sizeof(int);  } }
 
 		public Color Color { get; set; }
 		public Point Center { get; set; }
 		public Rectangle BoundingRectangle { get; set; }
 		public Double Concentration { get; set; }
+		public int CountNonZero { get; set; }
 
-		public LEDCandidate(Color color, Point center, Rectangle boundingRectangle, Double concentration)
+		public LEDCandidate(Color color, Point center, Rectangle boundingRectangle, Double concentration, int countNonZero)
 		{
 			Color = color;
 			Center = center;
 			BoundingRectangle = boundingRectangle;
 			Concentration = concentration;
+			CountNonZero = countNonZero;
 		}
 
 		public LEDCandidate(byte[] serialized)
@@ -42,6 +44,7 @@ namespace RaspiCommon.GraphicalHelp
 				Center = PointExtensions.Deserialize(br);
 				BoundingRectangle = RectangleExtensions.Deserialize(br);
 				Concentration = br.ReadDouble();
+				CountNonZero = br.ReadInt32();
 			}
 		}
 
@@ -54,6 +57,7 @@ namespace RaspiCommon.GraphicalHelp
 				bw.Write(PointExtensions.Serialize(Center));
 				bw.Write(RectangleExtensions.Serialize(BoundingRectangle));
 				bw.Write(Concentration);
+				bw.Write(CountNonZero);
 			}
 			return serialized;
 		}
@@ -98,7 +102,7 @@ namespace RaspiCommon.GraphicalHelp
 						Mat roi = new Mat(image, rect);
 						Double nonZero = CvInvoke.CountNonZero(roi);
 						Double ratio = nonZero / (Double)(rect.Height * rect.Width);
-						candidate = new LEDCandidate(color, rect.Centroid().ToPoint(), rect, ratio);
+						candidate = new LEDCandidate(color, rect.Centroid().ToPoint(), rect, ratio, (int)nonZero);
 					}
 					break;
 				}

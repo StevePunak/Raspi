@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -18,7 +19,9 @@ using KanoopCommon.Queueing;
 using KanoopCommon.Threading;
 using RaspiCommon;
 using RaspiCommon.Devices.Chassis;
+using RaspiCommon.Devices.GamePads;
 using RaspiCommon.Devices.MotorControl;
+using RaspiCommon.Devices.Servos;
 using RaspiCommon.Devices.Spatial;
 using RaspiCommon.Extensions;
 using RaspiCommon.Lidar;
@@ -26,6 +29,10 @@ using RaspiCommon.Lidar.Environs;
 using RaspiCommon.Network;
 using RaspiCommon.Spatial;
 using RaspiCommon.Spatial.LidarImaging;
+using SharpDX.DirectInput;
+using TrackBotCommon;
+using TrackBotCommon.InputDevices;
+using TrackBotCommon.InputDevices.GamePads;
 
 namespace Testing
 {
@@ -40,11 +47,132 @@ namespace Testing
 		{
 			OpenLog();
 
-			MqttTest();
+			//ServoTest();
+			XBoxTest();
+			//JoystickTest();
+//			VideoTest();
+//			MqttTest();
 //			PointCloudTest();
 //			EMGUTest();
 
-			RunLidar();
+//			RunLidar();
+		}
+
+		static void ImageClassify()
+		{
+		}
+
+		static void ServoTest()
+		{
+			ServoTestController controller = new ServoTestController();
+			controller.Start();
+			controller.AddServo(new ServoParameters()
+			{
+				Name = "test servo",
+				Pin = GpioPin.Pin01,
+				Minimum = 1000,
+				Maximum = 1800,
+				Quantum = 30,
+			});
+
+			Thread.Sleep(1000);
+			controller.MoveToPercent(GpioPin.Pin01, 10);
+			Thread.Sleep(20000);
+			controller.MoveToPercent(GpioPin.Pin01, 80);
+			Thread.Sleep(20000);
+			controller.MoveToPercent(GpioPin.Pin01, 0);
+			Thread.Sleep(20000);
+			controller.MoveToPercent(GpioPin.Pin01, 100);
+		}
+
+		static void XBoxTest()
+		{
+			XBoxController joystick = GamePadBase.Create(GamePadType.XBoxOneController) as XBoxController;
+			joystick.GamepadEvent += OnXBoxEvent;
+			joystick.LeftTriggerChanged += OnXBoxLeftTriggerChanged;
+			joystick.RightTriggerChanged += OnXBoxRightTriggerChanged;
+			//joystick.DumpButtonChanges = true;
+			joystick.Start(TimeSpan.FromMinutes(10));
+
+			String lastSet = String.Empty;
+			while(true)
+			{
+				Thread.Sleep(250);
+//				joystick.Dump();
+			}
+		}
+
+		private static void OnXBoxRightTriggerChanged(GamePadBase gamePad, AnalogControl value)
+		{
+			Log.LogText(LogLevel.DEBUG, "Right: {0}", value);
+		}
+
+		private static void OnXBoxLeftTriggerChanged(GamePadBase gamePad, AnalogControl value)
+		{
+			Log.LogText(LogLevel.DEBUG, "Left: {0}", value);
+		}
+
+		private static void OnXBoxEvent(GamePadBase gamePad)
+		{
+			gamePad.DumpStates();
+		}
+
+		static void JoystickTest()
+		{
+			StandardGamePad joystick = GamePadBase.Create(GamePadType.ESM) as StandardGamePad;
+			joystick.DumpButtonChanges = true;
+			joystick.Start(TimeSpan.FromMinutes(10));
+
+			String lastSet = String.Empty;
+			while(true)
+			{
+				Thread.Sleep(250);
+				if(joystick.Device != null)
+				{
+					String output = joystick.Device.GetCurrentState().ToString();
+					if(output != lastSet)
+					{
+						Console.WriteLine(output);
+					}
+					lastSet = output;
+					Console.WriteLine(joystick);
+
+					if(Console.KeyAvailable)
+					{
+						Console.ReadKey();
+						joystick.Dump();
+					}
+				}
+			}
+		}
+
+		static string _lastString = String.Empty;
+		private static void Joystick_GamepadEvent(GamePadBase gamePad)
+		{
+			String thisOne = ((SteelSeriesXL)gamePad).Device.GetCurrentState().ToString();
+			if(thisOne != _lastString)
+			{
+				Console.WriteLine(thisOne);
+			}
+			_lastString = thisOne;
+		}
+
+		static void VideoTest()
+		{
+			VideoCapture capture = new VideoCapture(0);
+			Mat image = new Mat();
+
+			capture.Read(image);
+			if(image.IsEmpty)
+			{
+				Console.WriteLine("Image is empty");
+			}
+			else
+			{
+				Console.WriteLine("Image is NOT empty");
+			}
+
+			Console.WriteLine("Video open = {0}", capture.IsOpened);
 		}
 
 		private static void MqttTest()

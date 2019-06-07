@@ -15,6 +15,7 @@ using MQTT;
 using MQTT.Examples;
 using MQTT.Packets;
 using RaspiCommon.Devices.Chassis;
+using RaspiCommon.Devices.Locomotion;
 using RaspiCommon.Devices.Optics;
 using RaspiCommon.Lidar;
 using RaspiCommon.Lidar.Environs;
@@ -38,6 +39,7 @@ namespace RaspiCommon.Network
 		public event DeadReckoningEnvironmentReceivedHandler DeadReckoningEnvironmentReceived;
 		public event CameraImageReceivedHandler CameraImageReceived;
 		public event CameraImagesAnalyzedHandler CameraImageAnalyzed;
+		public event SpeedAndBearingReceivedHandler SpeedAndBearing;
 
 		public LidarVector[] Vectors;
 
@@ -82,9 +84,10 @@ namespace RaspiCommon.Network
 			DeadReckoningEnvironmentReceived += delegate {};
 			CameraImageReceived += delegate {};
 			CameraImageAnalyzed += delegate {};
+			SpeedAndBearing += delegate{};
 		}
 
-		private void OnLidarClientInboundSubscribedMessage(MqttClient client, PublishMessage packet)
+		protected virtual void OnLidarClientInboundSubscribedMessage(MqttClient client, PublishMessage packet)
 		{
 			try
 			{
@@ -154,6 +157,10 @@ namespace RaspiCommon.Network
 					else if(packet.Topic == MqttTypes.CameraLastAnalysisTopic)
 					{
 						CameraImageAnalyzed(new ImageAnalysis(packet.Message));
+					}
+					else if(packet.Topic == MqttTypes.SpeedAndBearingTopic)
+					{
+						SpeedAndBearing(new SpeedAndBearing(packet.Message));
 					}
 				}
 			}

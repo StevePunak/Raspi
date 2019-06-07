@@ -46,6 +46,7 @@ namespace TrackBot.Spatial
 			FindInImage,
 			CenterInImage,
 			Success,
+			ReturnHome,
 		}
 
 		public ActivityStates ActivityState { get; protected set; }
@@ -232,8 +233,9 @@ namespace TrackBot.Spatial
 		/// </summary>
 		/// <param name="howLong"></param>
 		/// <returns></returns>
-		protected Double WaitForValidRange(Double bearing, TimeSpan howLong)
+		protected Double WaitForValidRangeExact(Double bearing, TimeSpan howLong)
 		{
+			Log.LogText(LogLevel.DEBUG, "WaitForValidRangeExact at {0} for {1}", bearing.ToAngleString(), howLong.ToAbbreviatedFormat(true));
 			Double distance = 0;
 			DateTime startTime = DateTime.UtcNow;
 			while(DateTime.UtcNow < startTime + howLong)
@@ -255,9 +257,9 @@ namespace TrackBot.Spatial
 		/// <param name="bearing"></param>
 		/// <param name="waitTime"></param>
 		/// <returns></returns>
-		protected Double WaitForAdjustedRange(Double bearing, TimeSpan waitTime)
+		protected Double WaitForAdjustedRangeExact(Double bearing, TimeSpan waitTime)
 		{
-			Double range = Math.Max(WaitForValidRange(bearing, waitTime) - Widgets.Instance.Chassis.LidarPosition.Y, 0.1);
+			Double range = Math.Max(WaitForValidRangeExact(bearing, waitTime) - Widgets.Instance.Chassis.LidarPosition.Y, 0.1);
 			return range;
 		}
 
@@ -296,7 +298,7 @@ namespace TrackBot.Spatial
 				throw new ActivityException("Could not get new image");
 			}
 
-			Widgets.Instance.LEDImageAnalysis.AnalyzeImage(image);
+			Widgets.Instance.LEDImageAnalysis.AnalyzeImage(image, color);
 
 			if(Widgets.Instance.LEDImageAnalysis.HasColor(color))
 			{

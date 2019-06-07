@@ -9,18 +9,20 @@ using Emgu.CV;
 using KanoopCommon.Extensions;
 using KanoopCommon.Geometry;
 using KanoopCommon.Serialization;
+using RaspiCommon.GraphicalHelp;
 
 namespace RaspiCommon.Devices.Optics
 {
 	public class LEDPosition
 	{
-		public static int ByteArraySize { get { return sizeof(UInt32) + PointD.ByteArraySize + sizeof(Double) + SizeExtensions.ByteArraySize; } }
+		public static int ByteArraySize { get { return sizeof(UInt32) + PointD.ByteArraySize + sizeof(Double) + SizeExtensions.ByteArraySize + LEDCandidate.ByteArraySize; } }
 
 		public Color Color { get; set; }
 		public PointD Location { get; set; }
 		public Double Bearing { get; set; }
 		public DateTime CreateTime { get; set; }
 		public Size Size { get; set; }
+		public LEDCandidate Candidate { get; set; }
 
 		public Object Tag { get; set; }
 
@@ -42,6 +44,7 @@ namespace RaspiCommon.Devices.Optics
 				Location = new PointD(br.ReadBytes(PointD.ByteArraySize));
 				Bearing = br.ReadDouble();
 				Size = SizeExtensions.Deserialize(br);
+				Candidate = new LEDCandidate(br.ReadBytes(LEDCandidate.ByteArraySize));
 			}
 		}
 
@@ -54,6 +57,7 @@ namespace RaspiCommon.Devices.Optics
 				bw.Write(Location.Serialize());
 				bw.Write(Bearing);
 				bw.Write(Size.Serialize());
+				bw.Write(Candidate.Serialize());
 			}
 			return serialized;
 		}

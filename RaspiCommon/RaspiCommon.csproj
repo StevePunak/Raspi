@@ -87,19 +87,26 @@
     <Compile Include="Devices\Chassis\XiaorTankTracks.cs" />
     <Compile Include="Devices\Compass\NullCompass.cs" />
     <Compile Include="Devices\Devices.cs" />
+    <Compile Include="Devices\GamePads\GamePadTypes.cs" />
     <Compile Include="Devices\Locomotion\IMotorizedChassis.cs" />
+    <Compile Include="Devices\Locomotion\MoveStep.cs" />
+    <Compile Include="Devices\Locomotion\SpeedAndBearing.cs" />
+    <Compile Include="Devices\Locomotion\TrackSpeed.cs" />
     <Compile Include="Devices\MotorControl\DRV8825StepperControl.cs" />
     <Compile Include="Devices\MotorControl\ESC.cs" />
     <Compile Include="Devices\Optics\Camera.cs" />
     <Compile Include="Devices\Optics\ColorThreshold.cs" />
-    <Compile Include="Devices\Optics\CommandLineCamera.cs" />
+    <Compile Include="Devices\Optics\RaspiCameraParameters.cs" />
+    <Compile Include="Devices\Optics\RaspiCameraV2.cs" />
     <Compile Include="Devices\Optics\ImageAnalysis.cs" />
     <Compile Include="Devices\Optics\LEDImageAnalysis.cs" />
     <Compile Include="Devices\Optics\LEDPosition.cs" />
     <Compile Include="Devices\Optics\LEDTravelHistoryEntry.cs" />
+    <Compile Include="Devices\Optics\MotionDaemonCamera.cs" />
     <Compile Include="Devices\Optics\NullCamera.cs" />
     <Compile Include="Devices\Optics\RaspiCamCv.cs" />
     <Compile Include="Devices\Optics\Types.cs" />
+    <Compile Include="Devices\RobotArms\MeArm.cs" />
     <Compile Include="Extensions\GraphicsExtensions.cs" />
     <Compile Include="Extensions\LidarVectorExtensions.cs" />
     <Compile Include="Extensions\OpenCvExtensions.cs" />
@@ -113,6 +120,8 @@
     <Compile Include="IWidgetCollection.cs" />
     <Compile Include="Network\RadarController.cs" />
     <Compile Include="OpenCvExceptionHandler.cs" />
+    <Compile Include="Devices\Servos\ServoMoveThread.cs" />
+    <Compile Include="Devices\Servos\ServoParameters.cs" />
     <Compile Include="Spatial\DeadReckoning\DeadReckoningEnvironment.cs" />
     <Compile Include="Spatial\DeadReckoning\DRGrid.cs" />
     <Compile Include="Spatial\DeadReckoning\DRMatrix.cs" />
@@ -176,7 +185,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Folder Include="Servos\" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="..\packages\EMGU.CV.3.4.3.3016\build\EMGU.CV.targets" Condition="Exists('..\packages\EMGU.CV.3.4.3.3016\build\EMGU.CV.targets')" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

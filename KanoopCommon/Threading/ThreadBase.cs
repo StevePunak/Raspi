@@ -1,4 +1,5 @@
 #undef LOG_SPIN
+#define MONITOR_PERFORMANCE
 using System;
 using System.IO;
 using System.Collections.Generic;
@@ -128,6 +129,8 @@ namespace KanoopCommon.Threading
 
 		public TimeSpan RunTime { get { return _startTime != DateTime.MinValue ? DateTime.UtcNow - _startTime : TimeSpan.Zero; } }
 
+		PerformanceTimer _performanceTimer;
+
 		public Exception LastThreadException { get; private set; }
 
 		private Log _log;
@@ -221,6 +224,8 @@ namespace KanoopCommon.Threading
 			_runCount = 0;
 
 			_startTime = DateTime.MinValue;
+
+			_performanceTimer = new PerformanceTimer(name);
 
 			Tag = null;
 			Message = String.Empty;
@@ -551,7 +556,14 @@ namespace KanoopCommon.Threading
 							LogThreadOnRun();
 						}
 						StartRunTime = DateTime.UtcNow;
-						if(OnRun())
+#if MONITOR_PERFORMANCE
+						_performanceTimer.Start();
+#endif
+						bool runResult = OnRun();
+#if MONITOR_PERFORMANCE
+						_performanceTimer.Stop();
+#endif
+						if(runResult)
 						{
 							_runCount++;
 
@@ -735,6 +747,30 @@ namespace KanoopCommon.Threading
 			}
 
 			return threads;
+		}
+
+		public static void DumpPerformanceData()
+		{
+			try
+			{
+				_threadListLock.Lock();
+				foreach(ThreadBase thread in _startedThreads)
+				{
+					try
+					{
+						thread._performanceTimer.DumpToLog();
+					}
+					catch(Exception e)
+					{
+						Log.SysLogText(LogLevel.ERROR, "Error stopping thread {0}: {1}", thread, e.Message);
+					}
+				}
+			}
+			finally
+			{
+				_threadListLock.Unlock();
+			}
+
 		}
 
 		public static void StopAllRunningThreads(int timeoutms = 30)

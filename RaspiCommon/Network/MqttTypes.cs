@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using KanoopCommon.Geometry;
 using RaspiCommon.Devices.Chassis;
+using RaspiCommon.Devices.Locomotion;
 using RaspiCommon.Devices.Optics;
 using RaspiCommon.Lidar;
 using RaspiCommon.Lidar.Environs;
@@ -21,7 +22,7 @@ namespace RaspiCommon.Network
 	public delegate void RangeBlobReceivedHandler(LidarVector[] vectors);
 	public delegate void ImageMetricsReceivedHandler(ImageMetrics metrics);
 	public delegate void ChassisMetricsReceivedHandler(ChassisMetrics metrics);
-	public delegate void BearingReceivedHandler(Double bearing);
+	public delegate void SpeedAndBearingReceivedHandler(SpeedAndBearing speedAndBearing);
 	public delegate void EnvironmentInfoReceivedHandler(EnvironmentInfo metrics);
 	public delegate void PointCloudReceivedHandler(PointCloud2D pointCloud);
 	public delegate void FuzzyPathReceivedHandler(FuzzyPath path);
@@ -29,6 +30,11 @@ namespace RaspiCommon.Network
 	public delegate void CameraImagesAnalyzedHandler(ImageAnalysis analysis);
 
 	public delegate void DeadReckoningEnvironmentReceivedHandler(DeadReckoningEnvironment environment);
+
+	public delegate void PercentageCommandReceivedHandler(int percent);
+	public delegate void RaspiCameraParametersReceivedHandler(RaspiCameraParameters parameters);
+
+	public delegate void SpinStepReceivedHandler(SpinDirection spinDirection);
 
 	public delegate void CommandReceivedHandler(String command);
 
@@ -55,9 +61,24 @@ namespace RaspiCommon.Network
 
 		// control
 		public const String CommandsTopic = "trackbot/control/commands";
+		public const String ArmRotationTopic = "trackbot/control/robotarm/rotation";
+		public const String ArmElevationTopic = "trackbot/control/robotarm/elevation";
+		public const String ArmThrustTopic = "trackbot/control/robotarm/thrust";
+		public const String ArmClawTopic = "trackbot/control/robotarm/claw";
+		public const String BotSpeedTopic = "trackbot/control/motion/speed";
+		public const String BotSpinStepLeftDegreesTopic = "trackbot/control/motion/spinstep/left/degrees";
+		public const String BotSpinStepRightDegreesTopic = "trackbot/control/motion/spinstep/right/degrees";
+		public const String BotSpinStepLeftTimeTopic = "trackbot/control/motion/spinstep/left/ms";
+		public const String BotSpinStepRightTimeTopic = "trackbot/control/motion/spinstep/right/ms";
+		public const String BotMoveTimeTopic = "trackbot/control/motion/go/time";
 
 		// optical camera
 		public const String CameraLastImageTopic = "trackbot/camera/lastimage";
 		public const String CameraLastAnalysisTopic = "trackbot/camera/analysiscomplete";
+		public const String RaspiCameraSetParametersTopic = "trackbot/camera/set/parameters";
+
+		// realtime feedback (telemetry)
+		public const String SpeedAndBearingTopic = "trackbot/telemetry/speedandbearing";
+
 	}
 }

@@ -24,6 +24,7 @@ namespace TrackBot.Spatial
 		const Double ASSERTIVE_RANGE = 1;
 		const Double BACK_STAGGER_DEGREES = 5;
 		const int MAX_CENTER_TRIES = 2;
+		const int LED_SATURATION_SIZE = 800;
 
 		public Double StartBearing { get; set; }
 		public LEDTravelHistoryEntry LastLEDHistory { get; set; }
@@ -42,11 +43,13 @@ namespace TrackBot.Spatial
 		bool _saveAutoSnap;
 		int _centerAttemptsForDestination;
 		bool _staggerBack;
-		bool _doneTraveling;
 		int _colorIndex;
 		int _centerTriesLeft;
+		int _historyIndex;
 
 		SpinDirection SpinDirection { get; set; }
+
+		List<BearingAndRange> History { get; set; }
 		
 		#endregion
 
@@ -88,8 +91,8 @@ namespace TrackBot.Spatial
 			CurrentColor = Colors[_colorIndex];
 			ColorsTraveled = new List<Color>();
 			LastLEDHistory = null;
+			History = new List<BearingAndRange>();
 			Widgets.Instance.Camera.AutoSnap = false;
-			_doneTraveling = false;
 			return base.OnStart();
 		}
 
@@ -198,8 +201,15 @@ namespace TrackBot.Spatial
 					{
 					}
 
+					Log.LogText(LogLevel.DEBUG, "LED candidate non-zero count is {0}", LED.Candidate.CountNonZero);
+					bool saturated;
+					if((saturated = led.Candidate.CountNonZero > LED_SATURATION_SIZE))
+					{
+						Log.LogText(LogLevel.DEBUG, "AREA > Saturation size");
+					}
+
 					Double range;
-					if((range = WaitForAdjustedRange(Widgets.Instance.Compass.Bearing, TimeSpan.FromSeconds(10))) != 0 && range < ARRIVAL_RANGE)
+					if(saturated || (range = WaitForAdjustedRangeExact(Widgets.Instance.Compass.Bearing, TimeSpan.FromSeconds(10))) != 0 && range < ARRIVAL_RANGE)
 					{
 						/** make sure the LED is visible */
 						if(TryGetLEDPosition(CurrentColor, out led))
@@ -286,7 +296,7 @@ namespace TrackBot.Spatial
 					Double diff = bearing.AngularDifference(LED.Bearing);
 					bool turnSomeMore = diff > MAX_BEARING_DIFFERENTIAL;
 
-					Log.LogText(LogLevel.DEBUG, "CENTERCENTERCENTERCENTER======    The image says our LED is at {0} and our bearing is currently {1}... we {2} turn    ======CENTERCENTERCENTERCENTER",
+					Log.LogText(LogLevel.DEBUG, "CENTERING ======    The image says our LED is at {0} and our bearing is currently {1}... we {2} turn    ====== CENTERING",
 						LED.Bearing.ToAngleString(), bearing.ToAngleString(), turnSomeMore ? "WILL" : "WILL NOT");
 					if(turnSomeMore)
 					{
@@ -296,7 +306,7 @@ namespace TrackBot.Spatial
 
 						bearing = Widgets.Instance.Compass.Bearing;
 						Double range;
-						if((range = WaitForAdjustedRange(bearing, TimeSpan.FromSeconds(10))) != 0 && range < ARRIVAL_RANGE)
+						if((range = WaitForAdjustedRangeExact(bearing, TimeSpan.FromSeconds(10))) != 0 && range < ARRIVAL_RANGE)
 						{
 							ArrivedAtDestination();
 						}
@@ -348,23 +358,21 @@ namespace TrackBot.Spatial
 
 			bool result = true;
 
-			Double startDistance = WaitForAdjustedRange(Widgets.Instance.Compass.Bearing, TimeSpan.FromSeconds(10));
+			Double startBearing = Widgets.Instance.Compass.Bearing;
+			Double startDistance = WaitForAdjustedRangeExact(startBearing, TimeSpan.FromSeconds(10));
 			Log.SysLogText(LogLevel.DEBUG, "Movin slow {0}", startDistance.ToMetersString());
-			Widgets.Instance.Tracks.MoveMeters(Direction.Forward, Math.Max(startDistance, ASSERTIVE_RANGE), Widgets.Instance.Tracks.TooSlow);
+			Double metersToTravel = Math.Max(startDistance - ASSERTIVE_RANGE, ASSERTIVE_RANGE);
+			TravelResult travelResult = Widgets.Instance.Tracks.MoveMeters(Direction.Forward, metersToTravel, Widgets.Instance.Tracks.Slow);
+			if(travelResult == TravelResult.TravelTimeComplete)
+			{
+				History.Add(new BearingAndRange(startBearing, metersToTravel));
+			}
 
 			Sleep(1000);
 			Double endDistance = Widgets.Instance.ImageEnvironment.GetRangeAtBearing(Widgets.Instance.Compass.Bearing) - Widgets.Instance.Chassis.LidarPosition.Y;
 
-			LegDistanceTraveled = startDistance - endDistance;
-			if(startDistance < ASSERTIVE_RANGE)
-			{
-				_doneTraveling = true;
-			}
-
-			Log.SysLogText(LogLevel.DEBUG, "Traveled {0} on leg - done travelling = {1}", LegDistanceTraveled.ToMetersString(), _doneTraveling);
-
 			Double range = 0;
-			if(_doneTraveling || (range = WaitForValidRange(Widgets.Instance.Compass.Bearing, TimeSpan.FromSeconds(10))) != 0 && range < ARRIVAL_RANGE)
+			if((range = WaitForValidRangeExact(Widgets.Instance.Compass.Bearing, TimeSpan.FromSeconds(10))) != 0 && range < ARRIVAL_RANGE)
 			{
 				ArrivedAtDestination();
 			}
@@ -372,6 +380,64 @@ namespace TrackBot.Spatial
 			{
 				Log.LogText(LogLevel.DEBUG, "RANGE is now -------------- {0} -----------------", range.ToMetersString());
 				SwitchState(ActivityStates.FindInImage);
+			}
+
+			return result;
+		}
+
+		#endregion
+
+		#region Center In Image State
+
+		protected bool InitReturnHomeState()
+		{
+			bool result = false;
+			if(History.Count > 0)
+			{
+				_historyIndex = History.Count - 1;
+				result = true;
+			}
+			return result;
+		}
+
+		protected bool RunReturnHomeState()
+		{
+			Interval = TimeSpan.Zero;
+			bool result = true;
+
+			Log.LogText(LogLevel.DEBUG, "=============== RunReturnHomeState");
+
+			try
+			{
+				Double reciprocal = History[_historyIndex].Bearing.Reciprocal();
+				Double distance = History[_historyIndex].Range;
+
+				if(TryTurnToBearing(reciprocal) == false)
+				{
+					throw new ActivityException("Could not turn to bearing");
+				}
+
+				TravelResult travelResult = Widgets.Instance.Tracks.MoveMeters(Direction.Forward, distance, Widgets.Instance.Tracks.Slow);
+				if(travelResult == TravelResult.TravelTimeComplete)
+				{
+					if(--_historyIndex < 0)
+					{
+						Log.SysLogText(LogLevel.DEBUG, "HEY... we think we are here!");
+						SwitchState(ActivityStates.Success);
+					}
+				}
+				else
+				{
+					Log.SysLogText(LogLevel.DEBUG, "Don't know what to do now");
+					result = false;
+				}
+
+			}
+			catch(Exception e)
+			{
+				Log.LogText(LogLevel.WARNING, "Return home ENDING: {0}", e.Message);
+				SwitchState(ActivityStates.Idle);
+				result = false;
 			}
 
 			return result;
@@ -394,7 +460,7 @@ namespace TrackBot.Spatial
 
 		private void ArrivedAtDestination()
 		{
-			Log.LogText(LogLevel.DEBUG, "!!!!!!!!!!!!! We arrived at destination  !!!!!!!!!!!!!");
+			Log.LogText(LogLevel.DEBUG, "!!!!!!!!!!!!! We arrived at destination while in state {0}  !!!!!!!!!!!!!", ActivityState);
 			if(++_colorIndex < Colors.Count)
 			{
 				ColorsTraveled.Add(CurrentColor);
@@ -405,8 +471,9 @@ namespace TrackBot.Spatial
 			}
 			else
 			{
-				Log.LogText(LogLevel.DEBUG, "Done and going idle");
-				SwitchState(ActivityStates.Success);
+				Log.LogText(LogLevel.DEBUG, "Goin home!");
+				SwitchState(ActivityStates.ReturnHome);
+				// SwitchState(ActivityStates.Success);
 			}
 		}
 

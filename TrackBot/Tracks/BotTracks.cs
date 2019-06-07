@@ -11,7 +11,7 @@ using RaspiCommon.Spatial;
 
 namespace TrackBot.Tracks
 {
-	class BotTracks : L298N_DC_TankTracks, IMotorizedChassis
+	public class BotTracks : L298N_DC_TankTracks, IMotorizedChassis
 	{
 		#region Constants
 
@@ -63,6 +63,8 @@ namespace TrackBot.Tracks
 		public GridLocation StartLocation { get; private set; }
 		public DateTime StartCalcTime { get; private set; }
 
+		public TravelThread TravelThread { get; private set; }
+
 		DateTime _lastDirectionalAdjustment;
 
 		public BotTracks()
@@ -95,6 +97,18 @@ namespace TrackBot.Tracks
 			NewDestinationBearing += delegate { };
 			DistanceToTravel += delegate { };
 			DistanceLeft += delegate { };
+
+		}
+
+		public void StartTracks()
+		{
+			TravelThread = new TravelThread(this);
+			TravelThread.Start();
+		}
+
+		public void StopTracks()
+		{
+			TravelThread.Stop();
 		}
 
 		/// <summary>
@@ -113,6 +127,29 @@ namespace TrackBot.Tracks
 				LeftSpeed = -speed;
 				RightSpeed = speed;
 			}
+		}
+
+		/// <summary>
+		/// Spin in place at speed 0 - 100
+		/// </summary>
+		/// <param name="speed"></param>
+		public void Spin(SpinDirection direction, TimeSpan time, int speed = 0)
+		{
+			Log.SysLogText(LogLevel.DEBUG, "Will spin {0} for {1}ms", direction, time.TotalMilliseconds);
+			if(speed == 0)
+				speed = Program.Config.StandardSpeed;
+			if(direction == SpinDirection.Clockwise)
+			{
+				LeftSpeed = speed;
+				RightSpeed = -speed;
+			}
+			else
+			{
+				LeftSpeed = -speed;
+				RightSpeed = speed;
+			}
+			Thread.Sleep(time);
+			Stop();
 		}
 
 		public void SetStart()
@@ -224,19 +261,76 @@ namespace TrackBot.Tracks
 			Log.SysLogText(LogLevel.INFO, "Ending backward move {0}", (int)time.TotalMilliseconds);
 		}
 
-		public bool ForwardMeters(Double meters, int motorSpeed, bool stagger = false, bool ignoreCollision = false)
+		/// <summary>
+		/// Move for the given amount of time in the given direction with range detection
+		/// </summary>
+		/// <param name="time"></param>
+		/// <param name="direction"></param>
+		/// <param name="motorSpeed"></param>
+		/// <returns></returns>
+		public TravelResult MoveTime(TimeSpan time, Direction direction, int motorSpeed)
+		{
+			TravelResult result = TravelResult.UnknownFailure;
+
+			TimeSpan maxTimeToTravel = time;
+
+			Double startDistance = Widgets.Instance.GetRangeAtDirection(direction);
+			Log.SysLogText(LogLevel.DEBUG, "Start move {0} at {1:0.00} distance from nearest obstacle", time, startDistance);
+
+			DateTime startTime = DateTime.UtcNow;
+			int trackSpeed = direction == Direction.Forward ? motorSpeed : -motorSpeed;
+			Widgets.Instance.Tracks.Speed = trackSpeed;
+
+			while(true)
+			{
+				Double forwardRange = Widgets.Instance.GetRangeAtDirection(Direction.Forward, false);
+				Double backwardRange = Widgets.Instance.GetRangeAtDirection(Direction.Backward, false);
+
+				ForwardPrimaryRange(forwardRange);
+				BackwardPrimaryRange(backwardRange);
+
+				if(Widgets.Instance.RangeFinders.Count > 0)
+				{
+					forwardRange = Math.Min(Widgets.Instance.RangeFinders[RFDir.Front].Range, forwardRange);
+					backwardRange = Math.Min(Widgets.Instance.RangeFinders[RFDir.Rear].Range, backwardRange);
+
+					ForwardSecondaryRange(forwardRange);
+					BackwardSecondaryRange(backwardRange);
+				}
+
+				Double range = direction == Direction.Forward ? forwardRange : backwardRange;
+
+				Log.SysLogText(LogLevel.DEBUG, "There is {0:0.000}m left at {1}", range, direction);
+
+				DistanceLeft(range);
+
+				if(DateTime.UtcNow >= startTime + maxTimeToTravel)
+				{
+					result = TravelResult.TravelTimeComplete;
+					break;
+				}
+				Thread.Sleep(100);
+			}
+			Widgets.Instance.Tracks.Stop();
+
+			Log.SysLogText(LogLevel.DEBUG, "MoveTime returning {0}", result);
+			return result;
+		}
+
+
+		public TravelResult ForwardMeters(Double meters, int motorSpeed, bool stagger = false, bool ignoreCollision = false)
 		{
 			return MoveMeters(Direction.Forward, meters, motorSpeed, stagger, ignoreCollision);
 		}
 
-		public bool BackwardMeters(Double meters, int motorSpeed, bool stagger = false, bool ignoreCollision = false)
+		public TravelResult BackwardMeters(Double meters, int motorSpeed, bool stagger = false, bool ignoreCollision = false)
 		{
 			return MoveMeters(Direction.Backward, meters, motorSpeed, stagger, ignoreCollision);
 		}
 
-		public bool MoveMeters(Direction direction, Double meters, int motorSpeed, bool stagger = false, bool ignoreCollision = false, bool useFuzzyRange = true)
+		public TravelResult MoveMeters(Direction direction, Double meters, int motorSpeed, bool stagger = false, bool ignoreCollision = false, bool useFuzzyRange = true)
 		{
-			bool result = false;
+			TravelResult result = TravelResult.UnknownFailure;
 
 			DistanceToTravel(meters);
 
@@ -274,20 +368,21 @@ namespace TrackBot.Tracks
 				Double distanceTraveled = startDistance - range;
 				if(stagger == false && DateTime.UtcNow > startTime + maxTimeToTravel)
 				{
-					Log.SysLogText(LogLevel.DEBUG, "Ran out of time");
+					result = TravelResult.TravelTimeComplete;
 					break;
 				}
 				else if(distanceTraveled >= meters)
 				{
 					Log.SysLogText(LogLevel.DEBUG, "Traveled our distance (actually went {0})", distanceTraveled.ToMetersString());
 					Widgets.Instance.DeadReckoningEnvironment.Move(travelBearing, distanceTraveled);
-					result = true;
+					result = TravelResult.TravelDistanceComplete;
 					break;
 				}
 				else if(ignoreCollision == false && range < StoppingDistance)
 				{
 					Log.SysLogText(LogLevel.DEBUG, "Ran out of space (actually went {0})", distanceTraveled.ToMetersString());
 					Widgets.Instance.DeadReckoningEnvironment.Move(travelBearing, distanceTraveled);
+					result = TravelResult.OutOfSpace;
 					break;
 				}
 				if(stagger)
@@ -305,6 +400,7 @@ namespace TrackBot.Tracks
 			}
 			Widgets.Instance.Tracks.Stop();
 
+			Log.SysLogText(LogLevel.DEBUG, "MoveMeters returning {0}", result);
 			return result;
 		}
 
@@ -404,6 +500,13 @@ namespace TrackBot.Tracks
 			{
 				bearing = Widgets.Instance.GyMag.Bearing;
 				diff = Degrees.AngularDifference(to, bearing);
+				if(bearing.AngularDifference(to, direction) > 180)
+				{
+					Log.SysLogText(LogLevel.WARNING, "Shit... we're turning the wrong way.. diff from {0} to {1} {2} is {3}. Reversing direction",
+						bearing.ToAngleString(), to.ToAngleString(), direction, bearing.AngularDifference(to, direction).ToAngleString());
+					direction = direction == SpinDirection.Clockwise ? SpinDirection.CounterClockwise : SpinDirection.Clockwise;
+					Widgets.Instance.Tracks.Spin(direction, spinSpeed);
+				}
 				//Log.SysLogText(LogLevel.DEBUG, "Difference from {0:00}° to {1:00}° is {2:00}°", bearing, to, diff);
 				if(diff < THRESHOLD)
 				{

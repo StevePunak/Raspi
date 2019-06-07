@@ -29,6 +29,8 @@ namespace RaspiCommon.Lidar
 
 		public static void LoadFromRangeBlob(LidarVector[] vectors, byte[] blob)
 		{
+			if(blob.Length == 0)
+				return;
 			Double vectorSize = (Double)360 / (Double)vectors.Length;
 			using(BinaryReader br = new BinaryReader(new MemoryStream(blob)))
 			{

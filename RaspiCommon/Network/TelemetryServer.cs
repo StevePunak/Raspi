@@ -18,6 +18,7 @@ using KanoopCommon.Threading;
 using MQTT;
 using RaspiCommon.Devices.Chassis;
 using RaspiCommon.Devices.Compass;
+using RaspiCommon.Devices.Locomotion;
 using RaspiCommon.Devices.Optics;
 using RaspiCommon.Lidar;
 using RaspiCommon.Lidar.Environs;
@@ -116,6 +117,9 @@ namespace RaspiCommon.Network
 					SendRangeData();
 
 					SendBearing();
+
+					SendSpeedAndBearing();
+
 					if(_sendFuzzyPath)
 					{
 						SendFuzzyPath();
@@ -188,6 +192,21 @@ namespace RaspiCommon.Network
 
 			byte[] output = BitConverter.GetBytes(forwardBearing);
 			Client.Publish(MqttTypes.BearingTopic, output, true);
+		}
+
+		private void SendSpeedAndBearing()
+		{
+			SpeedAndBearing speed = new SpeedAndBearing()
+			{
+				Bearing = Widgets.Compass.Bearing,
+				TrackSpeed = new TrackSpeed()
+				{
+					LeftSpeed = Widgets.TrackSpeed.LeftSpeed,
+					RightSpeed = Widgets.TrackSpeed.RightSpeed,
+				},
+			};
+			byte[] output = speed.Serialize();
+			Client.Publish(MqttTypes.SpeedAndBearingTopic, output, false);
 		}
 
 		private void SendFuzzyPath()

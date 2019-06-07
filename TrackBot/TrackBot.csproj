@@ -57,8 +57,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ForkLift\Lift.cs" />
-    <Compile Include="Network\CommandServer.cs" />
+    <Compile Include="Network\RemoteMqttController.cs" />
     <Compile Include="Network\RadarController.cs" />
+    <Compile Include="Servos\ServoController.cs" />
     <Compile Include="Spatial\ActivityException.cs" />
     <Compile Include="Spatial\GotoLED.cs" />
     <Compile Include="Spatial\FindTwoLEDs.cs" />
@@ -78,8 +79,11 @@
     <Compile Include="Spatial\VirtualEnvironment.cs" />
     <Compile Include="Testing.cs" />
     <Compile Include="TrackBotException.cs" />
+    <Compile Include="Tracks\TravelThread.cs" />
+    <Compile Include="TTY\ArmCommand.cs" />
     <Compile Include="TTY\Backward.cs" />
     <Compile Include="TTY\DumpCommand.cs" />
+    <Compile Include="TTY\DumpThreads.cs" />
     <Compile Include="TTY\ImageParameter.cs" />
     <Compile Include="TTY\CalibrateCompass.cs" />
     <Compile Include="TTY\CalibrateSpeed.cs" />

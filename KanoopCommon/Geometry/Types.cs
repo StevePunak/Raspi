@@ -8,8 +8,10 @@ namespace KanoopCommon.Geometry
 {
 	public enum Direction
 	{
+		None,
+
 		Forward,
-		Backward
+		Backward,
 	}
 
 	public enum SpinDirection

@@ -25,7 +25,8 @@ namespace TrackBot.TTY
 			LEDPositionList leds;
 			LEDCandidateList candidates;
 			LEDImageAnalysis.AnalyzeImage(
-				Widgets.Instance.LEDImageAnalysis.LastImageAnalysisFile, 
+				Widgets.Instance.LEDImageAnalysis.LastImageAnalysisFile,
+				LEDImageAnalysis.AllLEDColors,
 				Widgets.Instance.Server.ImageDirectory, 
 				out outputFiles, out leds, out candidates);
 			Widgets.Instance.Server.PublishImage(outputFiles);

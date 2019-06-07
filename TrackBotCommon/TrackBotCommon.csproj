@@ -39,6 +39,15 @@
     <Reference Include="Emgu.CV.World, Version=3.4.3.3016, Culture=neutral, PublicKeyToken=7281126722ab4438, processorArchitecture=MSIL">
       <HintPath>..\packages\EMGU.CV.3.4.3.3016\lib\net35\Emgu.CV.World.dll</HintPath>
     </Reference>
+    <Reference Include="SharpDX, Version=4.2.0.0, Culture=neutral, PublicKeyToken=b4dcf0f35e5521f1, processorArchitecture=MSIL">
+      <HintPath>..\packages\SharpDX.4.2.0\lib\net45\SharpDX.dll</HintPath>
+    </Reference>
+    <Reference Include="SharpDX.DirectInput, Version=4.2.0.0, Culture=neutral, PublicKeyToken=b4dcf0f35e5521f1, processorArchitecture=MSIL">
+      <HintPath>..\packages\SharpDX.DirectInput.4.2.0\lib\net45\SharpDX.DirectInput.dll</HintPath>
+    </Reference>
+    <Reference Include="SharpDX.XInput, Version=4.2.0.0, Culture=neutral, PublicKeyToken=b4dcf0f35e5521f1, processorArchitecture=MSIL">
+      <HintPath>..\packages\SharpDX.XInput.4.2.0\lib\net45\SharpDX.XInput.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
@@ -61,8 +70,17 @@
       <DependentUpon>BotDash.cs</DependentUpon>
     </Compile>
     <Compile Include="Environs\TrackBotLandscape.cs" />
+    <Compile Include="InputDevices\ClawControl.cs" />
+    <Compile Include="InputDevices\GamePads\DeviceInputTypes.cs" />
+    <Compile Include="InputDevices\GamePads\GamePadBase.cs" />
+    <Compile Include="InputDevices\GamePads\EZSmxGamePad.cs" />
+    <Compile Include="InputDevices\GamePads\StandardGamePad.cs" />
+    <Compile Include="InputDevices\GamePads\USBGamePad.cs" />
+    <Compile Include="InputDevices\GamePads\XBoxController.cs" />
+    <Compile Include="InputDevices\GamePads\ZDVGamePad.cs" />
     <Compile Include="Properties\LidarVectorExtensions.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="InputDevices\GamePads\SteelSeriesXL.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\KanoopCommon\KanoopCommon.csproj">

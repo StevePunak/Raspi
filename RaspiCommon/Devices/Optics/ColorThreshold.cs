@@ -32,20 +32,25 @@ namespace RaspiCommon.Devices.Optics
 
 		public void MakeMCvScalarArrays(out MCvScalar lowRange, out MCvScalar topRange)
 		{
-			if(Color == Color.Blue)
+			MakeMCvScalarArrays(Color, MinimumValue, MaximumOtherValue, out lowRange, out topRange);
+		}
+
+		public static void MakeMCvScalarArrays(Color color, int minimumValue, int maximumOtherValue, out MCvScalar lowRange, out MCvScalar topRange)
+		{
+			if(color == Color.Blue)
 			{
-				lowRange = new MCvScalar(MinimumValue, 0, 0);
-				topRange = new MCvScalar(255, MaximumOtherValue, MaximumOtherValue);
+				lowRange = new MCvScalar(minimumValue, 0, 0);
+				topRange = new MCvScalar(255, maximumOtherValue, maximumOtherValue);
 			}
-			else if(Color == Color.Green)
+			else if(color == Color.Green)
 			{
-				lowRange = new MCvScalar(0, MinimumValue, 0);
-				topRange = new MCvScalar(MaximumOtherValue, 255, MaximumOtherValue);
+				lowRange = new MCvScalar(0, minimumValue, 0);
+				topRange = new MCvScalar(maximumOtherValue, 255, maximumOtherValue);
 			}
-			else if(Color == Color.Red)
+			else if(color == Color.Red)
 			{
-				lowRange = new MCvScalar(0, 0, MinimumValue);
-				topRange = new MCvScalar(MaximumOtherValue, MaximumOtherValue, 255);
+				lowRange = new MCvScalar(0, 0, minimumValue);
+				topRange = new MCvScalar(maximumOtherValue, maximumOtherValue, 255);
 			}
 			else
 			{

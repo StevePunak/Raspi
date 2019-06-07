@@ -6,11 +6,42 @@ using System.Reflection;
 using KanoopCommon.CommonObjects;
 using KanoopCommon.Extensions;
 using KanoopCommon.Logging;
+using System.Runtime.InteropServices;
 
 namespace KanoopCommon.Reflection
 {
 	public class ReflectionUtilities
 	{
+		public static Object GetAttribute(Type enumType, Type attributeType, Enum value)
+		{
+			Object ret = null;
+			foreach(Enum e in Enum.GetValues(enumType))
+			{
+				if(e.ToString() == value.ToString())
+				{
+					MemberInfo member = enumType.GetMember(e.ToString())[0];
+					ret = member.GetCustomAttribute(attributeType);
+				}
+			}
+
+			return ret;
+		}
+
+		public static int SizeofWriteableProperties(Type type)
+		{
+			int total = 0;
+
+			foreach(PropertyInfo property in type.GetProperties())
+			{
+				if(property.GetSetMethod() != null)
+				{
+					total += Marshal.SizeOf(property.PropertyType);
+
+				}
+			}
+			return total;
+		}
+
 		public static void SetProperty(Object thing, String propertyName, String value)
 		{
 			PropertyInfo property = thing.GetType().GetProperty(propertyName);

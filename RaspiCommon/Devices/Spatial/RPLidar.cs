@@ -431,13 +431,13 @@ namespace RaspiCommon.Devices.Spatial
 				{
 					Double distance = Math.Max(response.Distance, .001);
 					DateTime now = DateTime.UtcNow;
-				//	Log.SysLogText(LogLevel.DEBUG, "Putting sample at offset {0}  Bearing {1}  Offset {2}", offset, Bearing, Offset);
+					//Log.SysLogText(LogLevel.DEBUG, "Putting sample at offset {0}  Bearing {1}  Offset {2}", offset, Bearing, Offset);
 					Vectors[(int)offset].Range = distance;
 					Vectors[(int)offset].RefreshTime = now;
 					_lastGoodSampleTime = now;
 
 					LidarSample sample = new LidarSample(angle, distance, now);
-					Sample(sample);
+					//Sample(sample);
 
 					_lastScanOffset = (int)offset;
 				}

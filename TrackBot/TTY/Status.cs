@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using KanoopCommon.Extensions;
 using RaspiCommon;
+using RaspiCommon.Devices.Spatial;
 
 namespace TrackBot.TTY
 {
@@ -38,6 +39,11 @@ namespace TrackBot.TTY
 			if(Widgets.Instance.DeadReckoningEnvironment != null)
 			{
 				Console.WriteLine("DR Environs: {0}", Widgets.Instance.DeadReckoningEnvironment);
+			}
+			HCSR04_RangeFinder forwardUS, backwardUS;
+			if(Widgets.Instance.RangeFinders.TryGetValue(RFDir.Front, out forwardUS) && Widgets.Instance.RangeFinders.TryGetValue(RFDir.Rear, out backwardUS))
+			{
+				Console.WriteLine("Ultrasonic [Forward {0}]   [Backward {1}]", forwardUS.Range.ToMetersString(), backwardUS.Range.ToMetersString());
 			}
 
 			return true;

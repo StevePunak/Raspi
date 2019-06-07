@@ -25,13 +25,11 @@ namespace RaspiCommon.Devices.MotorControl
 				_direction = value;
 				if(value == Direction.Forward)
 				{
-					Log.SysLogText(LogLevel.DEBUG, "Setting DIRECTION PINS {0}", value);
 					Pigs.SetOutputPin(IN1, PinState.High);
 					Pigs.SetOutputPin(IN2, PinState.Low);
 				}
 				else
 				{
-					Log.SysLogText(LogLevel.DEBUG, "Setting DIRECTION PINS {0}", value);
 					Pigs.SetOutputPin(IN1, PinState.Low);
 					Pigs.SetOutputPin(IN2, PinState.High);
 				}

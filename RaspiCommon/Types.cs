@@ -8,6 +8,15 @@ namespace RaspiCommon
 {
 	public delegate void GPIOInputCallback(GpioPin pin, EdgeType edgeType, UInt64 nanoseconds);
 
+	public enum TravelResult
+	{
+		UnknownFailure,
+		OutOfSpace,
+		OutOfTime,
+		TravelTimeComplete,
+		TravelDistanceComplete,
+	}
+
 	public enum ImageType
 	{
 		Unknown = 0,

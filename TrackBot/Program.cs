@@ -17,6 +17,7 @@ using RaspiCommon.Data.DataSource;
 using RaspiCommon.Data.Entities;
 using RaspiCommon.Devices.MotorControl;
 using RaspiCommon.Devices.Optics;
+using RaspiCommon.Devices.RobotArms;
 using TrackBot.Spatial;
 using TrackBot.Tracks;
 using TrackBot.TTY;
@@ -57,13 +58,8 @@ namespace TrackBot
 		{
 			try
 			{
-				Program.Config.TracksLeftA1Pin = GpioPin.Pin11;
-				Program.Config.TracksLeftA2Pin = GpioPin.Pin13;
-				Program.Config.TracksRightA1Pin = GpioPin.Pin10;
-				Program.Config.TracksRightA2Pin = GpioPin.Pin09;
-
-				Log.SysLogText(LogLevel.DEBUG, "LEFT: {0} {1}", Program.Config.TracksLeftA1Pin, Program.Config.TracksLeftA2Pin);
-				Log.SysLogText(LogLevel.DEBUG, "Right: {0} {1}", Program.Config.TracksRightA1Pin, Program.Config.TracksRightA2Pin);
+				Defaults();
+				Console.WriteLine("{0}", Program.Config.CameraParameters);
 				Program.Config.Save();
 			}
 			catch(Exception e)
@@ -72,21 +68,35 @@ namespace TrackBot
 			}
 		}
 
-		void Defaults()
+		static void Defaults()
 		{
+#if zero
 			Program.Config.RemoteImageDirectory = "/home/pi/images";
 			Program.Config.RadarHost = "192.168.0.50";
 			Program.Config.BlueThresholds = new ColorThreshold(Color.Blue, 150, 70);
 			Program.Config.GreenThresholds = new ColorThreshold(Color.Green, 150, 100);
 			Program.Config.RedThresholds = new ColorThreshold(Color.Red, 150, 70);
-			Program.Config.CameraBrightness = 0;
-			Program.Config.CameraContrast = 0;
-			Program.Config.CameraSaturation = 0;
-			Program.Config.CameraImageEffect = String.Empty;
-			Program.Config.CameraColorEffect = String.Empty;
-			Program.Config.CameraExposureType = String.Empty;
+			Program.Config.CameraParameters = new RaspiCameraParameters();
+
 			Program.Config.CameraBearingOffset = 4;
-			Program.Config.CameraImageDelay = TimeSpan.FromMilliseconds(1500);
+
+#endif
+			Program.Config.ClawRotationPin = GpioPin.Pin18;
+			Program.Config.ClawLeftPin = GpioPin.Pin22;
+			Program.Config.ClawRightPin = GpioPin.Pin27;
+			Program.Config.ClawPin = GpioPin.Pin17;
+
+			Program.Config.ClawRotationPinMin = 1000;
+			Program.Config.ClawRotationPinMax = 2000;
+			Program.Config.ClawLeftPinMin = 600;
+			Program.Config.ClawLeftPinMax = 1400;
+			Program.Config.ClawRightPinMin = 900;
+			Program.Config.ClawRightPinMax = 2400;
+			Program.Config.ClawPinMin = 1000;
+			Program.Config.ClawPinMax = 2000;
+#if zero
+			Program.Config.CameraParameters.SnapshotDelay = TimeSpan.FromMilliseconds(1500);
+#endif
 		}
 
 		private static void OpenConfig()
