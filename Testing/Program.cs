@@ -47,8 +47,9 @@ namespace Testing
 		{
 			OpenLog();
 
+			LidarTest();
 			//ServoTest();
-			XBoxTest();
+			//XBoxTest();
 			//JoystickTest();
 //			VideoTest();
 //			MqttTest();
@@ -56,6 +57,16 @@ namespace Testing
 //			EMGUTest();
 
 //			RunLidar();
+		}
+
+		private static void LidarTest()
+		{
+			RPLidar lidar = new RPLidar("COM5", 360.0/4);
+			lidar.Start();
+			lidar.GetDeviceInfo();
+			lidar.StartScan();
+
+			Thread.Sleep(30000);
 		}
 
 		static void ImageClassify()

@@ -506,7 +506,7 @@ namespace RaspiForm
 			}
 		}
 
-		private void OnStartScanLicked(object sender, EventArgs args)
+		private void OnStartScanClicked(object sender, EventArgs args)
 		{
 			try
 			{

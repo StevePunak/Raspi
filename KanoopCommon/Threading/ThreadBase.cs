@@ -121,7 +121,7 @@ namespace KanoopCommon.Threading
 			set { _thread.Priority = value; }
 		}
 
-		public int ThreadID { get { return _thread.GetHashCode(); } }
+		public int ThreadID { get; private set; }
 
 		public DateTime StartTime { get { return _startTime; } }
 
@@ -758,6 +758,7 @@ namespace KanoopCommon.Threading
 				{
 					try
 					{
+						Log.SysLogText(LogLevel.DEBUG, "Thread {0} {1}", thread.Name, thread.ThreadID);
 						thread._performanceTimer.DumpToLog();
 					}
 					catch(Exception e)

@@ -752,7 +752,7 @@ namespace RaspiForm
 			this.btnStartScan.TabIndex = 0;
 			this.btnStartScan.Text = "Scan";
 			this.btnStartScan.UseVisualStyleBackColor = true;
-			this.btnStartScan.Click += new System.EventHandler(this.OnStartScanLicked);
+			this.btnStartScan.Click += new System.EventHandler(this.OnStartScanClicked);
 			// 
 			// button1
 			// 

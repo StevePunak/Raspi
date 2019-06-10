@@ -10,8 +10,8 @@ namespace RaspiCommon.Lidar
 	{
 		public Double Bearing { get; private set; }
 		public Double Distance { get; private set; }
-
 		public DateTime Timestamp { get; private set; }
+
 		public LidarSample(Double bearing, Double distance, DateTime timestamp) 
 		{
 			Bearing = bearing;

@@ -57,6 +57,8 @@ namespace TrackBotCommon.InputDevices.GamePads
 		public bool DumpButtonChanges { get; set; }
 
 		public String MatchString { get; private set; }
+		public bool Connected { get; protected set; }
+
 
 		protected bool LastGamepadNeutral { get; set; }
 		protected GamePadType GamePadType { get; private set; }

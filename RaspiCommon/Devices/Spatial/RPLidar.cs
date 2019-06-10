@@ -279,7 +279,7 @@ namespace RaspiCommon.Devices.Spatial
 		{
 			try
 			{
-#if DEBUG_SERIAL
+#if true
 				Log.SysLogText(LogLevel.DEBUG, "INBOUND");
 				Log.SysLogHex(LogLevel.DEBUG, buffer, 0, length);
 #endif
@@ -426,18 +426,18 @@ namespace RaspiCommon.Devices.Spatial
 			{
 				Double offset = angle / VectorSize;
 
-				//				Console.WriteLine("Got entry at {0}... Clear from {1} to {2}", intOffset, VectorArrayInc(_lastScanOffset), intOffset);
+								//Console.WriteLine("Got entry at {0}... Clear from {1} to {2}", intOffset, VectorArrayInc(_lastScanOffset), intOffset);
 				if(response.Distance > .010)
 				{
 					Double distance = Math.Max(response.Distance, .001);
 					DateTime now = DateTime.UtcNow;
-					//Log.SysLogText(LogLevel.DEBUG, "Putting sample at offset {0}  Bearing {1}  Offset {2}", offset, Bearing, Offset);
+					Log.SysLogText(LogLevel.DEBUG, "Putting sample at offset {0}  Bearing {1}  Offset {2}", offset, Bearing, Offset);
 					Vectors[(int)offset].Range = distance;
 					Vectors[(int)offset].RefreshTime = now;
 					_lastGoodSampleTime = now;
 
 					LidarSample sample = new LidarSample(angle, distance, now);
-					//Sample(sample);
+					Sample(sample);
 
 					_lastScanOffset = (int)offset;
 				}
@@ -569,8 +569,8 @@ namespace RaspiCommon.Devices.Spatial
 		public void SendCommand(LidarCommand command)
 		{
 			byte[] data = command.Serialize();
-			//Log.SysLogText(LogLevel.DEBUG, "OUTPUT!!!!!");
-			//Log.SysLogHex(LogLevel.DEBUG, data);
+			Log.SysLogText(LogLevel.DEBUG, "OUTPUT!!!!!");
+			Log.SysLogHex(LogLevel.DEBUG, data);
 			Port.Write(data, 0, data.Length);
 		}
 
