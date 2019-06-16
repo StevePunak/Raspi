@@ -292,6 +292,10 @@ namespace TrackBotCommon.InputDevices.GamePads
 				mapping.AnalogControl.Changed = true;
 				States.AnyChanged = true;
 			}
+			else
+			{
+				mapping.AnalogControl.Changed = false;
+			}
 		}
 
 		protected void CallGamepadEvent()

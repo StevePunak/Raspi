@@ -19,8 +19,8 @@ namespace TrackBot.Spatial
 		const Double MAX_BEARING_DIFFERENTIAL = 5;
 		const Double BEARING_INCREMENT = 20;
 
-		public LEDPosition Green { get; set; }
-		public LEDPosition Blue { get; set; }
+		public ColoredObjectPosition Green { get; set; }
+		public ColoredObjectPosition Blue { get; set; }
 
 		public Double StartBearing { get; set; }
 
@@ -87,7 +87,7 @@ namespace TrackBot.Spatial
 		{
 			Log.LogText(LogLevel.DEBUG, "=============== RunFindInImage");
 
-			Widgets.Instance.LEDImageAnalysis.AnalyzeImage();
+			Widgets.Instance.LEDImageAnalysis.AnalyzeImage(LED.LEDSize);
 
 			bool gotGreen = Widgets.Instance.LEDImageAnalysis.HasGreen;
 			bool gotBlue = Widgets.Instance.LEDImageAnalysis.HasBlue;

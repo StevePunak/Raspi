@@ -44,7 +44,7 @@ namespace Radar
 		[STAThread]
 		static void Main()
 		{
-			LEDImageAnalysis.Compass = Compass = new NullCompass();
+			SolidColorAnalysis.Compass = Compass = new NullCompass();
 
 			OpenLog();
 
@@ -61,6 +61,8 @@ namespace Radar
 
 		static void Test()
 		{
+			int x = 30;
+			String s = x.ToString().PadLeft(4, '0');
 			Double diff = (Double)(67.024).AngularDifference(77.674, SpinDirection.CounterClockwise);
 			//TestImage();
 
@@ -91,11 +93,11 @@ namespace Radar
 			Program.Config.RedThresholds = new ColorThreshold(Color.Red, 150, 70);
 			Config.Save();
 
-			LEDImageAnalysis.Width = 800;
-			LEDImageAnalysis.Height = 600;
-			LEDImageAnalysis.ColorThresholds[Color.Blue] = Program.Config.BlueThresholds;
-			LEDImageAnalysis.ColorThresholds[Color.Green] = Program.Config.GreenThresholds;
-			LEDImageAnalysis.ColorThresholds[Color.Red] = Program.Config.RedThresholds;
+			SolidColorAnalysis.Width = 800;
+			SolidColorAnalysis.Height = 600;
+			SolidColorAnalysis.ColorThresholds[Color.Blue] = Program.Config.BlueThresholds;
+			SolidColorAnalysis.ColorThresholds[Color.Green] = Program.Config.GreenThresholds;
+			SolidColorAnalysis.ColorThresholds[Color.Red] = Program.Config.RedThresholds;
 
 			String remoteFile = @"\\raspi\pi\images\snap-0003.bmp";
 			String workDir = @"c:\pub\tmp\junk";
@@ -103,13 +105,13 @@ namespace Radar
 
 			File.Copy(remoteFile, inputFile, true);
 			Camera.ImageDirectory = workDir;
-			LEDImageAnalysis.ImageAnalysisDirectory = workDir;
+			SolidColorAnalysis.ImageAnalysisDirectory = workDir;
 
 			Mat image = new Mat(inputFile);
 //		Camera.ConvertImage(outputFile, new Size(LEDImageAnalysis.Width, LEDImageAnalysis.Height), ImageType.RawRGB, ImageType.Bitmap, 0, out outputFile);
 
-			LEDImageAnalysis analysis = new LEDImageAnalysis(new NullCamera());
-			analysis.AnalyzeImage(image); //, workDir, out files, out leds, out candidates);
+			SolidColorAnalysis analysis = new SolidColorAnalysis(new NullCamera());
+			analysis.AnalyzeImage(image, new Size(6, 6)); //, workDir, out files, out leds, out candidates);
 			//ImageAnalysis analysis = new ImageAnalysis(files, leds, candidates);
 			//analysis.Serialize();
 

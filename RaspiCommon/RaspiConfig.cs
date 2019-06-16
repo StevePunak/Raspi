@@ -207,6 +207,9 @@ namespace RaspiCommon
 			set { _landscapeName = value; }
 		}
 
+		String _snapshotUrl;
+		public String SnapshotUrl { get { if(String.IsNullOrEmpty(_snapshotUrl)) _snapshotUrl = "http://raspi:8085/?action=snapshot"; return _snapshotUrl;  } set { _snapshotUrl = value; } }
+
 		public Size LastRadarWindowSize { get; set; }
 		public Point LastRadarWindowLocation { get; set; }
 		public int SplitRadarPosition { get; set; }

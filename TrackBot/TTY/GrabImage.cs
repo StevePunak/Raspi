@@ -20,7 +20,7 @@ namespace TrackBot.TTY
 
 		public override bool Execute(List<string> commandParts)
 		{
-			LEDImageAnalysis.DebugAnalysis = true;
+			SolidColorAnalysis.DebugAnalysis = true;
 
 			Mat image;
 			if(Widgets.Instance.Camera.TryTakeSnapshot(out image) == false)
@@ -31,7 +31,7 @@ namespace TrackBot.TTY
 			Color color;
 			if(commandParts.Count > 1 && (color = Color.FromName(commandParts[1])).ToArgb() != 0)
 			{
-				Widgets.Instance.LEDImageAnalysis.AnalyzeImage(image, color);
+				Widgets.Instance.LEDImageAnalysis.AnalyzeImage(image, color, LED.LEDSize);
 
 				Double ledBearing;
 				if(Widgets.Instance.LEDImageAnalysis.TryGetBearing(color, Widgets.Instance.Compass.Bearing, out ledBearing))
@@ -41,10 +41,10 @@ namespace TrackBot.TTY
 			}
 			else
 			{
-				Widgets.Instance.LEDImageAnalysis.AnalyzeImage(image);
+				Widgets.Instance.LEDImageAnalysis.AnalyzeImage(image, LED.LEDSize);
 			}
 
-			LEDImageAnalysis.DebugAnalysis = false;
+			SolidColorAnalysis.DebugAnalysis = false;
 			return true;
 		}
 

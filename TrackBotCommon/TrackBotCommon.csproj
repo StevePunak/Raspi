@@ -81,6 +81,7 @@
     <Compile Include="Properties\LidarVectorExtensions.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="InputDevices\GamePads\SteelSeriesXL.cs" />
+    <Compile Include="Testing\ClassifierTest.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\KanoopCommon\KanoopCommon.csproj">

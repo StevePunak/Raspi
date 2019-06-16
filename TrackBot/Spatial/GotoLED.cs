@@ -29,7 +29,7 @@ namespace TrackBot.Spatial
 		public Double StartBearing { get; set; }
 		public LEDTravelHistoryEntry LastLEDHistory { get; set; }
 
-		public LEDPosition LED { get; set; }
+		public ColoredObjectPosition LED { get; set; }
 
 		public List<Color> Colors { get; set; }
 		public Color CurrentColor { get; private set; }
@@ -180,7 +180,7 @@ namespace TrackBot.Spatial
 			try
 			{
 
-				LEDPosition led;
+				ColoredObjectPosition led;
 				if(TryGetLEDPosition(CurrentColor, out led))
 				{
 					LED = led;
@@ -286,7 +286,7 @@ namespace TrackBot.Spatial
 					throw new ActivityException("Could not get new image");
 				}
 
-				Widgets.Instance.LEDImageAnalysis.AnalyzeImage(image);
+				Widgets.Instance.LEDImageAnalysis.AnalyzeImage(image, RaspiCommon.Devices.Optics.LED.LEDSize);
 
 				if(Widgets.Instance.LEDImageAnalysis.HasColor(CurrentColor))
 				{

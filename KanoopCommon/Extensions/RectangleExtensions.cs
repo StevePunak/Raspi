@@ -68,6 +68,18 @@ namespace KanoopCommon.Extensions
 			return new Rectangle(left, top, right - left, bottom - top);
 		}
 
+		public static Rectangle GetFromTwoPoints(Point point1, Point point2)
+		{
+			PointD p1 = new PointD(point1.X, point1.Y);
+			PointD p2 = new PointD(point1.X, point2.Y);
+			PointD p3 = new PointD(point2.X, point1.Y);
+			PointD p4 = new PointD(point2.X, point2.Y);
+			RectangleD rect = new RectangleD(p1, p2, p3, p4);
+			PointD upperLeft = rect.UpperLeft;
+			PointD lowerRight = rect.LowerRight;
+			return new Rectangle(upperLeft.ToPoint(), new Size((int)(lowerRight.X - upperLeft.X), (int)(lowerRight.Y - upperLeft.Y)));
+		}
+
 		public static Rectangle GetFromPoint(Size imageSize, Point point, Size rectangleSize)
 		{
 			int left = Math.Max(0, point.X - rectangleSize.Width / 2);

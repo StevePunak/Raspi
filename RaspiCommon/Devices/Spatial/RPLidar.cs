@@ -144,11 +144,12 @@ namespace RaspiCommon.Devices.Spatial
 		{
 			_recvOffset = _bytesInBuffer = 0;
 			_state = State.Sync;
+
 			Port = new MonoSerialPort(PortName);
+			Port.Port.BaudRate = 115200;
+			Port.BufferTime = TimeSpan.FromMilliseconds(500);
 			Port.DataReceived += OnSerialDataReceived;
 			Port.Open();
-
-			Port.Port.DtrEnable = false;
 		}
 
 		public void Stop()
@@ -159,7 +160,6 @@ namespace RaspiCommon.Devices.Spatial
 				Port.Port.DtrEnable = true;
 				Port.DataReceived -= OnSerialDataReceived;
 				Port.Close();
-				Port = null;
 				Log.SysLogText(LogLevel.DEBUG, "Done");
 			}
 		}
@@ -224,7 +224,7 @@ namespace RaspiCommon.Devices.Spatial
 			SendCommand(command);
 
 			LidarResponse response;
-			bool result = TryGetResponse(TimeSpan.FromMilliseconds(500), out response);
+			bool result = TryGetResponse(TimeSpan.FromMilliseconds(1500), out response);
 			return result;
 		}
 
@@ -279,7 +279,7 @@ namespace RaspiCommon.Devices.Spatial
 		{
 			try
 			{
-#if true
+#if DEBUG_SERIAL
 				Log.SysLogText(LogLevel.DEBUG, "INBOUND");
 				Log.SysLogHex(LogLevel.DEBUG, buffer, 0, length);
 #endif
@@ -431,7 +431,7 @@ namespace RaspiCommon.Devices.Spatial
 				{
 					Double distance = Math.Max(response.Distance, .001);
 					DateTime now = DateTime.UtcNow;
-					Log.SysLogText(LogLevel.DEBUG, "Putting sample at offset {0}  Bearing {1}  Offset {2}", offset, Bearing, Offset);
+					//Log.SysLogText(LogLevel.DEBUG, "Putting sample at offset {0}  Bearing {1}  Offset {2}", offset, Bearing, Offset);
 					Vectors[(int)offset].Range = distance;
 					Vectors[(int)offset].RefreshTime = now;
 					_lastGoodSampleTime = now;

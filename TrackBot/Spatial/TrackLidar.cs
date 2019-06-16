@@ -45,6 +45,7 @@ namespace TrackBot.Spatial
 		public void Start()
 		{
 			Lidar.Start();
+			Log.SysLogText(LogLevel.DEBUG, "Retrieving LIDAR info");
 			if(Lidar.GetDeviceInfo())
 			{
 				Log.SysLogText(LogLevel.DEBUG, "Retrieved LIDAR info");

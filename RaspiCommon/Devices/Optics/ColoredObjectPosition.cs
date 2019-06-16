@@ -13,20 +13,20 @@ using RaspiCommon.GraphicalHelp;
 
 namespace RaspiCommon.Devices.Optics
 {
-	public class LEDPosition
+	public class ColoredObjectPosition
 	{
-		public static int ByteArraySize { get { return sizeof(UInt32) + PointD.ByteArraySize + sizeof(Double) + SizeExtensions.ByteArraySize + LEDCandidate.ByteArraySize; } }
+		public static int ByteArraySize { get { return sizeof(UInt32) + PointD.ByteArraySize + sizeof(Double) + SizeExtensions.ByteArraySize + ColoredObjectCandidate.ByteArraySize; } }
 
 		public Color Color { get; set; }
 		public PointD Location { get; set; }
 		public Double Bearing { get; set; }
 		public DateTime CreateTime { get; set; }
 		public Size Size { get; set; }
-		public LEDCandidate Candidate { get; set; }
+		public ColoredObjectCandidate Candidate { get; set; }
 
 		public Object Tag { get; set; }
 
-		public LEDPosition()
+		public ColoredObjectPosition()
 		{
 			Color = Color.Empty;
 			Location = PointD.Empty;
@@ -36,7 +36,7 @@ namespace RaspiCommon.Devices.Optics
 			CreateTime = DateTime.UtcNow;
 		}
 
-		public LEDPosition(byte[] serialized)
+		public ColoredObjectPosition(byte[] serialized)
 		{
 			using(BinaryReader br = new BinaryReader(new MemoryStream(serialized)))
 			{
@@ -44,7 +44,7 @@ namespace RaspiCommon.Devices.Optics
 				Location = new PointD(br.ReadBytes(PointD.ByteArraySize));
 				Bearing = br.ReadDouble();
 				Size = SizeExtensions.Deserialize(br);
-				Candidate = new LEDCandidate(br.ReadBytes(LEDCandidate.ByteArraySize));
+				Candidate = new ColoredObjectCandidate(br.ReadBytes(ColoredObjectCandidate.ByteArraySize));
 			}
 		}
 
@@ -68,9 +68,9 @@ namespace RaspiCommon.Devices.Optics
 		}
 	}
 
-	public class LEDPositionList : List<LEDPosition>
+	public class ColoredObjectPositionList : List<ColoredObjectPosition>
 	{
-		public int ByteArraySize { get { return LEDPosition.ByteArraySize * Count; } }
+		public int ByteArraySize { get { return ColoredObjectPosition.ByteArraySize * Count; } }
 
 		public List<PointD> Points
 		{
@@ -86,7 +86,7 @@ namespace RaspiCommon.Devices.Optics
 			byte[] serialized = new byte[ByteArraySize];
 			using(BinaryWriter bw = new BinaryWriter(new MemoryStream(serialized)))
 			{
-				foreach(LEDPosition position in this)
+				foreach(ColoredObjectPosition position in this)
 				{
 					bw.Write(position.Serialize());
 				}
@@ -97,7 +97,7 @@ namespace RaspiCommon.Devices.Optics
 		public override string ToString()
 		{
 			StringBuilder sb = new StringBuilder();
-			foreach(LEDPosition position in this)
+			foreach(ColoredObjectPosition position in this)
 			{
 				sb.AppendFormat("{0}\n", position.ToString());
 			}

@@ -96,11 +96,13 @@
     <Compile Include="Devices\MotorControl\ESC.cs" />
     <Compile Include="Devices\Optics\Camera.cs" />
     <Compile Include="Devices\Optics\ColorThreshold.cs" />
+    <Compile Include="Devices\Optics\LED.cs" />
+    <Compile Include="Devices\Optics\MJpegStreamerCamera.cs" />
     <Compile Include="Devices\Optics\RaspiCameraParameters.cs" />
     <Compile Include="Devices\Optics\RaspiCameraV2.cs" />
     <Compile Include="Devices\Optics\ImageAnalysis.cs" />
-    <Compile Include="Devices\Optics\LEDImageAnalysis.cs" />
-    <Compile Include="Devices\Optics\LEDPosition.cs" />
+    <Compile Include="Devices\Optics\SolidColorAnalysis.cs" />
+    <Compile Include="Devices\Optics\ColoredObjectPosition.cs" />
     <Compile Include="Devices\Optics\LEDTravelHistoryEntry.cs" />
     <Compile Include="Devices\Optics\MotionDaemonCamera.cs" />
     <Compile Include="Devices\Optics\NullCamera.cs" />
@@ -115,7 +117,7 @@
     <Compile Include="Devices\Compass\ICompass.cs" />
     <Compile Include="Devices\Locomotion\L298N_DC_TankTracks.cs" />
     <Compile Include="Devices\MotorControl\L298N_DC_MotorControl.cs" />
-    <Compile Include="GraphicalHelp\LEDCandidate.cs" />
+    <Compile Include="GraphicalHelp\ColoredObjectCandidate.cs" />
     <Compile Include="GraphicalHelp\MatEvaluation.cs" />
     <Compile Include="IWidgetCollection.cs" />
     <Compile Include="Network\RadarController.cs" />

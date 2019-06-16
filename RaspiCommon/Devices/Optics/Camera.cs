@@ -40,13 +40,14 @@ namespace RaspiCommon.Devices.Optics
 		#region Public Properties
 
 		public String LastSavedImageFileName { get; protected set; }
-		public Mat LastSavedImage { get; protected set; }
 		public DateTime LastSavedImageTime { get; protected set; }
 
 		public Double FieldOfViewHorizontal { get { return 53.0; } }
 		public Double FieldOfViewVertical { get { return 41.0; } }
 
 		public Double AngleOffset { get; set; }
+
+		public String SnapshotUrl { get; set; }
 
 		public RaspiCameraParameters Parameters { get; set; }
 
@@ -57,6 +58,15 @@ namespace RaspiCommon.Devices.Optics
 		protected String SaveNameEnd { get; set; }
 
 		public int ImageNumber { get; protected set; }
+
+		public Mat LastSavedImage { get; protected set; }
+
+		#endregion
+
+		#region Private Members
+
+		MutexLock _imageLock;
+		Mat _lastSavedImage;
 
 		#endregion
 
@@ -95,6 +105,8 @@ namespace RaspiCommon.Devices.Optics
 			ConvertTo = ImageType.Unknown;
 
 			SnapshotTaken += delegate {};
+
+			_imageLock = new MutexLock();
 
 			Interval = TimeSpan.FromSeconds(2);
 		}
@@ -219,6 +231,18 @@ namespace RaspiCommon.Devices.Optics
 			}
 			image.Save(outputFilename);
 			return true;
+		}
+
+		#endregion
+
+		#region Protected Utility Methods
+
+		protected void SaveLastMemoryImage(Mat image)
+		{
+			lock(_imageLock)
+			{
+				_lastSavedImage = image;
+			}
 		}
 
 		#endregion

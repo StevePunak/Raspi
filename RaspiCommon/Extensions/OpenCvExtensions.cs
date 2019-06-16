@@ -190,14 +190,14 @@ namespace RaspiCommon.Extensions
 			return new Rectangle(minX, minY, (maxX - minX) + 1, (maxY - minY) + 1);
 		}
 
-		public static bool FindLEDMatrix(this Mat bitmap, Color color, Size size, out LEDCandidateList candidates)
+		public static bool FindObjectMatrix(this Mat bitmap, Color color, Size size, out ObjectCandidateList candidates)
 		{
 			if(bitmap.NumberOfChannels > 1)
 			{
 				throw new ImageException("Can not FindMatrix with more than one color channel");
 			}
 
-			candidates = new LEDCandidateList();
+			candidates = new ObjectCandidateList();
 
 			int totalcount = CvInvoke.CountNonZero(bitmap);
 			if(totalcount > 999999)
@@ -218,15 +218,14 @@ namespace RaspiCommon.Extensions
 				for(row = 0;row < bitmap.Rows;row++)
 				{
 					byte[] rowArray = new byte[bitmap.Cols];
-					//Marshal.Copy()
 					for(col = 0;col < bitmap.Cols;col++, ptr++)
 					{
 						if(*ptr != 0 && row < bitmap.Rows - size.Height / 2 && col < bitmap.Cols - size.Width / 2)
 						{
 							if(candidates.Contains(new Point(col, row)) == false)
 							{
-								LEDCandidate candidate;
-								if(LEDCandidate.TryGetCandidate(bitmap, color, new Point(col, row), size, out candidate))
+								ColoredObjectCandidate candidate;
+								if(ColoredObjectCandidate.TryGetCandidate(bitmap, color, new Point(col, row), size, out candidate))
 								{
 									candidates.Add(candidate);
 								}
@@ -437,6 +436,11 @@ namespace RaspiCommon.Extensions
 			return new Mat();
 			//var outputImage = CvInvoke.Canny(inputImage, inputImage.Canny(400, 20);
 			//return outputImage.ToUMat().ToImage<Bgr, byte>();
+		}
+
+		public static void LoadFromByteArray(this Mat image, byte[] data, ImreadModes mode = ImreadModes.Unchanged)
+		{
+			CvInvoke.Imdecode(data, mode, image);
 		}
 
 	}

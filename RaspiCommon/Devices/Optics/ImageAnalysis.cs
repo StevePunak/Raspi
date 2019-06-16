@@ -14,15 +14,15 @@ namespace RaspiCommon.Devices.Optics
 		public int ByteArraySize { get { return sizeof(int) + sizeof(int) + sizeof(int) + UTF8.Length(FileNames) + LEDs.ByteArraySize + Candidates.ByteArraySize; } }
 
 		public List<String> FileNames { get; set; }
-		public LEDPositionList LEDs { get; set; }
-		public LEDCandidateList Candidates { get; set; }
+		public ColoredObjectPositionList LEDs { get; set; }
+		public ObjectCandidateList Candidates { get; set; }
 
 		public ImageAnalysis()
-			: this(new List<string>(), new LEDPositionList(), new LEDCandidateList())
+			: this(new List<string>(), new ColoredObjectPositionList(), new ObjectCandidateList())
 		{
 		}
 
-		public ImageAnalysis(List<String> filenames, LEDPositionList leds, LEDCandidateList candidates)
+		public ImageAnalysis(List<String> filenames, ColoredObjectPositionList leds, ObjectCandidateList candidates)
 		{
 			FileNames = filenames;
 			LEDs = leds;
@@ -45,12 +45,12 @@ namespace RaspiCommon.Devices.Optics
 				}
 				for(int x = 0;x < ledCount;x++)
 				{
-					LEDPosition led = new LEDPosition(br.ReadBytes(LEDPosition.ByteArraySize));
+					ColoredObjectPosition led = new ColoredObjectPosition(br.ReadBytes(ColoredObjectPosition.ByteArraySize));
 					LEDs.Add(led);
 				}
 				for(int x = 0;x < candidateCount;x++)
 				{
-					LEDCandidate candidate = new LEDCandidate(br.ReadBytes(LEDCandidate.ByteArraySize));
+					ColoredObjectCandidate candidate = new ColoredObjectCandidate(br.ReadBytes(ColoredObjectCandidate.ByteArraySize));
 					Candidates.Add(candidate);
 				}
 			}

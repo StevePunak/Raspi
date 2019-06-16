@@ -18,6 +18,7 @@ using RaspiCommon.Data.Entities;
 using RaspiCommon.Devices.MotorControl;
 using RaspiCommon.Devices.Optics;
 using RaspiCommon.Devices.RobotArms;
+using RaspiCommon.Devices.Spatial;
 using TrackBot.Spatial;
 using TrackBot.Tracks;
 using TrackBot.TTY;
@@ -60,7 +61,6 @@ namespace TrackBot
 			{
 				Defaults();
 				Console.WriteLine("{0}", Program.Config.CameraParameters);
-				Program.Config.Save();
 			}
 			catch(Exception e)
 			{
@@ -81,6 +81,8 @@ namespace TrackBot
 			Program.Config.CameraBearingOffset = 4;
 
 #endif
+			Program.Config.LidarComPort = "/dev/ttyS0";
+
 			Program.Config.ClawRotationPin = GpioPin.Pin18;
 			Program.Config.ClawLeftPin = GpioPin.Pin22;
 			Program.Config.ClawRightPin = GpioPin.Pin27;
@@ -94,6 +96,10 @@ namespace TrackBot
 			Program.Config.ClawRightPinMax = 2400;
 			Program.Config.ClawPinMin = 1000;
 			Program.Config.ClawPinMax = 2000;
+
+			Program.Config.SnapshotUrl = "http://127.0.0.1:8085/?action=snapshot";
+
+			Program.Config.Save();
 #if zero
 			Program.Config.CameraParameters.SnapshotDelay = TimeSpan.FromMilliseconds(1500);
 #endif

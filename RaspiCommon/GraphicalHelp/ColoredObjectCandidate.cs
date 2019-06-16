@@ -17,7 +17,7 @@ using RaspiCommon.Extensions;
 
 namespace RaspiCommon.GraphicalHelp
 {
-	public class LEDCandidate
+	public class ColoredObjectCandidate
 	{
 		public static int ByteArraySize { get { return ColorExtensions.ByteArraySize + PointExtensions.ByteArraySize + RectangleExtensions.ByteArraySize + sizeof(Double) + sizeof(int);  } }
 
@@ -27,7 +27,7 @@ namespace RaspiCommon.GraphicalHelp
 		public Double Concentration { get; set; }
 		public int CountNonZero { get; set; }
 
-		public LEDCandidate(Color color, Point center, Rectangle boundingRectangle, Double concentration, int countNonZero)
+		public ColoredObjectCandidate(Color color, Point center, Rectangle boundingRectangle, Double concentration, int countNonZero)
 		{
 			Color = color;
 			Center = center;
@@ -36,7 +36,7 @@ namespace RaspiCommon.GraphicalHelp
 			CountNonZero = countNonZero;
 		}
 
-		public LEDCandidate(byte[] serialized)
+		public ColoredObjectCandidate(byte[] serialized)
 		{
 			using(BinaryReader br = new BinaryReader(new MemoryStream(serialized)))
 			{
@@ -62,9 +62,9 @@ namespace RaspiCommon.GraphicalHelp
 			return serialized;
 		}
 
-		public static bool TryGetCandidate(Mat image, Color color, Point startPoint, Size chunkSize, out LEDCandidate candidate)
+		public static bool TryGetCandidate(Mat image, Color color, Point startPoint, Size chunkSize, out ColoredObjectCandidate candidate)
 		{
-			image.Save(@"c:\pub\tmp\junk\junk.png");
+			//image.Save(@"c:\pub\tmp\junk\junk.png");
 			ImageChunkList chunks = new ImageChunkList(image.Size);
 
 			ExpandingSearchInfo searchInfo = new ExpandingSearchInfo(image, startPoint, chunkSize);
@@ -102,7 +102,7 @@ namespace RaspiCommon.GraphicalHelp
 						Mat roi = new Mat(image, rect);
 						Double nonZero = CvInvoke.CountNonZero(roi);
 						Double ratio = nonZero / (Double)(rect.Height * rect.Width);
-						candidate = new LEDCandidate(color, rect.Centroid().ToPoint(), rect, ratio, (int)nonZero);
+						candidate = new ColoredObjectCandidate(color, rect.Centroid().ToPoint(), rect, ratio, (int)nonZero);
 					}
 					break;
 				}
@@ -311,16 +311,16 @@ namespace RaspiCommon.GraphicalHelp
 		}
 	}
 
-	public class LEDCandidateList : List<LEDCandidate>
+	public class ObjectCandidateList : List<ColoredObjectCandidate>
 	{
-		public int ByteArraySize { get { return LEDCandidate.ByteArraySize * Count; } }
+		public int ByteArraySize { get { return ColoredObjectCandidate.ByteArraySize * Count; } }
 
 		public byte[] Serialize()
 		{
 			byte[] serialized = new byte[ByteArraySize];
 			using(BinaryWriter bw = new BinaryWriter(new MemoryStream(serialized)))
 			{
-				foreach(LEDCandidate candidate in this)
+				foreach(ColoredObjectCandidate candidate in this)
 				{
 					bw.Write(candidate.Serialize());
 				}
@@ -331,7 +331,7 @@ namespace RaspiCommon.GraphicalHelp
 		public bool ContainsAny(IEnumerable<Point> points)
 		{
 			bool result = false;
-			foreach(LEDCandidate candidate in this)
+			foreach(ColoredObjectCandidate candidate in this)
 			{
 				if(candidate.BoundingRectangle.ContainsAny(points))
 				{
@@ -345,7 +345,7 @@ namespace RaspiCommon.GraphicalHelp
 		public bool ContainsAny(IEnumerable<PointD> points)
 		{
 			bool result = false;
-			foreach(LEDCandidate candidate in this)
+			foreach(ColoredObjectCandidate candidate in this)
 			{
 				if(candidate.BoundingRectangle.ContainsAny(points))
 				{
@@ -356,15 +356,15 @@ namespace RaspiCommon.GraphicalHelp
 			return result;
 		}
 
-		public bool TryGetCandidateAtPoint(PointD point, out LEDCandidate candidate)
+		public bool TryGetCandidateAtPoint(PointD point, out ColoredObjectCandidate candidate)
 		{
 			return TryGetCandidateAtPoint(new List<PointD>() { point }, out candidate);
 		}
 
-		public bool TryGetCandidateAtPoint(IEnumerable<PointD> points, out LEDCandidate candidate)
+		public bool TryGetCandidateAtPoint(IEnumerable<PointD> points, out ColoredObjectCandidate candidate)
 		{
 			candidate = null;
-			foreach(LEDCandidate c in this)
+			foreach(ColoredObjectCandidate c in this)
 			{
 				if(c.BoundingRectangle.ContainsAny(points))
 				{
@@ -383,7 +383,7 @@ namespace RaspiCommon.GraphicalHelp
 		public bool Contains(Point point)
 		{
 			bool result = false;
-			foreach(LEDCandidate candidate in this)
+			foreach(ColoredObjectCandidate candidate in this)
 			{
 				if(candidate.BoundingRectangle.Contains(point))
 				{
@@ -396,7 +396,7 @@ namespace RaspiCommon.GraphicalHelp
 
 		public void DumpToLog()
 		{
-			foreach(LEDCandidate candidate in this)
+			foreach(ColoredObjectCandidate candidate in this)
 			{
 				Log.SysLogText(LogLevel.DEBUG, "{0}", candidate);
 			}

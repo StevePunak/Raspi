@@ -16,17 +16,18 @@ namespace TrackBot.TTY
 
 		public override bool Execute(List<string> commandParts)
 		{
-			LEDImageAnalysis.Width = 800;
-			LEDImageAnalysis.Height = 600;
+			SolidColorAnalysis.Width = 800;
+			SolidColorAnalysis.Height = 600;
 
-			Widgets.Instance.LEDImageAnalysis.AnalyzeImage();
+			Widgets.Instance.LEDImageAnalysis.AnalyzeImage(LED.LEDSize);
 
 			List<String> outputFiles;
-			LEDPositionList leds;
-			LEDCandidateList candidates;
-			LEDImageAnalysis.AnalyzeImage(
+			ColoredObjectPositionList leds;
+			ObjectCandidateList candidates;
+			SolidColorAnalysis.AnalyzeImage(
 				Widgets.Instance.LEDImageAnalysis.LastImageAnalysisFile,
-				LEDImageAnalysis.AllLEDColors,
+				SolidColorAnalysis.AllLEDColors,
+				LED.LEDSize,
 				Widgets.Instance.Server.ImageDirectory, 
 				out outputFiles, out leds, out candidates);
 			Widgets.Instance.Server.PublishImage(outputFiles);

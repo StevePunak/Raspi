@@ -42,39 +42,61 @@ namespace TrackBotCommon.InputDevices.GamePads
 
 		protected override bool OnStart()
 		{
-			if(GamePadType == GamePadType.XBoxOneController)
-			{
-				Controller[] controllers = new Controller[] { new Controller(UserIndex.One), new Controller(UserIndex.Two), new Controller(UserIndex.Three), new Controller(UserIndex.Four) };
+			return true;
+		}
 
-				// Get 1st controller available
-				XBoxDevice = null;
+		private void ConnectController()
+		{
+			Controller[] controllers = new Controller[] { new Controller(UserIndex.One), new Controller(UserIndex.Two), new Controller(UserIndex.Three), new Controller(UserIndex.Four) };
+
+			// Get 1st controller available
+			XBoxDevice = null;
+			try
+			{
 				foreach(Controller selectControler in controllers)
 				{
 					if(selectControler.IsConnected)
 					{
 						XBoxDevice = selectControler;
+						Connected = true;
+						Interval = TimeSpan.FromMilliseconds(50);
 						break;
 					}
 				}
 			}
-			return true;
+			catch(SharpDX.SharpDXException)
+			{
+				Connected = false;
+				Interval = TimeSpan.FromSeconds(5);
+			}
+			if(XBoxDevice == null)
+			{
+				Connected = false;
+				Interval = TimeSpan.FromSeconds(5);
+			}
 		}
 
 		protected override bool OnRun()
 		{
-			// Poll events from joystick
-			XState state = XBoxDevice.GetState();
-			if(_currentState.PacketNumber != state.PacketNumber || DateTime.UtcNow > _lastInterpretTime)
+			if(Connected)
 			{
-				if(_currentState.PacketNumber != state.PacketNumber)
+				// Poll events from joystick
+				XState state = XBoxDevice.GetState();
+				if(_currentState.PacketNumber != state.PacketNumber || DateTime.UtcNow > _lastInterpretTime)
 				{
-					_lastPacketTime = DateTime.UtcNow;
+					if(_currentState.PacketNumber != state.PacketNumber)
+					{
+						_lastPacketTime = DateTime.UtcNow;
+					}
+					_currentState = state;
+					InterpretState();
+					_lastInterpretTime = DateTime.Now;
 				}
-				_currentState = state;
-				InterpretState();
-				_lastInterpretTime = DateTime.Now;
 			}
-
+			else
+			{
+				ConnectController();
+			}
 			return true;
 		}
 

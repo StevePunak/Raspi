@@ -33,6 +33,7 @@ using SharpDX.DirectInput;
 using TrackBotCommon;
 using TrackBotCommon.InputDevices;
 using TrackBotCommon.InputDevices.GamePads;
+using TrackBotCommon.Testing;
 
 namespace Testing
 {
@@ -47,30 +48,33 @@ namespace Testing
 		{
 			OpenLog();
 
-			LidarTest();
+			new LidarTest();
+			//new SerialTest();
+			//new ImageTest();
+			//new FrameGrabTest();
+			//ConvertFiles();
+			//ImageClassify();
+			//LidarTest();
 			//ServoTest();
 			//XBoxTest();
 			//JoystickTest();
-//			VideoTest();
-//			MqttTest();
-//			PointCloudTest();
-//			EMGUTest();
+			//			VideoTest();
+			//			MqttTest();
+			//			PointCloudTest();
+			//			EMGUTest();
 
-//			RunLidar();
+			//RunLidar();
+			Console.WriteLine("Done");
 		}
 
-		private static void LidarTest()
+		private static void ConvertFiles()
 		{
-			RPLidar lidar = new RPLidar("COM5", 360.0/4);
-			lidar.Start();
-			lidar.GetDeviceInfo();
-			lidar.StartScan();
-
-			Thread.Sleep(30000);
+			ImageConvert.Convert(@"c:\pub\classify\baton\positive", "*.jpg", @"c:\pub\classify\baton\positive\tmp");
 		}
 
 		static void ImageClassify()
 		{
+			ClassifierTest test = new ClassifierTest(@"c:\pub\tmp\image.jpg");
 		}
 
 		static void ServoTest()
@@ -341,108 +345,18 @@ namespace Testing
 		{
 
 //			RPLidar lidar = new RPLidar("/dev/ttyUSB0");
-			RPLidar lidar = new RPLidar("COM5", .25);
+			RPLidar lidar = new RPLidar("/dev/ttyS0", .25);
 			lidar.Start();
 
-#if zero
-			{
-			{
-				LidarCommand command = new ResetCommand();
-				lidar.SendCommand(command);
+			lidar.GetDeviceInfo();
+			lidar.StartScan();
 
-				LidarResponse response;
-				if(lidar.TryGetResponse(TimeSpan.FromSeconds(1), out response))
-				{
-					Log.SysLogText(LogLevel.DEBUG, "Reset Response successful");
-				}
-				else
-				{
-					Log.SysLogText(LogLevel.DEBUG, "Reset Response Unsuccessful");
-				}
-			}
-			Thread.Sleep(1000);
 
-			{
-				LidarCommand command = new GetSampleRateCommand();
-				lidar.SendCommand(command);
+			Thread.Sleep(30000);
 
-				LidarResponse response;
-				if(lidar.TryGetResponse(TimeSpan.FromSeconds(1), out response))
-				{
-					Log.SysLogText(LogLevel.DEBUG, "Response successful");
-				}
-				else
-				{
-					Log.SysLogText(LogLevel.DEBUG, "Response Unsuccessful");
-				}
-			}
-			Thread.Sleep(1000);
+			lidar.StopScan();
 
-			{
-				LidarCommand command = new GetDeviceInfoCommand();
-				lidar.SendCommand(command);
-
-				LidarResponse response;
-				if(lidar.TryGetResponse(TimeSpan.FromSeconds(1), out response))
-				{
-					Log.SysLogText(LogLevel.DEBUG, "Next Response successful");
-				}
-			}
-			Thread.Sleep(1000);
-				lidar.SendCommand(new StartExpressScanCommand());
-
-				Log.SysLogText(LogLevel.DEBUG, "I'm anout to die!!");
-				Thread.Sleep(100);
-//				Environment.FailFast("I'm dying");
-//				return;
-				LidarResponse response;
-
-				if(lidar.TryGetResponse(TimeSpan.FromSeconds(10), out response))
-				{
-					Log.SysLogText(LogLevel.DEBUG, "Response successful");
-				}
-			}
-#else
-			{
-				lidar.SendCommand(new StartScanCommand());
-
-				Thread.Sleep(100);
-				LidarResponse response;
-
-				if(lidar.TryGetResponse(TimeSpan.FromSeconds(10), out response))
-				{
-					Log.SysLogText(LogLevel.DEBUG, "Response successful");
-				}
-			}
-#endif
-
-			Thread.Sleep(1000);
-			Console.WriteLine("Sending stop");
-			{
-				LidarCommand command = new StopCommand();
-				lidar.SendCommand(command);
-
-				LidarResponse response;
-				if(lidar.TryGetResponse(TimeSpan.FromSeconds(1), out response))
-				{
-					Log.SysLogText(LogLevel.DEBUG, "Stop Response successful");
-				}
-			}
-
-			Thread.Sleep(1000);
-			Console.WriteLine("Sending stop motor");
-			{
-				LidarCommand command = new SetMotorPwm(0);
-				lidar.SendCommand(command);
-
-				LidarResponse response;
-				if(lidar.TryGetResponse(TimeSpan.FromSeconds(1), out response))
-				{
-					Log.SysLogText(LogLevel.DEBUG, "Stop Response successful");
-				}
-			}
-
-			Thread.Sleep(5000);
+			lidar.Stop();
 
 		}
 

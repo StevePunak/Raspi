@@ -289,7 +289,7 @@ namespace TrackBot.Spatial
 			return tries > 0;
 		}
 
-		protected bool TryGetLEDPosition(Color color,  out LEDPosition ledPosition)
+		protected bool TryGetLEDPosition(Color color,  out ColoredObjectPosition ledPosition)
 		{
 			ledPosition = null;
 			Mat image;
@@ -298,7 +298,7 @@ namespace TrackBot.Spatial
 				throw new ActivityException("Could not get new image");
 			}
 
-			Widgets.Instance.LEDImageAnalysis.AnalyzeImage(image, color);
+			Widgets.Instance.LEDImageAnalysis.AnalyzeImage(image, color, LED.LEDSize);
 
 			if(Widgets.Instance.LEDImageAnalysis.HasColor(color))
 			{

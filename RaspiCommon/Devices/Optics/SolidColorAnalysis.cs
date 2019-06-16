@@ -22,7 +22,7 @@ using RaspiCommon.Network;
 
 namespace RaspiCommon.Devices.Optics
 {
-	public class LEDImageAnalysis
+	public class SolidColorAnalysis
 	{
 		public static readonly List<Color> AllLEDColors = new List<Color>() { Color.Blue, Color.Red, Color.Green };
 
@@ -41,20 +41,20 @@ namespace RaspiCommon.Devices.Optics
 		public static ColorThresholdList ColorThresholds { get; private set; }
 
 		public bool HasGreen { get { return HasColor(Color.Green); } }
-		public LEDPosition GreenLED { get { return GetColor(Color.Green); } }
+		public ColoredObjectPosition GreenLED { get { return GetColor(Color.Green); } }
 
 		public bool HasRed { get { return HasColor(Color.Red); } }
-		public LEDPosition RedLED { get { return GetColor(Color.Red); } }
+		public ColoredObjectPosition RedLED { get { return GetColor(Color.Red); } }
 
 		public bool HasBlue { get { return HasColor(Color.Blue); } }
-		public LEDPosition BlueLED { get { return GetColor(Color.Blue); } }
+		public ColoredObjectPosition BlueLED { get { return GetColor(Color.Blue); } }
 
-		public LEDPositionList LEDs { get; set; }
-		public LEDCandidateList candidates { get; set; }
+		public ColoredObjectPositionList ColorObjects { get; set; }
+		public ObjectCandidateList candidates { get; set; }
 
 		public static bool DebugAnalysis { get; set; }
 
-		static LEDImageAnalysis()
+		static SolidColorAnalysis()
 		{
 			ColorThresholds = new ColorThresholdList()
 			{
@@ -65,7 +65,7 @@ namespace RaspiCommon.Devices.Optics
 			DebugAnalysis = false;
 		}
 
-		public LEDImageAnalysis(Camera camera)
+		public SolidColorAnalysis(Camera camera)
 		{
 			Camera = camera;
 			camera.SnapshotTaken += OnCameraSnapshotTaken;
@@ -74,23 +74,28 @@ namespace RaspiCommon.Devices.Optics
 			Height = Camera.Parameters.Height;
 			PixelsPerDegree = Width / Camera.FieldOfViewHorizontal;
 
-			LEDs = new LEDPositionList();
+			ColorObjects = new ColoredObjectPositionList();
 			Compass = new NullCompass();
 
 			CameraImagesAnalyzed += delegate {};
 		}
 
-		public void AnalyzeImage(Mat image = null)
+		public void AnalyzeImage(Size size)
 		{
-			AnalyzeImage(image, AllLEDColors);
+			AnalyzeImage(null, size);
 		}
 
-		public void AnalyzeImage(Mat image, Color color)
+		public void AnalyzeImage(Mat image, Size size)
 		{
-			AnalyzeImage(image, new List<Color>() { color });
+			AnalyzeImage(image, AllLEDColors, size);
 		}
 
-		public void AnalyzeImage(Mat image, List<Color> colors)
+		public void AnalyzeImage(Mat image, Color color, Size size)
+		{
+			AnalyzeImage(image, new List<Color>() { color }, size);
+		}
+
+		public void AnalyzeImage(Mat image, List<Color> colors, Size size)
 		{
 			try
 			{
@@ -114,14 +119,14 @@ namespace RaspiCommon.Devices.Optics
 				}
 
 				List<String> outputFiles;
-				LEDPositionList leds;
-				LEDCandidateList candidates;
-				AnalyzeImage(image, colors, ImageAnalysisDirectory, out outputFiles, out leds, out candidates);
+				ColoredObjectPositionList coloredObjects;
+				ObjectCandidateList candidates;
+				AnalyzeImage(image, colors, size, ImageAnalysisDirectory, out outputFiles, out coloredObjects, out candidates);
 
-				LEDs = leds;
+				ColorObjects = coloredObjects;
 
 				List<String> trimmedFilenames = outputFiles.GetFileNames();
-				ImageAnalysis analysis = new ImageAnalysis(trimmedFilenames, leds, candidates);
+				ImageAnalysis analysis = new ImageAnalysis(trimmedFilenames, coloredObjects, candidates);
 
 				CameraImagesAnalyzed(analysis);
 
@@ -134,35 +139,35 @@ namespace RaspiCommon.Devices.Optics
 		}
 
 		/// <summary>
-		/// Analyze the given image for LEDs
+		/// Analyze the given image for ColoredObjects
 		/// </summary>
 		/// <param name="filename">File containing full color image</param>
-		/// <param name="colors">LED colors to look for</param>
+		/// <param name="colors">Object colors to look for</param>
 		/// <param name="outputDirectory">Directory to put red.bmp, green.mbp and blue.bmp</param>
 		/// <param name="lowThreshold">The minimum value for the search color</param>
 		/// <param name="highThreshold">The max amount of other colors than the search color which will be allowed</param>
 		/// <param name="outputFilenames">Output for the saved files</param>
-		/// <param name="leds">Output for found LEDs</param>
-		public static void AnalyzeImage(String filename, List<Color> colors, String outputDirectory, out List<String> outputFilenames, out LEDPositionList leds, out LEDCandidateList candidates)
+		/// <param name="coloredObjects">Output for found LEDs</param>
+		public static void AnalyzeImage(String filename, List<Color> colors, Size size, String outputDirectory, out List<String> outputFilenames, out ColoredObjectPositionList coloredObjects, out ObjectCandidateList candidates)
 		{
 			Mat image = new Mat(filename);
-			AnalyzeImage(image, colors, outputDirectory, out outputFilenames, out leds, out candidates);
+			AnalyzeImage(image, colors, size, outputDirectory, out outputFilenames, out coloredObjects, out candidates);
 		}
 
 		/// <summary>
-		/// Analyze the given image for LEDs
+		/// Analyze the given image for colored objects
 		/// </summary>
 		/// <param name="filename">File containing full color image</param>
-		/// <param name="colors">LED colors to look for</param>
+		/// <param name="colors">Object colors to look for</param>
 		/// <param name="outputDirectory">Directory to put red.bmp, green.mbp and blue.bmp</param>
 		/// <param name="lowThreshold">The minimum value for the search color</param>
 		/// <param name="highThreshold">The max amount of other colors than the search color which will be allowed</param>
 		/// <param name="outputFilenames">Output for the saved files</param>
-		/// <param name="leds">Output for found LEDs</param>
-		public static void AnalyzeImage(Mat image, List<Color> colors, String outputDirectory, out List<String> outputFilenames, out LEDPositionList leds, out LEDCandidateList candidates)
+		/// <param name="coloredObjects">Output for found LEDs</param>
+		public static void AnalyzeImage(Mat image, List<Color> colors, Size size, String outputDirectory, out List<String> outputFilenames, out ColoredObjectPositionList coloredObjects, out ObjectCandidateList candidates)
 		{
 			outputFilenames = new List<string>();
-			leds = new LEDPositionList();
+			coloredObjects = new ColoredObjectPositionList();
 
 			if(Directory.Exists(outputDirectory) == false)
 			{
@@ -187,8 +192,8 @@ namespace RaspiCommon.Devices.Optics
 				Mat mat = SplitColor(image, outputDirectory, color, ref outputFilenames);
 				mats.Add(color, mat);
 			}
-			candidates = new LEDCandidateList();
-			leds = FindLEDs(mats, ref candidates);
+			candidates = new ObjectCandidateList();
+			coloredObjects = FindColoredObjects(mats, size, ref candidates);
 		}
 
 		/// <summary>
@@ -229,15 +234,15 @@ namespace RaspiCommon.Devices.Optics
 			return outputImage;
 		}
 
-		public static LEDPositionList FindLEDs(Dictionary<Color, Mat> mats, ref LEDCandidateList candidates)
+		public static ColoredObjectPositionList FindColoredObjects(Dictionary<Color, Mat> mats, Size size, ref ObjectCandidateList candidates)
 		{
-			LEDPositionList leds = new LEDPositionList();
-			LEDPosition position;
+			ColoredObjectPositionList leds = new ColoredObjectPositionList();
+			ColoredObjectPosition position;
 
 			foreach(Color color in mats.Keys)
 			{
-				LEDCandidateList additionalCandidates;
-				if(TryFindPosition(mats[color], color, out additionalCandidates, out position))
+				ObjectCandidateList additionalCandidates;
+				if(TryFindPosition(mats[color], color, size, out additionalCandidates, out position))
 				{
 					leds.Add(position);
 					candidates.AddRange(additionalCandidates);
@@ -246,30 +251,30 @@ namespace RaspiCommon.Devices.Optics
 			return leds;
 		}
 
-		public static bool TryFindPosition(Mat bitmap, Color color, out LEDCandidateList candidates, out LEDPosition position)
+		public static bool TryFindPosition(Mat bitmap, Color color, Size size, out ObjectCandidateList candidates, out ColoredObjectPosition position)
 		{
 			position = null;
-			candidates = new LEDCandidateList();
+			candidates = new ObjectCandidateList();
 
-			LEDCandidateList allCandidates;
-			if(bitmap.FindLEDMatrix(color, new Size(6, 6), out allCandidates))
+			ObjectCandidateList allCandidates;
+			if(bitmap.FindObjectMatrix(color, size, out allCandidates))
 			{
 				candidates = allCandidates;
-				LEDCandidate winner = candidates.Find(c => c.Concentration == allCandidates.Max(c1 => c1.Concentration));
+				ColoredObjectCandidate winner = candidates.Find(c => c.Concentration == allCandidates.Max(c1 => c1.Concentration));
 				if(winner == null)
 				{
 					Log.SysLogText(LogLevel.DEBUG, "THERE IS NO WINNER in {0} elements", allCandidates.Count);
 					allCandidates.DumpToLog();
 				}
-				position = new LEDPosition()
+				position = new ColoredObjectPosition()
 				{
 					Color = color,
 					Location = new PointD(winner.Center),
-					Bearing = Compass.Bearing.AddDegrees((winner.Center.X - (Width / 2)) / PixelsPerDegree + BearingOffset),
+					Bearing = Compass != null ? Compass.Bearing.AddDegrees((winner.Center.X - (Width / 2)) / PixelsPerDegree + BearingOffset) : 0,
 					Size = winner.BoundingRectangle.Size,
 					Candidate = winner,
 				};
-				Log.SysLogText(LogLevel.DEBUG, "Made LED position {0} w/bearing offset {1}", position, BearingOffset.ToAngleString());
+				Log.SysLogText(LogLevel.DEBUG, "Made object position {0} w/bearing offset {1}", position, BearingOffset.ToAngleString());
 			}
 
 			return position != null;
@@ -281,7 +286,7 @@ namespace RaspiCommon.Devices.Optics
 			bool result = false;
 			if(HasColor(color))
 			{
-				LEDPosition led = GetColor(color);
+				ColoredObjectPosition led = GetColor(color);
 
 				Double x = led.Location.X;
 				bearing = fromBearing.AddDegrees((x - (Width / 2)) / PixelsPerDegree);
@@ -296,12 +301,12 @@ namespace RaspiCommon.Devices.Optics
 
 		public bool HasColor(Color color)
 		{
-			return LEDs.Find(l => l.Color == color) != null;
+			return ColorObjects.Find(l => l.Color == color) != null;
 		}
 
-		public LEDPosition GetColor(Color color)
+		public ColoredObjectPosition GetColor(Color color)
 		{
-			return LEDs.Find(l => l.Color == color);
+			return ColorObjects.Find(l => l.Color == color);
 		}
 
 		public static void SetThreshold(Color color, int minimumValue, int maxOtherColorValue)
@@ -313,6 +318,5 @@ namespace RaspiCommon.Devices.Optics
 		{
 			ColorThresholds[threshold.Color] = threshold;
 		}
-
 	}
 }

@@ -9,6 +9,23 @@ namespace KanoopCommon.Extensions
 {
 	public static class DirectoryExtensions
 	{
+		public static String GetNextNumberedFileName(String directory, String prefix, String extension, int numberOfZeros = 1)
+		{
+			String ret = String.Empty;
+			int max = numberOfZeros * 10;
+			for(int x = 1;x < 1000;x++)
+			{
+				String format = x.ToString().PadLeft(numberOfZeros, '0');
+				String filename = String.Format("{0}{1}{2}", prefix, format, extension);
+				if(File.Exists(Path.Combine(directory, filename)) == false)
+				{
+					ret = Path.Combine(directory, filename);
+					break;
+				}
+			}
+			return ret;
+		}
+
 		public static String GetParent(String originalDirectory, int levelsBack = 1)
 		{
 			String returnValue = originalDirectory;

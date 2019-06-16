@@ -78,7 +78,7 @@ namespace TrackBot
 		public MeArm RobotArm { get; private set; }
 
 		public Camera Camera { get; private set; }
-		public LEDImageAnalysis LEDImageAnalysis { get; private set; }
+		public SolidColorAnalysis LEDImageAnalysis { get; private set; }
 
 		static Widgets _instance;
 		public static Widgets Instance
@@ -188,22 +188,24 @@ namespace TrackBot
 
 		private void StartCamera()
 		{
-			Log.SysLogText(LogLevel.DEBUG, "INIT WIDGETS PARAMETERS: {0}", Program.Config.CameraParameters);
-			Camera = new MotionDaemonCamera()
+			Log.SysLogText(LogLevel.DEBUG, "INIT WIDGETS CAMERA PARAMETERS: {0}", Program.Config.CameraParameters);
+			Camera = new MJpegStreamerCamera()
 			{
 				ConvertTo = ImageType.Bitmap,
 				Parameters = Program.Config.CameraParameters,
+				SnapshotUrl = Program.Config.SnapshotUrl,
 			};
-			LEDImageAnalysis = new LEDImageAnalysis(Camera);
-			LEDImageAnalysis.SetThreshold(Program.Config.BlueThresholds);
-			LEDImageAnalysis.SetThreshold(Program.Config.GreenThresholds);
-			LEDImageAnalysis.SetThreshold(Program.Config.RedThresholds);
-			LEDImageAnalysis.BearingOffset = Program.Config.CameraBearingOffset;
-			LEDImageAnalysis.Compass = Compass;
+			LEDImageAnalysis = new SolidColorAnalysis(Camera);
+			SolidColorAnalysis.SetThreshold(Program.Config.BlueThresholds);
+			SolidColorAnalysis.SetThreshold(Program.Config.GreenThresholds);
+			SolidColorAnalysis.SetThreshold(Program.Config.RedThresholds);
+			SolidColorAnalysis.BearingOffset = Program.Config.CameraBearingOffset;
+			SolidColorAnalysis.Compass = Compass;
 			LEDImageAnalysis.CameraImagesAnalyzed += OnCameraImagesAnalyzed;
 			Log.SysLogText(LogLevel.DEBUG, "Setting dir to '{0}'", Program.Config.RemoteImageDirectory);
-			LEDImageAnalysis.ImageAnalysisDirectory = Program.Config.RemoteImageDirectory;
+			SolidColorAnalysis.ImageAnalysisDirectory = Program.Config.RemoteImageDirectory;
 			Camera.Start();
+			Camera.AutoSnap = true;
 			CommandServer.RaspiCameraParameters += OnRaspiCameraParametersReceived;
 		}
 

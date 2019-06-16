@@ -88,12 +88,6 @@
     <Compile Include="ChooseBotForm.Designer.cs">
       <DependentUpon>ChooseBotForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="JoystickControl.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="JoystickControl.Designer.cs">
-      <DependentUpon>JoystickControl.cs</DependentUpon>
-    </Compile>
     <Compile Include="LiveView.cs">
       <SubType>Component</SubType>
     </Compile>
@@ -123,9 +117,6 @@
     </Compile>
     <EmbeddedResource Include="ChooseBotForm.resx">
       <DependentUpon>ChooseBotForm.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="JoystickControl.resx">
-      <DependentUpon>JoystickControl.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="PreferencesForm.resx">
       <DependentUpon>PreferencesForm.cs</DependentUpon>

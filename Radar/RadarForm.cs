@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Data;
 using System.Diagnostics;
 using System.Drawing;
+using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -44,6 +45,7 @@ using SharpDX.DirectInput;
 using TrackBotCommon.Environs;
 using TrackBotCommon.InputDevices;
 using TrackBotCommon.InputDevices.GamePads;
+using TrackBotCommon.Testing;
 
 namespace Radar
 {
@@ -127,6 +129,13 @@ namespace Radar
 		GamePadBase _gamepad;
 		ClawControl _clawControl;
 		SpeedAndBearing _speedAndBearing;
+		bool _classifyGettingVideo;
+		bool _grabbingImages;
+		bool _selectingClassifyImage;
+		Bitmap _classifierCleanImage;
+		Point _classifySelectAnchor;
+		Rectangle _classifySelectedRectangle;
+		DateTime _lastGrabTime;
 
 		public RadarForm()
 		{
@@ -173,8 +182,6 @@ namespace Radar
 
 				textCommand.Select();
 				tabAnalysis.SelectedIndex = Program.Config.LastAnalyticsTabIndex;
-				picWorkBitmap.Size = tabPageAnalysis.Size;
-				picWorkBitmap.Location = Point.Empty;
 
 				textAnalysisCoordinates.Text = String.Empty;
 
@@ -194,8 +201,8 @@ namespace Radar
 				_mqqtController.SendPercentage(MqttTypes.ArmClawTopic, 50);
 
 				_gamepad = GamePadBase.Create(Program.Config.GamePadType);
-				_gamepad.X.Continuous = true;
-				_gamepad.B.Continuous = true;
+				_gamepad.LeftIndex.Continuous = true;
+				_gamepad.RightIndex.Continuous = true;
 				_gamepad.GamepadEvent += OnGamepadEvent;
 				_gamepad.HatChanged += OnGampadHatChanged;
 				_gamepad.XButtonChanged += OnGamepadXButtonChanged;
@@ -209,6 +216,9 @@ namespace Radar
 				_gamepad.LeftTriggerChanged += OnGamepadLeftTriggerChanged;
 				_gamepad.RightTriggerChanged += OnGampadRightTriggerChanged;
 				_gamepad.Start();
+
+				_classifyGettingVideo = true;
+				btnStartStop.Text = "Stop";
 
 				_layoutComplete = true;
 			}
@@ -477,7 +487,7 @@ namespace Radar
 				if(tabPage.Tag is Mat && analysis.LEDs.Count > 0)
 				{
 					Mat image = tabPage.Tag as Mat;
-					foreach(LEDPosition led in analysis.LEDs)
+					foreach(ColoredObjectPosition led in analysis.LEDs)
 					{
 						image.DrawCircleCross(led.Location, 6, led.Color);
 
@@ -539,9 +549,9 @@ namespace Radar
 			}
 		}
 
-		void DrawLEDPositions(Mat image, LEDPositionList leds, LEDCandidateList candidates)
+		void DrawLEDPositions(Mat image, ColoredObjectPositionList leds, ObjectCandidateList candidates)
 		{
-			foreach(LEDPosition led in leds)
+			foreach(ColoredObjectPosition led in leds)
 			{
 				Size size = led.Size != Size.Empty ? led.Size : new Size(20, 20);
 				size = size.Grow(10);
@@ -549,14 +559,14 @@ namespace Radar
 				led.Tag = rectangle;
 				image.DrawRectangle(rectangle, led.Color, 1);
 
-				LEDCandidate candidate;
+				ColoredObjectCandidate candidate;
 				if(candidates.TryGetCandidateAtPoint(led.Location, out candidate))
 				{
 					DrawTextForRectangle(image, String.Format("{0:0.000}", candidate.Concentration), candidate.BoundingRectangle, FontFace.HersheyPlain, Color.Yellow, .5);
 				}
 			}
 
-			foreach(LEDCandidate candidate in candidates)
+			foreach(ColoredObjectCandidate candidate in candidates)
 			{
 				if(candidate.BoundingRectangle.ContainsAny(leds.Points))
 				{
@@ -771,7 +781,17 @@ namespace Radar
 
 		private void OnStream_NewFrame(object sender, NewFrameEventArgs eventArgs)
 		{
-			pictureTempVideo.BackgroundImage = eventArgs.Frame.Clone() as Bitmap;
+			picVideo.BackgroundImage = eventArgs.Frame.Clone() as Bitmap;
+			if(_classifyGettingVideo)
+			{
+				picClassifer.BackgroundImage = picVideo.BackgroundImage.Clone() as Bitmap;
+				if(_grabbingImages && DateTime.UtcNow > _lastGrabTime + TimeSpan.FromSeconds(5))
+				{
+					String saveFile = DirectoryExtensions.GetNextNumberedFileName(@"c:\pub\classify\baton\positive\tmp", "positive", ".png", 4);
+					eventArgs.Frame.Save(saveFile, ImageFormat.Png);
+					_lastGrabTime = DateTime.UtcNow;
+				}
+			}
 			//_lastFrame = new Image<Bgr, byte>(eventArgs.Frame.Clone() as Bitmap).Mat;
 			//Log.SysLogText(LogLevel.DEBUG, "Setting frame");
 			//liveView.SetBitmap(_lastFrame, _speedAndBearing, 0, 0);
@@ -914,16 +934,22 @@ namespace Radar
 		private void OnAnalyzeClicked(object sender, EventArgs e)
 		{
 #if !LIVE
-			LEDImageAnalysis.DebugAnalysis = true;
+			SolidColorAnalysis.DebugAnalysis = true;
 			List<String> filenames = new List<string>();
-			LEDImageAnalysis.Width = 800;
-			LEDImageAnalysis.Height = 600;
-			LEDImageAnalysis.ColorThresholds[Color.Blue] = Program.Config.BlueThresholds;
-			LEDImageAnalysis.ColorThresholds[Color.Green] = Program.Config.GreenThresholds;
-			LEDImageAnalysis.ColorThresholds[Color.Red] = Program.Config.RedThresholds;
-			LEDPositionList leds;
-			LEDCandidateList candidates;
-			LEDImageAnalysis.AnalyzeImage(FullImage, LEDImageAnalysis.AllLEDColors, @"c:\pub\tmp\analysis", out filenames, out leds, out candidates);
+			SolidColorAnalysis.Width = 800;
+			SolidColorAnalysis.Height = 600;
+
+			ColorThreshold blueThreshold = new ColorThreshold() { Color = Color.Blue, MinimumValue = 128, MaximumOtherValue = 128};
+			ColorThreshold greenThreshold = new ColorThreshold() { Color = Color.Green, MinimumValue = 128, MaximumOtherValue = 128};
+			ColorThreshold redThreshold = new ColorThreshold() { Color = Color.Red, MinimumValue = 128, MaximumOtherValue = 128};
+
+			SolidColorAnalysis.ColorThresholds[Color.Blue] = blueThreshold;		// Program.Config.BlueThresholds;
+			SolidColorAnalysis.ColorThresholds[Color.Green] = greenThreshold;	// Program.Config.GreenThresholds;
+			SolidColorAnalysis.ColorThresholds[Color.Red] = redThreshold;		// Program.Config.RedThresholds;
+			ColoredObjectPositionList leds;
+			ObjectCandidateList candidates;
+			FullImage = @"c:\pub\tmp\image.jpg";
+			SolidColorAnalysis.AnalyzeImage(FullImage, new List<Color>() { Color.Red }, new Size(100, 100), @"c:\pub\tmp\analysis", out filenames, out leds, out candidates);
 			Mat image = new Mat(FullImage);
 			DrawLEDPositions(image, leds, candidates);
 			SetImage(image, TAB_FULL_IMAGE);
@@ -974,8 +1000,6 @@ namespace Radar
 					bitmap.DrawMinMaxLines(path.FrontRight, rightFront, PixelsPerMeterImage, Color.DarkGray);
 				}
 			}
-
-			picWorkBitmap.BackgroundImage = bitmap.Bitmap;
 
 			//LidarEnvironment env = new LidarEnvironment(ImageMetrics.MetersSquare, AnalysisPixelsPerMeter)
 			//{
@@ -1115,10 +1139,13 @@ namespace Radar
 			_mqqtController.SendPercentage(MqttTypes.ArmClawTopic, ((TrackBar)sender).Value);
 		}
 
-		private void OnTestArmClicked(object sender, EventArgs e)
+		private void OnAnalyzeCascadeClicked(object sender, EventArgs e)
 		{
-			Mat image = _robotArm.GetImage();
-			picRobotArm.BackgroundImage = new Bitmap(image.Bitmap.Clone() as Bitmap);
+			Bitmap image = picClassifer.BackgroundImage.Clone() as Bitmap;
+			String filename = @"c:\pub\tmp\analysis\image.jpg";
+			image.Save(filename);
+
+			ClassifierTest test = new ClassifierTest(filename);
 		}
 
 		private void OnImageParametersCheckChanged(object sender, EventArgs e)
@@ -1196,25 +1223,25 @@ namespace Radar
 		private void OnGamepadXButtonChanged(GamePadBase gamePad, RaspiCommon.Devices.GamePads.Button button)
 		{
 			if(button.State)
-				_clawControl.ChangeRotation(-CLAW_CONTROL_QUANTUM);
+				_mqqtController.SendSpinStepLeftTime(TimeSpan.FromMilliseconds(50));
 		}
 
 		private void OnGamepadBButtonChanged(GamePadBase gamePad, RaspiCommon.Devices.GamePads.Button button)
 		{
 			if(button.State)
-				_clawControl.ChangeRotation(CLAW_CONTROL_QUANTUM);
+				_mqqtController.SendSpinStepRightTime(TimeSpan.FromMilliseconds(50));
 		}
 
 		private void OnGamepadLeftIndexButtonChanged(GamePadBase gamePad, RaspiCommon.Devices.GamePads.Button button)
 		{
 			if(button.State)
-				_mqqtController.SendSpinStepLeftTime(TimeSpan.FromMilliseconds(50));
+				_clawControl.ChangeRotation(-CLAW_CONTROL_QUANTUM);
 		}
 
 		private void OnGamepadRightIndexButtonChanged(GamePadBase gamePad, RaspiCommon.Devices.GamePads.Button button)
 		{
 			if(button.State)
-				_mqqtController.SendSpinStepRightTime(TimeSpan.FromMilliseconds(50));
+				_clawControl.ChangeRotation(CLAW_CONTROL_QUANTUM);
 		}
 
 		private void OnGampadHatChanged(GamePadBase gamePad, Hat hat)
@@ -1280,5 +1307,62 @@ namespace Radar
 			PreferencesForm dlg = new PreferencesForm();
 			dlg.ShowDialog();
 		}
+
+		private void OnStartStopClassifyVideoClicked(object sender, EventArgs e)
+		{
+			_grabbingImages = _grabbingImages ? false : true;
+			btnStartStop.Text = _grabbingImages ? "Stop" : "Start";
+		}
+
+		private void OnClassifyMouseDown(object sender, MouseEventArgs e)
+		{
+			_classifyGettingVideo = false;
+			_selectingClassifyImage = true;
+			_classifySelectAnchor = e.Location;
+			btnAddClassify.Enabled = true;
+			_classifierCleanImage = picClassifer.BackgroundImage as Bitmap;
+		}
+
+		private void OnClassifyMouseUp(object sender, MouseEventArgs e)
+		{
+			_selectingClassifyImage = false;
+		}
+
+		private void ClearClassifierRectangle()
+		{
+			if(_classifySelectedRectangle != Rectangle.Empty)
+			{
+				Rectangle rect = picClassifer.RectangleToScreen(_classifySelectedRectangle);
+				ControlPaint.DrawReversibleFrame(rect, Color.Gray, FrameStyle.Dashed);
+				_classifySelectedRectangle = Rectangle.Empty;
+			}
+		}
+
+		private void OnClassifyMouseMove(object sender, MouseEventArgs e)
+		{
+			if(_selectingClassifyImage)
+			{
+				ClearClassifierRectangle();
+				_classifySelectedRectangle = RectangleExtensions.GetFromTwoPoints(_classifySelectAnchor, e.Location);
+				Rectangle rect = picClassifer.RectangleToScreen(_classifySelectedRectangle);
+				ControlPaint.DrawReversibleFrame(rect, Color.Gray, FrameStyle.Dashed);
+			}
+		}
+
+		private void OnAddClicked(object sender, EventArgs e)
+		{
+			String directory = @"c:\pub\tmp\classify";
+			String file = Path.Combine(directory, "classifier_collection.txt");
+			String imageFile = DirectoryExtensions.GetNextNumberedFileName(directory, "image", ".jpg", 4);
+			_classifierCleanImage.Save(imageFile);
+			String output = String.Format("{0}  1  {1} {2} {3} {4}\n", 
+				Path.GetFileName(imageFile), _classifySelectedRectangle.X, _classifySelectedRectangle.Y, _classifySelectedRectangle.Width, _classifySelectedRectangle.Height);
+			File.AppendAllText(file, output);
+			ClearClassifierRectangle();
+			picClassifer.BackgroundImage = _classifierCleanImage;
+			_selectingClassifyImage = false;
+			OnStartStopClassifyVideoClicked(null, null);
+		}
+
 	}
 }
