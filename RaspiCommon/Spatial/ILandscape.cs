@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using KanoopCommon.Geometry;
-using RaspiCommon.Data.Entities;
+using RaspiCommon.Data.Entities.Track;
 using RaspiCommon.Spatial.LidarImaging;
 
 namespace RaspiCommon.Spatial

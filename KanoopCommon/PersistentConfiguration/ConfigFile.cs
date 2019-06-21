@@ -16,7 +16,7 @@ namespace KanoopCommon.PersistentConfiguration
 	{
 		#region Constants
 
-		const String DEFAULT_PRIMARY_SECTION = "KARMA_CONFIG";
+		const String DEFAULT_PRIMARY_SECTION = "KANOOP_CONFIG";
 
 		#endregion
 

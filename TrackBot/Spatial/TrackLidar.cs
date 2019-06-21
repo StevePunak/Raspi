@@ -33,9 +33,12 @@ namespace TrackBot.Spatial
 		public Double VectorSize { get { return Lidar.VectorSize; } }
 		public IVector[] Vectors { get { return Lidar.Vectors; } }
 
-		public TrackLidar(Double metersSquare, Double pixelsPerMeter)
+		public GpioPin SpinPin { get; set; }
+
+		public TrackLidar(Double metersSquare, Double pixelsPerMeter, GpioPin spinPin)
 			: base(metersSquare, pixelsPerMeter)
 		{
+			SpinPin = spinPin;
 			Lidar = new RPLidar(Program.Config.LidarComPort, .25);
 			Lidar.Offset = Program.Config.LidarOffsetDegrees;
 			RangeFuzz = Program.Config.RangeFuzz;
@@ -49,13 +52,20 @@ namespace TrackBot.Spatial
 			if(Lidar.GetDeviceInfo())
 			{
 				Log.SysLogText(LogLevel.DEBUG, "Retrieved LIDAR info");
+				Pigs.SetMode(SpinPin, PinMode.Output);
+				Pigs.SetOutputPin(SpinPin, PinState.High);
 				Lidar.StartScan();
 				Log.SysLogText(LogLevel.DEBUG, "LIDAR scan started");
+			}
+			else
+			{
+
 			}
 		}
 
 		public void Stop()
 		{
+			Pigs.SetOutputPin(SpinPin, PinState.Low);
 			Lidar.StopScan();
 			GpioSharp.Sleep(250);
 			Lidar.Reset();

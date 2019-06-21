@@ -37,6 +37,8 @@ namespace TrackBot.Network
 																			MqttTypes.BotSpinStepLeftTimeTopic,
 																			MqttTypes.BotSpinStepRightTimeTopic,
 																			MqttTypes.BotMoveTimeTopic,
+																			MqttTypes.BotPanTopic,
+																			MqttTypes.BotTiltTopic,
 																		  })
 		{
 			ArmRotation += delegate { };
@@ -117,6 +119,18 @@ namespace TrackBot.Network
 				Log.LogText(LogLevel.DEBUG, "Move");
 				MoveStep move = new MoveStep(packet.Message);
 				Widgets.Instance.Tracks.TravelThread.MoveStepTime(move);
+			}
+			else if(packet.Topic == MqttTypes.BotPanTopic)
+			{
+				int percent = BitConverter.ToInt32(packet.Message, 0);
+				Log.LogText(LogLevel.DEBUG, $"Pan {percent}");
+				Widgets.Instance.PanTilt.Pan = percent;
+			}
+			else if(packet.Topic == MqttTypes.BotTiltTopic)
+			{
+				int percent = BitConverter.ToInt32(packet.Message, 0);
+				Log.LogText(LogLevel.DEBUG, $"Tilt {percent}");
+				Widgets.Instance.PanTilt.Tilt = percent;
 			}
 			else
 			{

@@ -89,7 +89,7 @@ namespace KanoopCommon.Serial
 						{
 							DeliverData();
 						}
-						Console.WriteLine("read timed out");
+						//Console.WriteLine("read timed out");
 					}
 				}
 				catch(Exception e)
@@ -98,7 +98,7 @@ namespace KanoopCommon.Serial
 					{
 						DeliverData();
 					}
-					Console.WriteLine(e.Message);
+					//Console.WriteLine(e.Message);
 				}
 				return true;
 			}
@@ -110,7 +110,7 @@ namespace KanoopCommon.Serial
 				Array.Copy(_parent.ReceiveBuffer, 0, receiveData, 0, _parent.BytesInReceiveBuffer);
 				_parent.DataReceived(receiveData, receiveData.Length);
 
-				Log.SysLogText(LogLevel.DEBUG, "Delivered {0} bytes:", receiveData.Length);
+				//Log.SysLogText(LogLevel.DEBUG, "Delivered {0} bytes:", receiveData.Length);
 				//							Log.SysLogHex(LogLevel.DEBUG, receiveData, 0, bytes);
 
 				// clear receive buffer

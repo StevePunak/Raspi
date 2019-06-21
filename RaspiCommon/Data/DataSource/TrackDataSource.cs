@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using KanoopCommon.Conversions;
 using KanoopCommon.Database;
 using KanoopCommon.Geometry;
-using RaspiCommon.Data.Entities;
+using RaspiCommon.Data.Entities.Track;
 using RaspiCommon.Spatial.DeadReckoning;
 
 namespace RaspiCommon.Data.DataSource

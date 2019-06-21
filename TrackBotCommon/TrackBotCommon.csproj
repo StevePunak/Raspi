@@ -78,6 +78,7 @@
     <Compile Include="InputDevices\GamePads\USBGamePad.cs" />
     <Compile Include="InputDevices\GamePads\XBoxController.cs" />
     <Compile Include="InputDevices\GamePads\ZDVGamePad.cs" />
+    <Compile Include="InputDevices\PanTiltControl.cs" />
     <Compile Include="Properties\LidarVectorExtensions.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="InputDevices\GamePads\SteelSeriesXL.cs" />

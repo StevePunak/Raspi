@@ -14,7 +14,7 @@ using KanoopCommon.Logging;
 using KanoopCommon.PersistentConfiguration;
 using RaspiCommon;
 using RaspiCommon.Data.DataSource;
-using RaspiCommon.Data.Entities;
+using RaspiCommon.Data.Entities.Track;
 using RaspiCommon.Devices.MotorControl;
 using RaspiCommon.Devices.Optics;
 using RaspiCommon.Devices.RobotArms;
@@ -96,6 +96,11 @@ namespace TrackBot
 			Program.Config.ClawRightPinMax = 2400;
 			Program.Config.ClawPinMin = 1000;
 			Program.Config.ClawPinMax = 2000;
+
+			Program.Config.PanPin = GpioPin.Pin06;
+			Program.Config.TiltPin = GpioPin.Pin19;
+
+			Program.Config.LidarSpinEnablePin = GpioPin.Pin24;
 
 			Program.Config.SnapshotUrl = "http://127.0.0.1:8085/?action=snapshot";
 

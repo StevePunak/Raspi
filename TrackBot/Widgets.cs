@@ -14,7 +14,7 @@ using KanoopCommon.Logging;
 using KanoopCommon.Threading;
 using RaspiCommon;
 using RaspiCommon.Data.DataSource;
-using RaspiCommon.Data.Entities;
+using RaspiCommon.Data.Entities.Track;
 using RaspiCommon.Devices.Chassis;
 using RaspiCommon.Devices.Compass;
 using RaspiCommon.Devices.Locomotion;
@@ -80,6 +80,8 @@ namespace TrackBot
 		public Camera Camera { get; private set; }
 		public SolidColorAnalysis LEDImageAnalysis { get; private set; }
 
+		public PanTilt PanTilt { get; private set; }
+
 		static Widgets _instance;
 		public static Widgets Instance
 		{
@@ -113,6 +115,7 @@ namespace TrackBot
 		public void StartWidgets()
 		{
 			StartServoController();
+			StartPanTilt();
 			StartChassis();
 			StartDatabase();
 			StartCommandServer();
@@ -144,12 +147,23 @@ namespace TrackBot
 			StopSaveImageThread();
 			StopDatabase();
 			StopChassis();
+			StopPanTilt();
 			StopServoController();
 
 			foreach(ThreadBase thread in ThreadBase.GetRunningThreads())
 			{
 				Log.SysLogText(LogLevel.DEBUG, "Remaining: {0}", thread);
 			}
+		}
+
+		private void StartPanTilt()
+		{
+			PanTilt = new PanTilt(Program.Config.PanPin, Program.Config.TiltPin);
+			Log.SysLogText(LogLevel.INFO, "Started {0}", PanTilt);
+		}
+
+		private void StopPanTilt()
+		{
 		}
 
 		private void StartServoController()
@@ -356,7 +370,7 @@ namespace TrackBot
 					Program.Config.RadarHost = "192.168.0.50";
 					Program.Config.Save();
 				}
-				ImageEnvironment = new TrackLidar(Program.Config.LidarMetersSquare, Program.Config.LidarPixelsPerMeter);
+				ImageEnvironment = new TrackLidar(Program.Config.LidarMetersSquare, Program.Config.LidarPixelsPerMeter, Program.Config.LidarSpinEnablePin);
 				ImageEnvironment.BarriersChanged += OnImageEnvironment_BarriersChanged;
 				ImageEnvironment.LandmarksChanged += OnImageEnvironment_LandmarksChanged;
 				ImageEnvironment.FuzzyPathChanged += OnImageEnvironment_FuzzyPathChanged;

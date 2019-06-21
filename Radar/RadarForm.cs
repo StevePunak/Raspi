@@ -1,51 +1,42 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Data;
-using System.Diagnostics;
 using System.Drawing;
-using System.Drawing.Imaging;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Threading;
 using System.Windows.Forms;
 using AForge.Video;
 using Emgu.CV;
 using Emgu.CV.CvEnum;
+using Emgu.CV.Face;
 using Emgu.CV.Structure;
-using KanoopCommon.Addresses;
-using KanoopCommon.CommonObjects;
+using Emgu.CV.Util;
 using KanoopCommon.Database;
 using KanoopCommon.Extensions;
 using KanoopCommon.Geometry;
 using KanoopCommon.Logging;
-using KanoopCommon.TCP.Clients;
 using KanoopCommon.Threading;
 using KanoopControls.SimpleTextSelection;
 using MQTT;
 using Ookii.Dialogs;
-using Radar.Properties;
 using RaspiCommon;
 using RaspiCommon.Data.DataSource;
-using RaspiCommon.Data.Entities;
+using RaspiCommon.Data.Entities.Facial;
+using RaspiCommon.Data.Entities.Track;
 using RaspiCommon.Devices.Chassis;
 using RaspiCommon.Devices.GamePads;
 using RaspiCommon.Devices.Locomotion;
 using RaspiCommon.Devices.Optics;
 using RaspiCommon.Extensions;
 using RaspiCommon.GraphicalHelp;
-using RaspiCommon.Lidar;
 using RaspiCommon.Lidar.Environs;
 using RaspiCommon.Network;
 using RaspiCommon.Spatial;
 using RaspiCommon.Spatial.DeadReckoning;
 using RaspiCommon.Spatial.LidarImaging;
-using SharpDX.DirectInput;
 using TrackBotCommon.Environs;
 using TrackBotCommon.InputDevices;
 using TrackBotCommon.InputDevices.GamePads;
-using TrackBotCommon.Testing;
 
 namespace Radar
 {
@@ -88,12 +79,12 @@ namespace Radar
 		}
 
 		TelemetryClient _client;
-		RadarController _mqqtController;
+		PCSideRadarController _mqqtController;
 		String Host { get; set; }
 
 		Chassis Chassis { get; set; }
 
-		Timer _drawTimer;
+		System.Windows.Forms.Timer _drawTimer;
 
 		Bitmap _radarBitmap;
 
@@ -119,6 +110,7 @@ namespace Radar
 		public String BlueImage { get; set; }
 		public String GreenImage { get; set; }
 		public String RedImage { get; set; }
+		public CascadeClassifier FaceClassifier { get; private set; }
 
 		MJPEGStream _videoStream;
 
@@ -128,20 +120,27 @@ namespace Radar
 
 		GamePadBase _gamepad;
 		ClawControl _clawControl;
+		PanTiltControl _panTilt;
 		SpeedAndBearing _speedAndBearing;
-		bool _classifyGettingVideo;
 		bool _grabbingImages;
 		bool _selectingClassifyImage;
 		Bitmap _classifierCleanImage;
+		Mat _classifierImage;
 		Point _classifySelectAnchor;
 		Rectangle _classifySelectedRectangle;
-		DateTime _lastGrabTime;
+		List<Rectangle> _classifyRectangles;
+		FacialDataSource _fds;
+		FaceNameList _faceNames;
+
+		FaceRecognizer _faceRecognizer;
+		bool _faceRecognizerReady;
 
 		public RadarForm()
 		{
 			_capture = null;
 			_captureFrame = null;
 			_client = null;
+			_faceRecognizerReady = false;
 
 			Host = String.IsNullOrEmpty(Program.Config.RadarHost) ? "raspi" : Program.Config.RadarHost;
 			InitializeComponent();
@@ -159,7 +158,7 @@ namespace Radar
 				GetConnected();
 				Log.SysLogText(LogLevel.DEBUG, "Got connected");
 
-				_drawTimer = new Timer();
+				_drawTimer = new System.Windows.Forms.Timer();
 				_drawTimer.Interval = 500;
 				_drawTimer.Enabled = true;
 				_drawTimer.Tick += OnDrawTimer;
@@ -176,7 +175,7 @@ namespace Radar
 					splitRadar.SplitterDistance = Program.Config.SplitRadarPosition;
 					Location = Program.Config.LastRadarWindowLocation;
 				}
-				LoadLandscape();
+//				LoadLandscape();
 
 				flowBitmap.Height = 40;
 
@@ -188,6 +187,20 @@ namespace Radar
 				SetupImageTabs();
 
 				LoadOptions();
+
+				_fds = DataSourceFactory.Create<FacialDataSource>(Program.Config.FacialDBCredentials);
+				_fds.GetAllNames(out _faceNames);
+
+				FaceClassifier = new CascadeClassifier(Program.Config.FaceCascadeFile);
+				BatonFinder = new BatonFinder(Program.Config.BatonCascadeFile)
+				{
+					MinimumInterval = TimeSpan.FromSeconds(1),
+				};
+
+				new Thread(delegate ()
+				{
+					LoadEigen();
+				});
 
 				StartVideoFeed();
 
@@ -217,8 +230,7 @@ namespace Radar
 				_gamepad.RightTriggerChanged += OnGampadRightTriggerChanged;
 				_gamepad.Start();
 
-				_classifyGettingVideo = true;
-				btnStartStop.Text = "Stop";
+				btnStartStop.Text = "Start";
 
 				_layoutComplete = true;
 			}
@@ -235,7 +247,7 @@ namespace Radar
 			_videoStream = new MJPEGStream("http://thufir:8080/mjpeg");
 
 			// set event handlers
-			_videoStream.NewFrame += OnStream_NewFrame;
+			_videoStream.NewFrame += OnNewFrameReceived;
 			// start the video source
 			_videoStream.Start();
 		}
@@ -468,8 +480,9 @@ namespace Radar
 			_client.SpeedAndBearing += OnSpeedAndBearingReceived;
 			_client.Start();
 
-			_mqqtController = new RadarController(Program.Config.RadarHost, MqttClient.MakeRandomID(Text));
+			_mqqtController = new PCSideRadarController(Program.Config.RadarHost, MqttClient.MakeRandomID(Text));
 			_clawControl = new ClawControl(_mqqtController);
+			_panTilt = new PanTiltControl(_mqqtController);
 		}
 
 		private void OnSpeedAndBearingReceived(SpeedAndBearing speedAndBearing)
@@ -779,24 +792,6 @@ namespace Radar
 #endif
 		}
 
-		private void OnStream_NewFrame(object sender, NewFrameEventArgs eventArgs)
-		{
-			picVideo.BackgroundImage = eventArgs.Frame.Clone() as Bitmap;
-			if(_classifyGettingVideo)
-			{
-				picClassifer.BackgroundImage = picVideo.BackgroundImage.Clone() as Bitmap;
-				if(_grabbingImages && DateTime.UtcNow > _lastGrabTime + TimeSpan.FromSeconds(5))
-				{
-					String saveFile = DirectoryExtensions.GetNextNumberedFileName(@"c:\pub\classify\baton\positive\tmp", "positive", ".png", 4);
-					eventArgs.Frame.Save(saveFile, ImageFormat.Png);
-					_lastGrabTime = DateTime.UtcNow;
-				}
-			}
-			//_lastFrame = new Image<Bgr, byte>(eventArgs.Frame.Clone() as Bitmap).Mat;
-			//Log.SysLogText(LogLevel.DEBUG, "Setting frame");
-			//liveView.SetBitmap(_lastFrame, _speedAndBearing, 0, 0);
-		}
-
 		private void OnRunAnalysisClicked(object sender, EventArgs e)
 		{
 			LandmarkList pointMarkers;
@@ -929,46 +924,6 @@ namespace Radar
 			picDeadReckoning.BackgroundImage = bitmap.Bitmap;
 			picDeadReckoning.Location = new Point(0, 0);
 			picDeadReckoning.Size = bitmap.Size;
-		}
-
-		private void OnAnalyzeClicked(object sender, EventArgs e)
-		{
-#if !LIVE
-			SolidColorAnalysis.DebugAnalysis = true;
-			List<String> filenames = new List<string>();
-			SolidColorAnalysis.Width = 800;
-			SolidColorAnalysis.Height = 600;
-
-			ColorThreshold blueThreshold = new ColorThreshold() { Color = Color.Blue, MinimumValue = 128, MaximumOtherValue = 128};
-			ColorThreshold greenThreshold = new ColorThreshold() { Color = Color.Green, MinimumValue = 128, MaximumOtherValue = 128};
-			ColorThreshold redThreshold = new ColorThreshold() { Color = Color.Red, MinimumValue = 128, MaximumOtherValue = 128};
-
-			SolidColorAnalysis.ColorThresholds[Color.Blue] = blueThreshold;		// Program.Config.BlueThresholds;
-			SolidColorAnalysis.ColorThresholds[Color.Green] = greenThreshold;	// Program.Config.GreenThresholds;
-			SolidColorAnalysis.ColorThresholds[Color.Red] = redThreshold;		// Program.Config.RedThresholds;
-			ColoredObjectPositionList leds;
-			ObjectCandidateList candidates;
-			FullImage = @"c:\pub\tmp\image.jpg";
-			SolidColorAnalysis.AnalyzeImage(FullImage, new List<Color>() { Color.Red }, new Size(100, 100), @"c:\pub\tmp\analysis", out filenames, out leds, out candidates);
-			Mat image = new Mat(FullImage);
-			DrawLEDPositions(image, leds, candidates);
-			SetImage(image, TAB_FULL_IMAGE);
-#else
-			if( String.IsNullOrEmpty(BlueImage) == false &&
-				String.IsNullOrEmpty(GreenImage) == false &&
-				String.IsNullOrEmpty(RedImage) == false &&
-				String.IsNullOrEmpty(FullImage) == false)
-			{
-
-
-				Mat blue = OpenCvExtensions.ToSingleChannel(new Mat(BlueImage));
-				Mat green = OpenCvExtensions.ToSingleChannel(new Mat(GreenImage));
-				Mat red = OpenCvExtensions.ToSingleChannel(new Mat(RedImage));
-
-				List<LEDPosition> leds = LEDImageAnalysis.FindLEDs(blue, green, red);
-
-			}
-#endif
 		}
 
 		private void DrawDeadReckoningPaths()
@@ -1139,15 +1094,6 @@ namespace Radar
 			_mqqtController.SendPercentage(MqttTypes.ArmClawTopic, ((TrackBar)sender).Value);
 		}
 
-		private void OnAnalyzeCascadeClicked(object sender, EventArgs e)
-		{
-			Bitmap image = picClassifer.BackgroundImage.Clone() as Bitmap;
-			String filename = @"c:\pub\tmp\analysis\image.jpg";
-			image.Save(filename);
-
-			ClassifierTest test = new ClassifierTest(filename);
-		}
-
 		private void OnImageParametersCheckChanged(object sender, EventArgs e)
 		{
 			if(_layoutComplete)
@@ -1220,6 +1166,7 @@ namespace Radar
 		}
 
 		const int CLAW_CONTROL_QUANTUM = 2;
+		const int PAN_TILT_CONTROL_QUANTUM = 2;
 		private void OnGamepadXButtonChanged(GamePadBase gamePad, RaspiCommon.Devices.GamePads.Button button)
 		{
 			if(button.State)
@@ -1247,13 +1194,13 @@ namespace Radar
 		private void OnGampadHatChanged(GamePadBase gamePad, Hat hat)
 		{
 			if(hat.Up.State)
-				_clawControl.ChangeElevation(-CLAW_CONTROL_QUANTUM);
+				_panTilt.TiltDown(PAN_TILT_CONTROL_QUANTUM);
 			if(hat.Down.State)
-				_clawControl.ChangeElevation(CLAW_CONTROL_QUANTUM);
+				_panTilt.TiltUp(PAN_TILT_CONTROL_QUANTUM);
 			if(hat.Right.State)
-				_clawControl.ChangeThrust(-CLAW_CONTROL_QUANTUM);
+				_panTilt.PanUp(PAN_TILT_CONTROL_QUANTUM);
 			if(hat.Left.State)
-				_clawControl.ChangeThrust(CLAW_CONTROL_QUANTUM);
+				_panTilt.PanDown(PAN_TILT_CONTROL_QUANTUM);
 		}
 
 		private void OnGamepadLeftTriggerChanged(GamePadBase gamePad, AnalogControl control)
@@ -1314,9 +1261,10 @@ namespace Radar
 			btnStartStop.Text = _grabbingImages ? "Stop" : "Start";
 		}
 
+		Point _classifyClickPoint;
 		private void OnClassifyMouseDown(object sender, MouseEventArgs e)
 		{
-			_classifyGettingVideo = false;
+			_classifyClickPoint = e.Location;
 			_selectingClassifyImage = true;
 			_classifySelectAnchor = e.Location;
 			btnAddClassify.Enabled = true;
@@ -1362,6 +1310,97 @@ namespace Radar
 			picClassifer.BackgroundImage = _classifierCleanImage;
 			_selectingClassifyImage = false;
 			OnStartStopClassifyVideoClicked(null, null);
+		}
+
+		private void OnAnalyzeCascadeClicked(object sender, EventArgs e)
+		{
+			VistaOpenFileDialog dlg = new VistaOpenFileDialog();
+			if(dlg.ShowDialog() == DialogResult.OK)
+			{
+				FaceNameList names;
+				_fds.GetAllNames(out names);
+
+				String imageDirectory = Environment.OSVersion.Platform == PlatformID.Unix
+					? @"/home/pi/classify/"
+					: @"c:\pub\classify\images";
+				String cascadeDirectory = Environment.OSVersion.Platform == PlatformID.Unix
+					? @"/home/pi/classify/cascades"
+					: @"c:\pub\classify\cascades";
+				String inputFile = dlg.FileName;
+				String cascadeFile = Path.Combine(cascadeDirectory, "haarcascade_frontalface_default.xml");
+				Mat image = new Mat(inputFile);
+				_classifierImage = image.Clone();
+				_classifyRectangles = image.FindObjects(FaceClassifier, 1.1, 3, Program.Config.FaceDetectSize);
+				foreach(Rectangle rectangle in _classifyRectangles)
+				{
+					image.DrawRectangle(rectangle, Color.Red, 5);
+					if(_faceRecognizer != null)
+					{
+						Mat resized = new Mat(_classifierImage, rectangle).Resize(Program.Config.FaceDetectSize, 0, 0, Inter.Cubic).ToGrayscaleImage();
+						resized.Save(@"c:\pub\tmp\images\grey.jpg");
+						FaceRecognizer.PredictionResult result = _faceRecognizer.Predict(resized);
+						if(result.Label != 0 && result.Distance < 3000)
+						{
+							FaceName facename = names.Find(n => n.NameID == (UInt32)result.Label);
+							if(facename != null)
+							{
+								String name = facename.Name;
+								image.DrawTextBelowRectangle(name, FontFace.HersheyPlain, Color.AliceBlue, rectangle, 50, 3, 2);
+							}
+						}
+					}
+				}
+				picClassifer.Image = new Bitmap(image.Bitmap);
+			}
+		}
+
+		private void OnClassifyOpening(object sender, CancelEventArgs e)
+		{
+			List<String> names;
+			_fds.GetAllNames(out names);
+			setNameToolStripMenuItem.DropDownItems.Clear();
+			foreach(String name in names)
+			{
+				ToolStripMenuItem item = new ToolStripMenuItem(name);
+				item.Click += OnNameClicked;
+				setNameToolStripMenuItem.DropDownItems.Add(item);
+			}
+		}
+
+		private void OnNameClicked(object sender, EventArgs e)
+		{
+			String name = ((ToolStripMenuItem)sender).Text;
+			Rectangle found = new Rectangle();
+			foreach(Rectangle rectangle in _classifyRectangles)
+			{
+				if(rectangle.Contains(_classifyClickPoint))
+				{
+					if(found.IsEmpty || rectangle.Area() < found.Area())
+					{
+						found = rectangle;
+					}
+				}
+			}
+
+			if(found.IsEmpty == false)
+			{
+				Mat part = new Mat(_classifierImage, found).ToGrayscaleImage().Resize(Program.Config.FaceDetectSize, 0, 0, Inter.Cubic);
+				_fds.AddImage(name, part);
+			}
+
+		}
+
+		private void OnAnalyzeFacesClicked(object sender, EventArgs e)
+		{
+			VistaOpenFileDialog dlg = new VistaOpenFileDialog();
+			if(dlg.ShowDialog() == DialogResult.OK)
+			{
+				String inputFile = dlg.FileName;
+				if(_faceRecognizer != null)
+				{
+				}
+
+			}
 		}
 
 	}

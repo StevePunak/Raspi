@@ -71,6 +71,8 @@ namespace RaspiCommon.Network
 		public const String BotSpinStepLeftTimeTopic = "trackbot/control/motion/spinstep/left/ms";
 		public const String BotSpinStepRightTimeTopic = "trackbot/control/motion/spinstep/right/ms";
 		public const String BotMoveTimeTopic = "trackbot/control/motion/go/time";
+		public const String BotTiltTopic = "trackbot/control/pantilt/tilt";
+		public const String BotPanTopic = "trackbot/control/pantilt/pan";
 
 		// optical camera
 		public const String CameraLastImageTopic = "trackbot/camera/lastimage";

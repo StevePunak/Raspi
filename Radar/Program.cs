@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using Emgu.CV;
 using Emgu.CV.CvEnum;
+using Emgu.CV.Face;
 using Emgu.CV.Structure;
 using Emgu.CV.Util;
 using KanoopCommon.Database;
@@ -18,17 +19,13 @@ using KanoopCommon.PersistentConfiguration;
 using KanoopCommon.Serialization;
 using RaspiCommon;
 using RaspiCommon.Data.DataSource;
-using RaspiCommon.Data.Entities;
+using RaspiCommon.Data.Entities.Facial;
+using RaspiCommon.Data.Entities.Track;
 using RaspiCommon.Devices.Chassis;
 using RaspiCommon.Devices.Compass;
 using RaspiCommon.Devices.Locomotion;
 using RaspiCommon.Devices.Optics;
-using RaspiCommon.GraphicalHelp;
-using RaspiCommon.Network;
-using RaspiCommon.Spatial;
-using RaspiCommon.Spatial.DeadReckoning;
-using RaspiCommon.Spatial.LidarImaging;
-using TrackBotCommon.Environs;
+using RaspiCommon.Extensions;
 
 namespace Radar
 {
@@ -61,29 +58,136 @@ namespace Radar
 
 		static void Test()
 		{
-			int x = 30;
-			String s = x.ToString().PadLeft(4, '0');
-			Double diff = (Double)(67.024).AngularDifference(77.674, SpinDirection.CounterClockwise);
-			//TestImage();
+			String directory = @"c:\pub\tmp\images\unclassified";
+			//LoadTrainingImagesIntoDatabase();
+			//SaveTrainingImagesToFiles(directory);
+			//TrainModel();
+			//MoveImages(directory);
+			//DetectFaces(directory);
+			return;
+		}
 
-			//Program.Config.RemoteImageDirectory = @"\\raspi\pi\images";
-			//Program.Config.Save();
+		private static void DetectFaces(string directory)
+		{
+			FacialDataSource fds = DataSourceFactory.Create<FacialDataSource>(Program.Config.FacialDBCredentials);
+			FaceNameList names;
+			fds.GetAllNames(out names);
 
-			//TrackDataSource tds = DataSourceFactory.Create<TrackDataSource>(Config.DBCredentials);
-			//DeadReckoningEnvironment env = new DeadReckoningEnvironment("ManCave", 10, 10, .1, 0, new PointD(8, 8));
-			//////tds.DeleteDREnvironment("ManCave");
-			//////tds.CreateDREnvironment(env);
-			//tds.GetDREnvironment("ManCave", out env);
-			////byte[] serialized = env.Serialize();
+			LBPHFaceRecognizer recognizer = new LBPHFaceRecognizer();
+			recognizer.Read(Program.Config.LBPHRecognizerFile);
+//			EigenFaceRecognizer recognizer = new EigenFaceRecognizer();
+//			recognizer.Read(Program.Config.EigenRecognizerFile);
 
-			//PointD point = env.GetGridPoint(env.CurrentLocation, 180, 10);
-			////env = new DeadReckoningEnvironment(serialized);
+			foreach(String file in Directory.GetFiles(directory))
+			{
+				Mat image = new Mat(file).ToGrayscaleImage();
+				FaceRecognizer.PredictionResult result = recognizer.Predict(image);
+
+				String name;
+				if(names.TryGetName(result.Label, out name))
+				{
+					FacePrediction prediction = new FacePrediction(new Rectangle(0, 0, image.Width, image.Height), image, name, result.Label, result.Distance);
+					Log.LogText(LogLevel.DEBUG, "{0} is {1}", Path.GetFileName(file), prediction);
+				}
+			}
+
+
+		}
+
+		private static void MoveImages(string fromDirectory)
+		{
+			String name = "annika";
+			fromDirectory = $@"c:\pub\tmp\images\raw\{name}";
+			String toDirectory = $@"c:\pub\tmp\images\greyscale\{name}";
+			if(Directory.Exists(toDirectory) == false)
+				Directory.CreateDirectory(toDirectory);
+			foreach(String file in Directory.GetFiles(fromDirectory))
+			{
+				String newFile = DirectoryExtensions.GetNextNumberedFileName(toDirectory, name, ".bmp");
+				Mat mat = new Mat(file).ToGrayscaleImage();
+				mat.Save(newFile);
+				//File.Copy(file, newFile)
+			}
+		}
+
+		private static void LoadTrainingImagesIntoDatabase()
+		{
+			FacialDataSource fds = DataSourceFactory.Create<FacialDataSource>(Program.Config.FacialDBCredentials);
+			List<String> names = new List<string>()
+			{
+				"papa", "karina", "annika"
+			};
+			foreach(String name in names)
+			{
+				String fromDirectory = $@"c:\pub\tmp\images\greyscale\{name}";
+				foreach(String file in Directory.GetFiles(fromDirectory))
+				{
+					Mat image = new Mat(file).ToGrayscaleImage();
+					fds.AddImage(name, image);
+					//File.Copy(file, newFile)
+				}
+			}
+		}
+
+		private static void TrainModel()
+		{
+			FacialDataSource fds = DataSourceFactory.Create<FacialDataSource>(Program.Config.FacialDBCredentials);
+
+			List<FacialImage> faces;
+			fds.GetAllFacialImages(out faces);
+
+			FaceNameList names;
+			fds.GetAllNames(out names);
+
+			VectorOfMat images = new VectorOfMat();
+			VectorOfInt nameIDs = new VectorOfInt();
+			foreach(FacialImage image in faces)
+			{
+				images.Push(image.Image);
+				nameIDs.Push(new int[] { (int)image.NameID });
+				Log.SysLogText(LogLevel.DEBUG, $"Saved {image.Name} to model");
+			}
+			LBPHFaceRecognizer _lpRecognizer = new LBPHFaceRecognizer();
+			_lpRecognizer.Train(images, nameIDs);
+			_lpRecognizer.Write(Program.Config.LBPHRecognizerFile);
+
+			EigenFaceRecognizer _eigenRecognizer = new EigenFaceRecognizer();
+			_eigenRecognizer.Train(images, nameIDs);
+			_eigenRecognizer.Write(Program.Config.EigenRecognizerFile);
+
+			FisherFaceRecognizer _fisherRecognizer = new FisherFaceRecognizer();
+			_fisherRecognizer.Train(images, nameIDs);
+			_fisherRecognizer.Write(Program.Config.FisherRecognizerFile);
+
+		}
+
+		private static void SaveTrainingImagesToFiles(String directory)
+		{
+			FacialDataSource fds = DataSourceFactory.Create<FacialDataSource>(Program.Config.FacialDBCredentials);
+
+			List<FacialImage> faces;
+			fds.GetAllFacialImages(out faces);
+
+			FaceNameList names;
+			fds.GetAllNames(out names);
+
+			foreach(FacialImage image in faces)
+			{
+				String filename = DirectoryExtensions.GetNextNumberedFileName(directory, $"{image.Name}-", ".bmp");
+				image.Image.Save(filename);
+			}
+
 		}
 
 		static void SetConfigDefaults()
 		{
 			Config.RadarHost = "thufir";
+			Config.EigenRecognizerFile = @"c:\pub\classify\faces.eigen";
+			Config.LBPHRecognizerFile = @"c:\pub\classify\faces.lbph";
+			Config.FisherRecognizerFile = @"c:\pub\classify\faces.fisher";
 			Config.RemoteImageDirectory = @"\\raspi\pi\images";
+			Config.FaceCascadeFile = @"c:\pub\classify\cascades\haarcascade_frontalface_default.xml";
+			Config.BatonCascadeFile = @"c:\pub\classify\cascades\baton_cascade.xml";
 		}
 
 		static void TestImage()

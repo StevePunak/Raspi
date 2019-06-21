@@ -77,11 +77,14 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Data\DataSource\FacialDataSource.cs" />
     <Compile Include="Data\DataSource\TrackDataSource.cs" />
-    <Compile Include="Data\Entities\Landscape.cs" />
-    <Compile Include="Data\Entities\Landmark.cs" />
-    <Compile Include="Data\Entities\DRGridLocation.cs" />
-    <Compile Include="Data\Entities\PointMarker.cs" />
+    <Compile Include="Data\Entities\Facial\FacialImage.cs" />
+    <Compile Include="Data\Entities\Facial\FaceName.cs" />
+    <Compile Include="Data\Entities\Track\Landscape.cs" />
+    <Compile Include="Data\Entities\Track\Landmark.cs" />
+    <Compile Include="Data\Entities\Track\DRGridLocation.cs" />
+    <Compile Include="Data\Entities\Track\PointMarker.cs" />
     <Compile Include="Devices\Chassis\Chassis.cs" />
     <Compile Include="Devices\Chassis\ChassisMetrics.cs" />
     <Compile Include="Devices\Chassis\XiaorTankTracks.cs" />
@@ -94,10 +97,14 @@
     <Compile Include="Devices\Locomotion\TrackSpeed.cs" />
     <Compile Include="Devices\MotorControl\DRV8825StepperControl.cs" />
     <Compile Include="Devices\MotorControl\ESC.cs" />
+    <Compile Include="Devices\Optics\BatonFinder.cs" />
     <Compile Include="Devices\Optics\Camera.cs" />
     <Compile Include="Devices\Optics\ColorThreshold.cs" />
+    <Compile Include="Devices\Optics\FacePrediction.cs" />
+    <Compile Include="Devices\Optics\FoundObject.cs" />
     <Compile Include="Devices\Optics\LED.cs" />
     <Compile Include="Devices\Optics\MJpegStreamerCamera.cs" />
+    <Compile Include="Devices\Optics\PanTilt.cs" />
     <Compile Include="Devices\Optics\RaspiCameraParameters.cs" />
     <Compile Include="Devices\Optics\RaspiCameraV2.cs" />
     <Compile Include="Devices\Optics\ImageAnalysis.cs" />

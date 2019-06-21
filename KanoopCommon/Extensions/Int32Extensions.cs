@@ -39,5 +39,14 @@ namespace KanoopCommon.Extensions
 				return value;
 		}
 
+		public static UInt32 EnsureBetween(this UInt32 value, UInt32 minimum, UInt32 maximum)
+		{
+			if(value < minimum)
+				return minimum;
+			else if(value > maximum)
+				return maximum;
+			else
+				return value;
+		}
 	}
 }

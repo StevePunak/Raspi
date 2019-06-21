@@ -9,7 +9,7 @@ namespace KanoopCommon.Extensions
 {
 	public static class DirectoryExtensions
 	{
-		public static String GetNextNumberedFileName(String directory, String prefix, String extension, int numberOfZeros = 1)
+		public static String GetNextNumberedFileName(String directory, String prefix, String extension, int numberOfZeros = 4)
 		{
 			String ret = String.Empty;
 			int max = numberOfZeros * 10;

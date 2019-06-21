@@ -134,6 +134,7 @@ namespace RaspiCommon
 		public Double LidarMetersSquare { get { return 10; } }
 		public Double LidarPixelsPerMeter { get { return 50; } }
 		public Double RangeFuzz { get; set; }
+		public GpioPin LidarSpinEnablePin { get; set; }
 
 		ImageVectorList _landmarks;
 		public ImageVectorList Landmarks
@@ -193,6 +194,20 @@ namespace RaspiCommon
 			set { _DBCredentials = value; }
 		}
 
+		SqlDBCredentials _facialDBCredentials;
+		public SqlDBCredentials FacialDBCredentials
+		{
+			get
+			{
+				if(_facialDBCredentials == null)
+				{
+					_facialDBCredentials = new SqlDBCredentials(SqlDataSource.MYSQL_NATIVE_DRIVER, "thufir", "facial", "trackbot", "trackbot");
+				}
+				return _facialDBCredentials;
+			}
+			set { _facialDBCredentials = value; }
+		}
+
 		String _landscapeName;
 		public String LandscapeName
 		{
@@ -237,6 +252,11 @@ namespace RaspiCommon
 		public ColorThreshold BlueThresholds { get; set; }
 		public ColorThreshold GreenThresholds { get; set; }
 		public ColorThreshold RedThresholds { get; set; }
+		public String EigenRecognizerFile { get; set; }
+		public String LBPHRecognizerFile { get; set; }
+		public String FisherRecognizerFile { get; set; }
+		public Size FaceDetectSize { get { return new Size(100, 100); } }
+		public Size FaceRecognizeSize { get { return new Size(300, 300); } }
 
 		RaspiCameraParameters _cameraParameters;
 		public RaspiCameraParameters CameraParameters
@@ -262,6 +282,12 @@ namespace RaspiCommon
 		public GpioPin ClawLeftPin { get; set; }
 		public GpioPin ClawRightPin { get; set; }
 		public GpioPin ClawPin { get; set; }
+
+		public GpioPin PanPin { get; set; }
+		public GpioPin TiltPin { get; set; }
+
+		public String FaceCascadeFile { get; set; }
+		public String BatonCascadeFile { get; set; }
 
 		public int ClawRotationPinMin { get; set; }
 		public int ClawRotationPinMax { get; set; }

@@ -35,5 +35,6 @@ namespace RaspiCommon
 		Chassis Chassis { get; }
 		Camera Camera { get; }
 		TrackSpeed TrackSpeed { get; }
+		PanTilt PanTilt { get; }
 	}
 }

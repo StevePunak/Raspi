@@ -9,11 +9,6 @@ namespace TrackBot.TTY
 	[CommandText("a")]
 	class ArmCommand : CommandBase
 	{
-		static int LeftPos = 50;
-		static int RightPos = 50;
-		static int ClawPos = 50;
-		static int RotationPos = 50;
-
 		public ArmCommand()
 			: base(true) { }
 

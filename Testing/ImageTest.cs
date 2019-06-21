@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -16,11 +17,10 @@ namespace Testing
 		public ImageTest()
 		{
 			String file = @"c:\pub\tmp\image.jpg";
-			Mat image = new Mat(file);
-			List<String> outputFiles;
-			ColoredObjectPositionList objects;
-			ObjectCandidateList candidates;
-			SolidColorAnalysis.AnalyzeImage(image, new List<Color>() { Color.Red }, new Size(300, 300), @"c:\pub\tmp\analysis", out outputFiles, out objects, out candidates);
+			byte[] inputData = File.ReadAllBytes(file);
+			Mat output = new Mat();
+			output.LoadFromByteArray(inputData);
+			output.Save(@"c:\pub\tmp\output.jpg");
 		}
 	}
 }

@@ -247,6 +247,10 @@ namespace TrackBotCommon.InputDevices.GamePads
 				mapping.Hat.Right.State = right;
 				States.AnyChanged = true;
 			}
+			else
+			{
+				mapping.Hat.Changed = false;
+			}
 		}
 
 		protected void SetStickState(GamePadControl controlType, int x, int y)

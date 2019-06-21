@@ -95,6 +95,9 @@
       <DependentUpon>LiveView.cs</DependentUpon>
     </Compile>
     <Compile Include="ObjectDetect.cs" />
+    <Compile Include="ObjectRecognition.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="PreferencesForm.cs">
       <SubType>Form</SubType>
     </Compile>

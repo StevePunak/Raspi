@@ -361,40 +361,7 @@ namespace KanoopCommon.Logging
 			{
 				String output = String.Format(text, parms);
 				output = String.Format("SYSTEMLOG: {0} {1} {2}", DateTime.UtcNow.ToString("HH:mm:ss.fff "), logLevel.ToString(), output);
-#if USE_EVENT_LOG
-				Debug.WriteLine(strOut);
-				if(logLevel != LogLevel.DEBUG && Debugger.IsAttached != true)
-				{
-					const String EVENT_LOG_APPLICATION_NAME = "Karma";
-
-					if(!EventLog.SourceExists(EVENT_LOG_APPLICATION_NAME))
-					{
-						EventLog.CreateEventSource(EVENT_LOG_APPLICATION_NAME, "Application");
-					}
-
-					EventLogEntryType entryType = EventLogEntryType.SuccessAudit;
-					switch(logLevel)
-					{
-						case LogLevel.INFO:
-							entryType = EventLogEntryType.Information;
-							break;
-						case LogLevel.WARNING:
-							entryType = EventLogEntryType.Warning;
-							break;
-						case LogLevel.ERROR:
-						case LogLevel.FATAL:
-							entryType = EventLogEntryType.Error;
-							break;
-
-						default:
-							break;
-
-					}
-					EventLog.WriteEntry(EVENT_LOG_APPLICATION_NAME, strOut, entryType);
-				}
-#else
 				Console.WriteLine(output);
-#endif
 			}
 		}
 

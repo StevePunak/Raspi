@@ -9,8 +9,9 @@ namespace RaspiCommon.Devices.Servos
 {
 	public class Servo
 	{
-		static readonly UInt32 MINIMUM = 600;
-		static readonly UInt32 MAXIMUM = 2200;
+		public static readonly UInt32 MINIMUM = 600;
+		public static readonly UInt32 MAXIMUM = 2400;
+		public static readonly UInt32 NEUTRAL = 2400;
 
 		public UInt32 Minimum { get; set; }
 		public UInt32 Maximum { get; set; }
@@ -34,6 +35,11 @@ namespace RaspiCommon.Devices.Servos
 			Minimum = MINIMUM;
 			Maximum = MAXIMUM;
 			Pin = pin;
+		}
+
+		public UInt32 MakePercentage(int percent)
+		{
+			return (UInt32)(((Double)Maximum - (Double)Minimum) * ((Double)percent / 100) + Minimum);
 		}
 	}
 }

@@ -12,7 +12,7 @@ using KanoopCommon.Geometry;
 using KanoopCommon.Logging;
 using RaspiCommon;
 using RaspiCommon.Data.DataSource;
-using RaspiCommon.Data.Entities;
+using RaspiCommon.Data.Entities.Track;
 using RaspiCommon.Extensions;
 using RaspiCommon.Lidar.Environs;
 using RaspiCommon.Spatial;

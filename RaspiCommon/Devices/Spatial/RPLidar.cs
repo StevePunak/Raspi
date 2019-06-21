@@ -198,7 +198,7 @@ namespace RaspiCommon.Devices.Spatial
 			return bitmap;
 		}
 
-		public bool StartExpressScan()
+		public virtual bool StartExpressScan()
 		{
 			LidarCommand command = new StartExpressScanCommand();
 			SendCommand(command);
@@ -207,7 +207,7 @@ namespace RaspiCommon.Devices.Spatial
 			return _tryGetResponse(TimeSpan.FromMilliseconds(500), out response);
 		}
 
-		public bool StopExpressScan()
+		public virtual bool StopExpressScan()
 		{
 			_responseQueue.Clear();
 			LidarCommand command = new StopCommand();
@@ -218,24 +218,25 @@ namespace RaspiCommon.Devices.Spatial
 			return true;
 		}
 
-		public bool GetDeviceInfo()
+		public virtual bool GetDeviceInfo()
 		{
 			LidarCommand command = new GetDeviceInfoCommand();
 			SendCommand(command);
 
 			LidarResponse response;
-			bool result = TryGetResponse(TimeSpan.FromMilliseconds(1500), out response);
+			bool result = TryGetResponse(TimeSpan.FromMilliseconds(5500), out response);
+			Log.SysLogText(LogLevel.INFO, "LIDAR: GetDeviceInfo {0}", result);
 			return result;
 		}
 
-		public bool StartScan()
+		public virtual bool StartScan()
 		{
 			LidarCommand command = new StartScanCommand();
 			SendCommand(command);
 			return true;
 		}
 
-		public bool StopScan()
+		public virtual bool StopScan()
 		{
 			_responseQueue.Clear();
 			LidarCommand command = new StopCommand();

@@ -94,9 +94,9 @@ namespace TrackBotCommon.InputDevices
 			}
 		}
 
-		public RadarController RadarController { get; private set; }
+		public PCSideRadarController RadarController { get; private set; }
 
-		public ClawControl(RadarController controller)
+		public ClawControl(PCSideRadarController controller)
 		{
 			RadarController = controller;
 			_rotation = _thrust = _elevation = _claw = 50;

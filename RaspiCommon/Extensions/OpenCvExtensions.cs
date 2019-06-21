@@ -272,6 +272,12 @@ namespace RaspiCommon.Extensions
 			DrawCenteredText(dest, text, fontFace, color, centerPoint, thickness, scale);
 		}
 
+		public static void DrawTextBelowRectangle(this Mat dest, String text, FontFace fontFace, Color color, Rectangle rectangle, int howFarBelow = 0, int thickness = 1, Double scale = 1)
+		{
+			Line line = new Line(new Point(rectangle.Left, rectangle.Bottom), new Point(rectangle.Right, rectangle.Bottom));
+			dest.DrawTextBelowLine(text, fontFace, color, line, howFarBelow, thickness, scale);
+		}
+
 		public static void DrawTextBelowLine(this Mat dest, String text, FontFace fontFace, Color color, Line line, int howFarBelow = 0, int thickness = 1, Double scale = 1)
 		{
 			int baseLine = 0;
@@ -426,9 +432,17 @@ namespace RaspiCommon.Extensions
 
 		public static Mat ToGrayscaleImage(this Mat inputImage)
 		{
-			Mat uimage = new Mat();
-			CvInvoke.CvtColor(inputImage, uimage, ColorConversion.Bgr2Gray);
-			return uimage;
+			Mat returnImage;
+			if(inputImage.NumberOfChannels > 1)
+			{
+				returnImage = new Mat();
+				CvInvoke.CvtColor(inputImage, returnImage, ColorConversion.Bgr2Gray);
+			}
+			else
+			{
+				returnImage = inputImage.Clone();
+			}
+			return returnImage;
 		}
 
 		public static Mat ToCannyImage(this Mat inputImage)
@@ -440,7 +454,36 @@ namespace RaspiCommon.Extensions
 
 		public static void LoadFromByteArray(this Mat image, byte[] data, ImreadModes mode = ImreadModes.Unchanged)
 		{
-			CvInvoke.Imdecode(data, mode, image);
+			unsafe
+			{
+				byte* ptr = (byte*)image.DataPointer.ToPointer();
+				Marshal.Copy(data, 0, image.DataPointer, data.Length);
+			}
+		}
+
+		public static byte[] ToByteArray(this Mat image)
+		{
+			byte[] data = new byte[image.NumberOfChannels * image.Rows * image.Cols];
+			unsafe
+			{
+				byte* ptr = (byte*)image.DataPointer.ToPointer();
+				Marshal.Copy(image.DataPointer, data, 0, data.Length);
+			}
+			return data;
+		}
+
+		public static Mat Resize(this Mat image, Size size, float fx = 0, float fy = 0, Inter interpolation = Inter.Linear)
+		{
+			Mat output = new Mat();
+			CvInvoke.Resize(image, output, size, fx, fy, interpolation);
+			return output;
+		}
+
+		public static List<Rectangle> FindObjects(this Mat image, CascadeClassifier classifier, Double scaleFactor = 1.1, int minNeighbors = 3, Size minimumSize = default(Size), Size maximumSize = default(Size))
+		{
+			Rectangle[] rectangles = classifier.DetectMultiScale(image, scaleFactor, minNeighbors, minimumSize, maximumSize);
+			List<Rectangle> result = new List<Rectangle>(rectangles);
+			return result;
 		}
 
 	}
