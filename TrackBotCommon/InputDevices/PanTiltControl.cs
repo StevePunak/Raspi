@@ -44,9 +44,9 @@ namespace TrackBotCommon.InputDevices
 			}
 		}
 
-		public PCSideRadarController RadarController { get; private set; }
+		public RaspiControlClient RadarController { get; private set; }
 
-		public PanTiltControl(PCSideRadarController controller)
+		public PanTiltControl(RaspiControlClient controller)
 		{
 			RadarController = controller;
 			_pan = _tilt = 50;

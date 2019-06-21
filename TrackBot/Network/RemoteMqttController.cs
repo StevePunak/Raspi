@@ -24,7 +24,7 @@ namespace TrackBot.Network
 		public event SpinStepReceivedHandler SpinRight;
 
 		public RemoteMqttController(String clientID)
-			: base(Program.Config.RadarHost, clientID, new List<String>() {
+			: base(Program.Config.MqttPublicHost, clientID, new List<String>() {
 																			MqttTypes.CommandsTopic,
 																			MqttTypes.ArmClawTopic,
 																			MqttTypes.ArmElevationTopic,

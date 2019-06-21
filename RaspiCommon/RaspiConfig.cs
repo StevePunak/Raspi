@@ -178,7 +178,8 @@ namespace RaspiCommon
 			set { _botImage = value; }
 		}
 
-		public String RadarHost { get; set; }
+		public String MqttPublicHost { get; set; }
+		public String MqttClusterHost { get; set; }
 
 		SqlDBCredentials _DBCredentials;
 		public SqlDBCredentials DBCredentials

@@ -306,7 +306,7 @@ namespace TrackBot
 
 		private void StartTelemetryServer()
 		{
-			Server = new TelemetryServer(this, Program.Config.RadarHost, "trackbot-lidar")
+			Server = new TelemetryServer(this, Program.Config.MqttPublicHost, "trackbot-lidar")
 			{
 				ImageDirectory = "/home/pi/images"
 			};
@@ -365,9 +365,9 @@ namespace TrackBot
 			ports.TerminateAll();
 			if(ports.Contains(Program.Config.LidarComPort) == true)
 			{
-				if(Program.Config.RadarHost == null)
+				if(Program.Config.MqttPublicHost == null)
 				{
-					Program.Config.RadarHost = "192.168.0.50";
+					Program.Config.MqttPublicHost = "192.168.0.50";
 					Program.Config.Save();
 				}
 				ImageEnvironment = new TrackLidar(Program.Config.LidarMetersSquare, Program.Config.LidarPixelsPerMeter, Program.Config.LidarSpinEnablePin);

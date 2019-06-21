@@ -59,26 +59,16 @@ namespace Testing
 			SetConfigDefaults();
 
 			Test();
-			//new LidarTest();
-			//new SerialTest();
-			new ImageTest();
-			//new FrameGrabTest();
-			//ConvertFiles();
-			//ImageClassify();
-			//LidarTest();
-			//ServoTest();
-			//XBoxTest();
-			//JoystickTest();
-			//			VideoTest();
-			//			MqttTest();
-			//			PointCloudTest();
-			//			EMGUTest();
 
-			//RunLidar();
 			Console.WriteLine("Done");
 		}
 
 		private static void Test()
+		{
+
+		}
+
+		private static void RecTests()
 		{
 			//LoadTrainingImagesIntoDatabase();
 			//SaveTrainingImagesToFiles(directory);
@@ -220,12 +210,15 @@ namespace Testing
 
 		static void SetConfigDefaults()
 		{
-			Config.RadarHost = "thufir";
-			Config.EigenRecognizerFile = @"c:\pub\classify\faces.eigen";
-			Config.LBPHRecognizerFile = @"c:\pub\classify\faces.lbph";
-			Config.FisherRecognizerFile = @"c:\pub\classify\faces.fisher";
-			Config.RemoteImageDirectory = @"\\raspi\pi\images";
-			Config.FaceCascadeFile = @"c:\pub\classify\cascades\haarcascade_frontalface_default.xml";
+			Config.MqttPublicHost = "thufir";
+			Config.MqttClusterHost = "raspi3";
+			Config.EigenRecognizerFile = Path.Combine(RaspiPaths.ClassifyRoot, "faces.eigen");
+			Config.LBPHRecognizerFile = Path.Combine(RaspiPaths.ClassifyRoot, "faces.lbph");
+			Config.FisherRecognizerFile = Path.Combine(RaspiPaths.ClassifyRoot, "faces.fisher");
+			Config.FaceCascadeFile = Path.Combine(RaspiPaths.ClassifyRoot, "haarcascade_frontalface_default.xml");
+			Config.MqttClusterHost = "thufir";
+			Config.MqttPublicHost = "raspi3";
+//			Config.RemoteImageDirectory = @"\\raspi\pi\images";
 			Config.Save();
 		}
 

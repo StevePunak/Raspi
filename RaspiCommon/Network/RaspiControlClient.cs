@@ -15,7 +15,7 @@ using RaspiCommon.Network;
 
 namespace RaspiCommon.Network
 {
-	public class RadarController
+	public class RaspiControlClient
 	{
 		#region Properties
 
@@ -29,7 +29,7 @@ namespace RaspiCommon.Network
 
 		#region Constructor
 
-		public RadarController(String brokerAddress, String mqqtClientID)
+		public RaspiControlClient(String brokerAddress, String mqqtClientID)
 		{
 			IPAddress address;
 

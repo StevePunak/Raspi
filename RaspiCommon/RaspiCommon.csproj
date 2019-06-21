@@ -127,7 +127,7 @@
     <Compile Include="GraphicalHelp\ColoredObjectCandidate.cs" />
     <Compile Include="GraphicalHelp\MatEvaluation.cs" />
     <Compile Include="IWidgetCollection.cs" />
-    <Compile Include="Network\RadarController.cs" />
+    <Compile Include="Network\RaspiControlClient.cs" />
     <Compile Include="OpenCvExceptionHandler.cs" />
     <Compile Include="Devices\Servos\ServoMoveThread.cs" />
     <Compile Include="Devices\Servos\ServoParameters.cs" />

@@ -181,7 +181,7 @@ namespace Radar
 
 		static void SetConfigDefaults()
 		{
-			Config.RadarHost = "thufir";
+			Config.MqttPublicHost = "thufir";
 			Config.EigenRecognizerFile = @"c:\pub\classify\faces.eigen";
 			Config.LBPHRecognizerFile = @"c:\pub\classify\faces.lbph";
 			Config.FisherRecognizerFile = @"c:\pub\classify\faces.fisher";

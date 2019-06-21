@@ -21,9 +21,9 @@ namespace Radar
 
 		private void OnFormLoad(object sender, EventArgs args)
 		{
-			if(String.IsNullOrEmpty(Host) && Program.Config.RadarHost == null)
+			if(String.IsNullOrEmpty(Host) && Program.Config.MqttPublicHost == null)
 			{
-				Program.Config.RadarHost = "raspi";
+				Program.Config.MqttPublicHost = "raspi";
 				Program.Config.Save();
 			}
 
@@ -42,7 +42,7 @@ namespace Radar
 		private void OnOKClicked(object sender, EventArgs e)
 		{
 			Host = textHost.Text;
-			Program.Config.RadarHost = textHost.Text;
+			Program.Config.MqttPublicHost = textHost.Text;
 			DialogResult = DialogResult.OK;
 			Close();
 		}

@@ -79,7 +79,7 @@ namespace Radar
 		}
 
 		TelemetryClient _client;
-		PCSideRadarController _mqqtController;
+		RaspiControlClient _mqqtController;
 		String Host { get; set; }
 
 		Chassis Chassis { get; set; }
@@ -142,7 +142,7 @@ namespace Radar
 			_client = null;
 			_faceRecognizerReady = false;
 
-			Host = String.IsNullOrEmpty(Program.Config.RadarHost) ? "raspi" : Program.Config.RadarHost;
+			Host = String.IsNullOrEmpty(Program.Config.MqttPublicHost) ? "raspi" : Program.Config.MqttPublicHost;
 			InitializeComponent();
 
 			Image < Bgr, Byte > imageCV = new Image<Bgr, byte>(Properties.Resources.tank);
@@ -454,7 +454,7 @@ namespace Radar
 
 		void GetConnected()
 		{
-			_client = new TelemetryClient(Program.Config.RadarHost, MqttClient.MakeRandomID(Text),
+			_client = new TelemetryClient(Program.Config.MqttPublicHost, MqttClient.MakeRandomID(Text),
 				new List<string>()
 				{
 					MqttTypes.CurrentPathTopic,
@@ -480,7 +480,7 @@ namespace Radar
 			_client.SpeedAndBearing += OnSpeedAndBearingReceived;
 			_client.Start();
 
-			_mqqtController = new PCSideRadarController(Program.Config.RadarHost, MqttClient.MakeRandomID(Text));
+			_mqqtController = new RaspiControlClient(Program.Config.MqttPublicHost, MqttClient.MakeRandomID(Text));
 			_clawControl = new ClawControl(_mqqtController);
 			_panTilt = new PanTiltControl(_mqqtController);
 		}
