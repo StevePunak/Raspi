@@ -110,10 +110,6 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\KanoopCommon\KanoopCommon.csproj">
-      <Project>{5c9d80a6-6fc0-4b59-b1cf-d2ec261b4b00}</Project>
-      <Name>KanoopCommon</Name>
-    </ProjectReference>
     <ProjectReference Include="..\RaspiCommon\RaspiCommon.csproj">
       <Project>{0194337c-274d-42f2-a1db-0166f0ac73eb}</Project>
       <Name>RaspiCommon</Name>

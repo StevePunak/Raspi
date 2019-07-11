@@ -27,6 +27,11 @@ namespace RaspiCommon.Lidar
 			RefreshTime = DateTime.MinValue;
 		}
 
+		/// <summary>
+		/// Load the input array from the given blob
+		/// </summary>
+		/// <param name="vectors"></param>
+		/// <param name="blob"></param>
 		public static void LoadFromRangeBlob(LidarVector[] vectors, byte[] blob)
 		{
 			if(blob.Length == 0)

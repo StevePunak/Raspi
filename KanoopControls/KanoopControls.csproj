@@ -137,8 +137,8 @@
     <Folder Include="obj\x64\Debug\TempPE\" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\KanoopCommon\KanoopCommon.csproj">
-      <Project>{5C9D80A6-6FC0-4B59-B1CF-D2EC261B4B00}</Project>
+    <ProjectReference Include="..\..\KanoopCommon\KanoopCommon.csproj">
+      <Project>{5c9d80a6-6fc0-4b59-b1cf-d2ec261b4b00}</Project>
       <Name>KanoopCommon</Name>
     </ProjectReference>
   </ItemGroup>

@@ -272,7 +272,7 @@ namespace RaspiCommon.Network
 
 		void SendRangeData()
 		{
-//			Log.LogText(LogLevel.DEBUG, "Sending Range Data");
+			//Log.LogText(LogLevel.DEBUG, "Sending Range Data");
 			byte[] output = Widgets.ImageEnvironment.MakeRangeBlob();
 			Client.Publish(MqttTypes.RangeBlobTopic, output);
 		}

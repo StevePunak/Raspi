@@ -7,9 +7,9 @@ using System.Threading.Tasks;
 using Emgu.CV;
 using RaspiCommon.Extensions;
 
-namespace RaspiCommon.Devices.Optics
+namespace RaspiCommon.Devices.Optics.Classifiers
 {
-	public class BatonFinder
+	public class ThingFinder
 	{
 		public TimeSpan MinimumInterval { get; set; }
 		public DateTime LastDetectTime { get; protected set; }
@@ -18,7 +18,7 @@ namespace RaspiCommon.Devices.Optics
 
 		FoundObjectList Objects { get; set; }
 
-		public BatonFinder(String cascadeFile)
+		public ThingFinder(String cascadeFile)
 		{
 			FileName = cascadeFile;
 			Classifier = new CascadeClassifier(cascadeFile);
@@ -33,13 +33,12 @@ namespace RaspiCommon.Devices.Optics
 				List<Rectangle> rectangles = frame.FindObjects(Classifier, 1.1, 3);
 				foreach(Rectangle rectangle in rectangles)
 				{
-					objects.Add(new FoundObject() { DetectTime = DateTime.UtcNow, Rectangle = rectangle } );
+					objects.Add(new FoundObject() { DetectTime = DateTime.UtcNow, Rectangle = rectangle });
 				}
 				LastDetectTime = DateTime.UtcNow;
 				Objects = objects;
 			}
 			return Objects;
 		}
-
 	}
 }

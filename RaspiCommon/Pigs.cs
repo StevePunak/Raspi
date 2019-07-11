@@ -26,7 +26,7 @@ namespace RaspiCommon
 			{
 				_client = null;
 			}
-			_client = new TcpClient("127.0.0.1", 8888);
+			_client = new TcpClient("raspi", 8888);
 		}
 
 		public static void SendCommand(PigCommand command)
@@ -35,7 +35,9 @@ namespace RaspiCommon
 			{
 				Start();
 			}
-			_client.Client.Send(command.Serialize());
+			byte[] serialized = command.Serialize();
+			Log.SysLogHex(LogLevel.DEBUG, serialized);
+			_client.Client.Send(serialized);
 		}
 
 		internal static void Stop()

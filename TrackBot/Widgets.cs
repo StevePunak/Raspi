@@ -82,6 +82,8 @@ namespace TrackBot
 
 		public PanTilt PanTilt { get; private set; }
 
+		public NetworkLidar NetworkLidar;
+
 		static Widgets _instance;
 		public static Widgets Instance
 		{

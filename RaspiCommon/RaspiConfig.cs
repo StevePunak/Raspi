@@ -130,6 +130,7 @@ namespace RaspiCommon
 		}
 
 		public String LidarComPort { get; set; }
+		public String LidarServer { get; set; }
 
 		public Double LidarMetersSquare { get { return 10; } }
 		public Double LidarPixelsPerMeter { get { return 50; } }

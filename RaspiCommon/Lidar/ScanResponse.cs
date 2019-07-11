@@ -17,7 +17,7 @@ namespace RaspiCommon.Lidar
 		public int AngleQ6 { get; private set; }
 		public Double Angle { get; private set; }
 		public int DistanceQ2 { get; private set; }
-		public Double Distance { get; private set; }
+		public Double Range { get; private set; }
 
 		public byte[] Bytes { get; private set; }
 
@@ -38,7 +38,7 @@ namespace RaspiCommon.Lidar
 				CheckBit = Bytes[1] & 0x01;
 				AngleQ6 = (Bytes[2] << 7) | (Bytes[1] >> 1);
 				Angle = (Double)AngleQ6 / 64.0;
-				Distance = (((Bytes[4] << 8) | Bytes[3]) / 4.0) / 1000;
+				Range = (((Bytes[4] << 8) | Bytes[3]) / 4.0) / 1000;
 			}
 		}
 
@@ -52,7 +52,7 @@ namespace RaspiCommon.Lidar
 		public override string ToString()
 		{
 			return String.Format("Q: {0}  Angle: {1}  Distance: {2:0.00}    sf: {3}  cb: {4}",
-				Quality, Angle, Distance, StartFlag, CheckBit);
+				Quality, Angle, Range, StartFlag, CheckBit);
 		}
 	}
 

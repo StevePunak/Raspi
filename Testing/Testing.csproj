@@ -65,7 +65,9 @@
     <Compile Include="FrameGrabTest.cs" />
     <Compile Include="ImageConvert.cs" />
     <Compile Include="ImageTest.cs" />
+    <Compile Include="LidarClientTest.cs" />
     <Compile Include="LidarTest.cs" />
+    <Compile Include="PigsTest.cs" />
     <Compile Include="Pixel.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -77,7 +79,7 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\KanoopCommon\KanoopCommon.csproj">
+    <ProjectReference Include="..\..\KanoopCommon\KanoopCommon.csproj">
       <Project>{5c9d80a6-6fc0-4b59-b1cf-d2ec261b4b00}</Project>
       <Name>KanoopCommon</Name>
     </ProjectReference>

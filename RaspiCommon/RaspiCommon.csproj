@@ -97,9 +97,11 @@
     <Compile Include="Devices\Locomotion\TrackSpeed.cs" />
     <Compile Include="Devices\MotorControl\DRV8825StepperControl.cs" />
     <Compile Include="Devices\MotorControl\ESC.cs" />
-    <Compile Include="Devices\Optics\BatonFinder.cs" />
+    <Compile Include="Devices\Optics\Classifiers\BatonFinder.cs" />
     <Compile Include="Devices\Optics\Camera.cs" />
+    <Compile Include="Devices\Optics\Classifiers\ThingFinder.cs" />
     <Compile Include="Devices\Optics\ColorThreshold.cs" />
+    <Compile Include="Devices\Optics\Classifiers\FaceFinder.cs" />
     <Compile Include="Devices\Optics\FacePrediction.cs" />
     <Compile Include="Devices\Optics\FoundObject.cs" />
     <Compile Include="Devices\Optics\LED.cs" />
@@ -116,6 +118,7 @@
     <Compile Include="Devices\Optics\RaspiCamCv.cs" />
     <Compile Include="Devices\Optics\Types.cs" />
     <Compile Include="Devices\RobotArms\MeArm.cs" />
+    <Compile Include="Devices\Spatial\NetworkLidar.cs" />
     <Compile Include="Extensions\GraphicsExtensions.cs" />
     <Compile Include="Extensions\LidarVectorExtensions.cs" />
     <Compile Include="Extensions\OpenCvExtensions.cs" />
@@ -127,10 +130,13 @@
     <Compile Include="GraphicalHelp\ColoredObjectCandidate.cs" />
     <Compile Include="GraphicalHelp\MatEvaluation.cs" />
     <Compile Include="IWidgetCollection.cs" />
+    <Compile Include="Network\RaspiCluster.cs" />
     <Compile Include="Network\RaspiControlClient.cs" />
+    <Compile Include="Network\RPLidarClient.cs" />
     <Compile Include="OpenCvExceptionHandler.cs" />
     <Compile Include="Devices\Servos\ServoMoveThread.cs" />
     <Compile Include="Devices\Servos\ServoParameters.cs" />
+    <Compile Include="RaspiPaths.cs" />
     <Compile Include="Spatial\DeadReckoning\DeadReckoningEnvironment.cs" />
     <Compile Include="Spatial\DeadReckoning\DRGrid.cs" />
     <Compile Include="Spatial\DeadReckoning\DRMatrix.cs" />
@@ -179,7 +185,7 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\KanoopCommon\KanoopCommon.csproj">
+    <ProjectReference Include="..\..\KanoopCommon\KanoopCommon.csproj">
       <Project>{5c9d80a6-6fc0-4b59-b1cf-d2ec261b4b00}</Project>
       <Name>KanoopCommon</Name>
     </ProjectReference>

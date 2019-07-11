@@ -129,7 +129,7 @@
     <None Include="synctopi.sh" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\KanoopCommon\KanoopCommon.csproj">
+    <ProjectReference Include="..\..\KanoopCommon\KanoopCommon.csproj">
       <Project>{5c9d80a6-6fc0-4b59-b1cf-d2ec261b4b00}</Project>
       <Name>KanoopCommon</Name>
     </ProjectReference>

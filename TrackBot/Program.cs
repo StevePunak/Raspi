@@ -82,6 +82,16 @@ namespace TrackBot
 
 #endif
 			Program.Config.LidarComPort = "/dev/ttyS0";
+			Program.Config.LidarServer = "raspi:5959";
+
+			// 11 13 5    10 9 4
+			Program.Config.TracksLeftA1Pin = GpioPin.Pin10;
+			Program.Config.TracksLeftA2Pin = GpioPin.Pin09;
+			Program.Config.TracksLeftEnaPin = GpioPin.Pin04;
+
+			Program.Config.TracksRightA1Pin = GpioPin.Pin11;
+			Program.Config.TracksRightA2Pin = GpioPin.Pin13;
+			Program.Config.TracksRightEnaPin = GpioPin.Pin05;
 
 			Program.Config.ClawRotationPin = GpioPin.Pin18;
 			Program.Config.ClawLeftPin = GpioPin.Pin22;
@@ -90,12 +100,12 @@ namespace TrackBot
 
 			Program.Config.ClawRotationPinMin = 1000;
 			Program.Config.ClawRotationPinMax = 2000;
-			Program.Config.ClawLeftPinMin = 600;
-			Program.Config.ClawLeftPinMax = 1400;
-			Program.Config.ClawRightPinMin = 900;
-			Program.Config.ClawRightPinMax = 2400;
-			Program.Config.ClawPinMin = 1000;
-			Program.Config.ClawPinMax = 2000;
+			Program.Config.ClawLeftPinMin = 800;
+			Program.Config.ClawLeftPinMax = 1700;
+			Program.Config.ClawRightPinMin = 800;
+			Program.Config.ClawRightPinMax = 2200;
+			Program.Config.ClawPinMin = 600;
+			Program.Config.ClawPinMax = 1600;
 
 			Program.Config.PanPin = GpioPin.Pin06;
 			Program.Config.TiltPin = GpioPin.Pin19;
@@ -103,6 +113,13 @@ namespace TrackBot
 			Program.Config.LidarSpinEnablePin = GpioPin.Pin24;
 
 			Program.Config.SnapshotUrl = "http://127.0.0.1:8085/?action=snapshot";
+
+			Program.Config.EigenRecognizerFile = Path.Combine(RaspiPaths.ClassifyRoot, "faces.eigen");
+			Program.Config.LBPHRecognizerFile = Path.Combine(RaspiPaths.ClassifyRoot, "faces.lbph");
+			Program.Config.FisherRecognizerFile = Path.Combine(RaspiPaths.ClassifyRoot, "faces.fisher");
+			Program.Config.FaceCascadeFile = Path.Combine(RaspiPaths.ClassifyRoot, "haarcascade_frontalface_default.xml");
+			Program.Config.MqttClusterHost = "raspi3";
+			Program.Config.MqttPublicHost = "thufir";
 
 			Program.Config.Save();
 #if zero

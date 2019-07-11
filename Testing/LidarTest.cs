@@ -12,7 +12,7 @@ namespace Testing
 	{
 		public LidarTest()
 		{
-			RPLidar lidar = new RPLidar("/dev/ttyS0", 360.0/4);
+			RPLidar lidar = new RPLidar("COM5", 360.0/4);
 			lidar.Sample += OnLidarSample;
 			lidar.Start();
 			lidar.GetDeviceInfo();

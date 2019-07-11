@@ -87,10 +87,6 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\KanoopCommon\KanoopCommon.csproj">
-      <Project>{5c9d80a6-6fc0-4b59-b1cf-d2ec261b4b00}</Project>
-      <Name>KanoopCommon</Name>
-    </ProjectReference>
     <ProjectReference Include="..\MQTT\MQTT.csproj">
       <Project>{52296cef-4bc8-423a-a1d9-9b900b3e99b9}</Project>
       <Name>MQTT</Name>

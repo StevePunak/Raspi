@@ -27,8 +27,11 @@ using RaspiCommon.Devices.Chassis;
 using RaspiCommon.Devices.GamePads;
 using RaspiCommon.Devices.Locomotion;
 using RaspiCommon.Devices.Optics;
+using RaspiCommon.Devices.Optics.Classifiers;
+using RaspiCommon.Devices.Spatial;
 using RaspiCommon.Extensions;
 using RaspiCommon.GraphicalHelp;
+using RaspiCommon.Lidar;
 using RaspiCommon.Lidar.Environs;
 using RaspiCommon.Network;
 using RaspiCommon.Spatial;
@@ -62,7 +65,7 @@ namespace Radar
 		{
 			get
 			{
-				Double value = _client != null && _client.ImageMetrics != null
+				Double value = _client != null && _client.ImageMetrics != null && _client.ImageMetrics.PixelsPerMeter != 0
 					? _client.ImageMetrics.PixelsPerMeter : 50;
 				return value;
 			}
@@ -133,14 +136,14 @@ namespace Radar
 		FaceNameList _faceNames;
 
 		FaceRecognizer _faceRecognizer;
-		bool _faceRecognizerReady;
+		NetworkLidar _lidarClient;
+		LidarVector[] _vectors;
 
 		public RadarForm()
 		{
 			_capture = null;
 			_captureFrame = null;
 			_client = null;
-			_faceRecognizerReady = false;
 
 			Host = String.IsNullOrEmpty(Program.Config.MqttPublicHost) ? "raspi" : Program.Config.MqttPublicHost;
 			InitializeComponent();
@@ -196,6 +199,10 @@ namespace Radar
 				{
 					MinimumInterval = TimeSpan.FromSeconds(1),
 				};
+				FaceFinder = new FaceFinder(Program.Config.FaceCascadeFile)
+				{
+					MinimumInterval = TimeSpan.FromSeconds(1),
+				};
 
 				new Thread(delegate ()
 				{
@@ -230,6 +237,10 @@ namespace Radar
 				_gamepad.RightTriggerChanged += OnGampadRightTriggerChanged;
 				_gamepad.Start();
 
+				_lidarClient = new NetworkLidar(Program.Config.LidarServer);
+				_lidarClient.RangeBlobReceived += OnLidarClientRangeBlobReceived;
+				_lidarClient.Start();
+
 				btnStartStop.Text = "Start";
 
 				_layoutComplete = true;
@@ -239,6 +250,11 @@ namespace Radar
 				MessageBox.Show(e.Message);
 				Close();
 			}
+		}
+
+		private void OnLidarClientRangeBlobReceived(LidarVector[] vectors)
+		{
+			_vectors = vectors;
 		}
 
 		void StartVideoFeed()
@@ -401,10 +417,11 @@ namespace Radar
 			if(_client == null || _client.Connected == false)
 				return;
 
-			PointCloud2D cloud = _client.Vectors.ToPointCloud2D();
+			PointCloud2D cloud = _vectors != null ? _vectors.ToPointCloud2D() : _client.Vectors.ToPointCloud2D();
 
 			// draw all the dots
 			Mat bitmap = cloud.ToBitmap(_radarBitmap.Height, Color.Red, PixelsPerMeterImage);
+			//bitmap.Save(@"c:\pub\tmp\lidar.bmp");
 			PointD origin = bitmap.Center();
 
 			// draw fuzzy path

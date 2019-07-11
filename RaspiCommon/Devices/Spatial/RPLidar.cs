@@ -1,8 +1,10 @@
-#undef DEBUG_SERIAL
+#define DEBUG_SERIAL
+#undef TRACE_SERIAL
 
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.IO;
 using System.IO.Ports;
 using System.Linq;
 using System.Text;
@@ -71,8 +73,11 @@ namespace RaspiCommon.Devices.Spatial
 		MemoryQueue<LidarResponse> _responseQueue;
 
 		int _responseWaiters;
+#if TRACE_SERIAL
+		FileStream _traceFile;
+#endif
 
-		#endregion
+#endregion
 
 		enum State
 		{
@@ -126,6 +131,9 @@ namespace RaspiCommon.Devices.Spatial
 			DebugAngle = -1;
 
 			VectorRefreshTime = TimeSpan.FromSeconds(.5);
+
+			//byte[] bytes = File.ReadAllBytes(@"c:\pub\tmp\csharp_lidar.bin");
+			//OnSerialDataReceived(bytes, bytes.Length);
 		}
 
 		public Double GetRangeAtBearing(Double bearing)
@@ -144,6 +152,12 @@ namespace RaspiCommon.Devices.Spatial
 		{
 			_recvOffset = _bytesInBuffer = 0;
 			_state = State.Sync;
+
+#if TRACE_SERIAL
+			String traceFile = Path.Combine(Directory.GetCurrentDirectory(), "lidar.bin");
+			_traceFile = new FileStream(traceFile, FileMode.CreateNew);
+			Log.SysLogText(LogLevel.INFO, "Opening serial trace file '{0}'", traceFile);
+#endif
 
 			Port = new MonoSerialPort(PortName);
 			Port.Port.BaudRate = 115200;
@@ -281,8 +295,11 @@ namespace RaspiCommon.Devices.Spatial
 			try
 			{
 #if DEBUG_SERIAL
-				Log.SysLogText(LogLevel.DEBUG, "INBOUND");
+				Log.SysLogText(LogLevel.DEBUG, $"INBOUND {length}");
 				Log.SysLogHex(LogLevel.DEBUG, buffer, 0, length);
+#endif
+#if TRACE_SERIAL
+				_traceFile.Write(buffer, 0, length);
 #endif
 				if(length + _bytesInBuffer > _receiveBuffer.Length)
 				{
@@ -421,18 +438,18 @@ namespace RaspiCommon.Devices.Spatial
 			if(DebugAngle >= 0 && angle.AngularDifference(DebugAngle) < 1)
 			{
 				Log.SysLogText(LogLevel.DEBUG, "response Angle {0:0.000}°  adjusted {1:000}° + {2:0.000}° to {3:0.000}°  Range: {4:0.00}m  Quality {5}",
-					response.Angle, Bearing, Offset, angle, response.Distance, response.Quality);
+					response.Angle, Bearing, Offset, angle, response.Range, response.Quality);
 			}
 			if(response.Quality > 10 && response.CheckBit == 1 && response.StartFlag == 1 && response.Angle < 360 && response.Angle >= 0)
 			{
 				Double offset = angle / VectorSize;
 
 								//Console.WriteLine("Got entry at {0}... Clear from {1} to {2}", intOffset, VectorArrayInc(_lastScanOffset), intOffset);
-				if(response.Distance > .010)
+				if(response.Range > .010)
 				{
-					Double distance = Math.Max(response.Distance, .001);
+					Double distance = Math.Max(response.Range, .001);
 					DateTime now = DateTime.UtcNow;
-					//Log.SysLogText(LogLevel.DEBUG, "Putting sample at offset {0}  Bearing {1}  Offset {2}", offset, Bearing, Offset);
+					Log.SysLogText(LogLevel.DEBUG, "Putting sample at offset {0}  Bearing {1}  Offset {2}", offset, Bearing, Offset);
 					Vectors[(int)offset].Range = distance;
 					Vectors[(int)offset].RefreshTime = now;
 					_lastGoodSampleTime = now;
@@ -537,7 +554,6 @@ namespace RaspiCommon.Devices.Spatial
 				_chunkLength = (int)(value & 0x3FFF);
 				_responseMode = (ResponseMode)(value >> 30);
 				_responseType = (LidarTypes.ResponseType)_receiveBuffer[_recvOffset + 4];
-
 #if DEBUG_SERIAL
 				Log.SysLogText(LogLevel.DEBUG, "len: 0x{0:X4}  mode: {1} value: 0x{2:X4} type: {3}", _chunkLength, _responseMode, value, _responseType);
 #endif

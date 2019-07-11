@@ -13,6 +13,7 @@ using Emgu.CV.CvEnum;
 using Emgu.CV.Face;
 using Emgu.CV.Structure;
 using Emgu.CV.Util;
+using KanoopCommon.Conversions;
 using KanoopCommon.Database;
 using KanoopCommon.Extensions;
 using KanoopCommon.Geometry;
@@ -65,7 +66,10 @@ namespace Testing
 
 		private static void Test()
 		{
-
+			new LidarClientTest();
+			//new PigsTest();
+			//new SerialTest();
+			//new LidarTest();
 		}
 
 		private static void RecTests()
