@@ -55,7 +55,7 @@ namespace RaspiCommon.Lidar.Environs
 		public PointD BitmapCenter { get { return new PointD(Image.Width / 2, Image.Height / 2); } }
 		public PointD GeoCenter { get { return BitmapCenter; } }
 
-		public RPLidar Lidar { get; set; }
+		public LidarBase Lidar { get; set; }
 
 		public PointD RelativeLocation { get; set; }
 

@@ -59,7 +59,7 @@ namespace TrackBot
 		{
 			try
 			{
-				Defaults();
+				SetConfigValues();
 				Console.WriteLine("{0}", Program.Config.CameraParameters);
 			}
 			catch(Exception e)
@@ -68,7 +68,7 @@ namespace TrackBot
 			}
 		}
 
-		static void Defaults()
+		static void SetConfigValues()
 		{
 #if zero
 			Program.Config.RemoteImageDirectory = "/home/pi/images";
@@ -118,13 +118,64 @@ namespace TrackBot
 			Program.Config.LBPHRecognizerFile = Path.Combine(RaspiPaths.ClassifyRoot, "faces.lbph");
 			Program.Config.FisherRecognizerFile = Path.Combine(RaspiPaths.ClassifyRoot, "faces.fisher");
 			Program.Config.FaceCascadeFile = Path.Combine(RaspiPaths.ClassifyRoot, "haarcascade_frontalface_default.xml");
-			Program.Config.MqttClusterHost = "raspi3";
+			Program.Config.MqttClusterHost = "raspi2";
 			Program.Config.MqttPublicHost = "thufir";
+			Program.Config.MqttPublicHost = "192.168.0.50";
 
+			if(Environment.MachineName.Contains("raspi1"))
+			{
+				SetConfigDefaultsRaspi1();
+			}
+			if(Environment.MachineName.Contains("raspi2"))
+			{
+				SetConfigDefaultsRaspi2();
+			}
 			Program.Config.Save();
 #if zero
 			Program.Config.CameraParameters.SnapshotDelay = TimeSpan.FromMilliseconds(1500);
 #endif
+		}
+
+		static void SetConfigDefaultsRaspi1()
+		{
+			Program.Config.ServoControllerEnabled = true;
+			Program.Config.PanTiltEnabled = true;
+			Program.Config.ChassisEnabled = true;
+			Program.Config.DatabaseEnabled = true;
+			Program.Config.CommandServerEnabled = true;
+			Program.Config.RangeFindersEnabled = true;
+			Program.Config.TracksEnabled = true;
+			Program.Config.PhysicalCompassEnabled = true;
+			Program.Config.MqttCompassEnabled = true;
+			Program.Config.LidarEnabled = true;
+			Program.Config.ActivitiesEnabled = true;
+			Program.Config.LiftEnabled = true;
+			Program.Config.CameraEnabled = false;
+			Program.Config.SaveImageThreadEnabled = true;
+			Program.Config.SpatialPollingEnabled = true;
+			Program.Config.DeadReckoningEnvironmentEnabled = true;
+			Program.Config.RobotArmEnabled = true;
+		}
+
+		static void SetConfigDefaultsRaspi2()
+		{
+			Program.Config.ServoControllerEnabled = false;
+			Program.Config.PanTiltEnabled = false;
+			Program.Config.ChassisEnabled = false;
+			Program.Config.DatabaseEnabled = false;
+			Program.Config.CommandServerEnabled = true;
+			Program.Config.RangeFindersEnabled = false;
+			Program.Config.TracksEnabled = false;
+			Program.Config.PhysicalCompassEnabled = false;
+			Program.Config.MqttCompassEnabled = false;
+			Program.Config.LidarEnabled = false;
+			Program.Config.ActivitiesEnabled = false;
+			Program.Config.LiftEnabled = false;
+			Program.Config.CameraEnabled = true;
+			Program.Config.SaveImageThreadEnabled = false;
+			Program.Config.SpatialPollingEnabled = false;
+			Program.Config.DeadReckoningEnvironmentEnabled = false;
+			Program.Config.RobotArmEnabled = false;
 		}
 
 		private static void OpenConfig()

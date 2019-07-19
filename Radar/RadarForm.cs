@@ -237,7 +237,7 @@ namespace Radar
 				_gamepad.RightTriggerChanged += OnGampadRightTriggerChanged;
 				_gamepad.Start();
 
-				_lidarClient = new NetworkLidar(Program.Config.LidarServer);
+				_lidarClient = new NetworkLidar(Program.Config.LidarServer, .25);
 				_lidarClient.RangeBlobReceived += OnLidarClientRangeBlobReceived;
 				_lidarClient.Start();
 

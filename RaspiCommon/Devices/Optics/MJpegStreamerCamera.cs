@@ -62,7 +62,6 @@ namespace RaspiCommon.Devices.Optics
 		public override bool SnapPhoto(out Mat image)
 		{
 			image = null;
-			return false;
 			Log.LogText(LogLevel.DEBUG, "{0} SnapPhoto", this);
 			bool result = false;
 			try

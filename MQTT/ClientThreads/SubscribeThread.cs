@@ -6,9 +6,9 @@ using System.Text;
 using System.Threading.Tasks;
 using MQTT.Packets;
 
-namespace MQTT.Examples
+namespace MQTT.ClientThreads
 {
-	public class SubscribeThread : MqttExampleThread
+	public class SubscribeThread : MqttClientThread
 	{
 		public event PublishedMessageReceivedHandler InboundSubscribedMessage;
 

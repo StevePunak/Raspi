@@ -20,6 +20,24 @@ namespace RaspiCommon
 	{
 		const String CONFIG_FILE = "/var/robo/robo.config";
 
+		public bool ServoControllerEnabled { get; set; }
+		public bool PanTiltEnabled { get; set; }
+		public bool ChassisEnabled { get; set; }
+		public bool DatabaseEnabled { get; set; }
+		public bool CommandServerEnabled { get; set; }
+		public bool RangeFindersEnabled { get; set; }
+		public bool TracksEnabled { get; set; }
+		public bool LidarEnabled { get; set; }
+		public bool PhysicalCompassEnabled { get; set; }
+		public bool MqttCompassEnabled { get; set; }
+		public bool ActivitiesEnabled { get; set; }
+		public bool LiftEnabled { get; set; }
+		public bool CameraEnabled { get; set; }
+		public bool SaveImageThreadEnabled { get; set; }
+		public bool SpatialPollingEnabled { get; set; }
+		public bool DeadReckoningEnvironmentEnabled { get; set; }
+		public bool RobotArmEnabled { get; set; }
+
 		public String LogFileName
 		{
 			get { return "/var/log/robo/robo.log";  }

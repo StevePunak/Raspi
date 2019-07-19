@@ -42,9 +42,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Constants.cs" />
-    <Compile Include="Examples\MqttExampleThread.cs" />
-    <Compile Include="Examples\PublishThread.cs" />
-    <Compile Include="Examples\SubscribeThread.cs" />
+    <Compile Include="ClientThreads\MqttClientThread.cs" />
+    <Compile Include="ClientThreads\PublishThread.cs" />
+    <Compile Include="ClientThreads\SubscribeThread.cs" />
     <Compile Include="MalformedPacketException.cs" />
     <Compile Include="MqttClient.cs" />
     <Compile Include="MqttException.cs" />

@@ -1,4 +1,4 @@
-﻿#define TRACE_LIDAR
+﻿#undef TRACE_LIDAR
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -31,7 +31,6 @@ namespace RaspiCommon.Network
 
 		byte[] _receiveBuffer;
 		int _bytesInBuffer;
-		int _receiveOffset;
 		Timer _timer;
 
 #if TRACE_LIDAR
@@ -57,6 +56,7 @@ namespace RaspiCommon.Network
 		{
 			try
 			{
+				Log.SysLogText(LogLevel.INFO, $"Attempting to connect to {ServerAddress}");
 				Reset();
 				Client = new TcpClientClient();
 				Client.DataReceived += OnClientDataReceived;
@@ -176,7 +176,6 @@ namespace RaspiCommon.Network
 		{
 			_receiveBuffer = new byte[65536];
 			_bytesInBuffer = 0;
-			_receiveOffset = 0;
 		}
 
 	}

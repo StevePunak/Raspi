@@ -12,7 +12,7 @@ using KanoopCommon.Serialization;
 using KanoopCommon.TCP.Clients;
 using KanoopCommon.Threading;
 using MQTT;
-using MQTT.Examples;
+using MQTT.ClientThreads;
 using MQTT.Packets;
 using RaspiCommon.Devices.Chassis;
 using RaspiCommon.Devices.Locomotion;

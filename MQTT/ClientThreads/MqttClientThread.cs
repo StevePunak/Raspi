@@ -9,9 +9,9 @@ using KanoopCommon.Extensions;
 using KanoopCommon.Logging;
 using KanoopCommon.Threading;
 
-namespace MQTT.Examples
+namespace MQTT.ClientThreads
 {
-	public abstract class MqttExampleThread : ThreadBase
+	public abstract class MqttClientThread : ThreadBase
 	{
 		public IPAddress BrokerAddress { get; set; }
 		public String ClientID { get; set; }
@@ -24,7 +24,7 @@ namespace MQTT.Examples
 
 		protected abstract void DoWork();
 
-		public MqttExampleThread(String name, String brokerAddress, String clientID, List<String> topics)
+		public MqttClientThread(String name, String brokerAddress, String clientID, List<String> topics)
 			: base(name)
 		{
 			IPAddress address;

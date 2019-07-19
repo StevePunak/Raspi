@@ -62,17 +62,21 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ADS1115Test.cs" />
+    <Compile Include="ClawControlTest.cs" />
     <Compile Include="FrameGrabTest.cs" />
     <Compile Include="ImageConvert.cs" />
     <Compile Include="ImageTest.cs" />
     <Compile Include="LidarClientTest.cs" />
     <Compile Include="LidarTest.cs" />
+    <Compile Include="MqttTest.cs" />
     <Compile Include="PigsTest.cs" />
     <Compile Include="Pixel.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SerialTest.cs" />
     <Compile Include="ServoTestController.cs" />
+    <Compile Include="WiringPiTest.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

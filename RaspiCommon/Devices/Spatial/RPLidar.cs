@@ -22,7 +22,7 @@ using RaspiCommon.Lidar;
 namespace RaspiCommon.Devices.Spatial
 {
 
-	public partial class RPLidar
+	public partial class RPLidar : LidarBase
 	{
 		#region Public Properties
 
@@ -35,19 +35,7 @@ namespace RaspiCommon.Devices.Spatial
 
 		public bool Active { get { return _lastGoodSampleTime > DateTime.UtcNow - TimeSpan.FromSeconds(1); } }
 
-		public Double Offset { get; set; }
-
-		public Double Bearing { get; set; }
-
-		public Double RenderPixelsPerMeter { get; set; } 
-
-		public Double VectorSize { get; private set; }
-
 		public TimeSpan VectorRefreshTime { get; set; }
-
-		public Double DebugAngle { get; set; }
-
-		public LidarVector[] Vectors { get; private set; }
 
 		public int _lastScanOffset;
 
@@ -97,6 +85,7 @@ namespace RaspiCommon.Devices.Spatial
 		}
 
 		public RPLidar(String portName, Double vectorSize)
+			: base(vectorSize)
 		{
 			RenderPixelsPerMeter = 50;
 
@@ -131,24 +120,9 @@ namespace RaspiCommon.Devices.Spatial
 			DebugAngle = -1;
 
 			VectorRefreshTime = TimeSpan.FromSeconds(.5);
-
-			//byte[] bytes = File.ReadAllBytes(@"c:\pub\tmp\csharp_lidar.bin");
-			//OnSerialDataReceived(bytes, bytes.Length);
 		}
 
-		public Double GetRangeAtBearing(Double bearing)
-		{
-			Double offset = bearing / VectorSize;
-			return Vectors[(int)offset].Range;
-		}
-
-		public DateTime GetLastSampleTimeAtBearing(Double bearing)
-		{
-			Double offset = bearing / VectorSize;
-			return Vectors[(int)offset].RefreshTime;
-		}
-
-		public void Start()
+		public override void Start()
 		{
 			_recvOffset = _bytesInBuffer = 0;
 			_state = State.Sync;
@@ -164,10 +138,29 @@ namespace RaspiCommon.Devices.Spatial
 			Port.BufferTime = TimeSpan.FromMilliseconds(500);
 			Port.DataReceived += OnSerialDataReceived;
 			Port.Open();
+
+			if(GetDeviceInfo())
+			{
+				Log.SysLogText(LogLevel.DEBUG, "Retrieved LIDAR info");
+				Pigs.SetMode(SpinPin, PinMode.Output);
+				Pigs.SetOutputPin(SpinPin, PinState.High);
+				StartScan();
+				Log.SysLogText(LogLevel.DEBUG, "LIDAR scan started");
+			}
+			else
+			{
+
+			}
 		}
 
-		public void Stop()
+		public override void Stop()
 		{
+			Pigs.SetOutputPin(SpinPin, PinState.Low);
+			StopScan();
+			GpioSharp.Sleep(250);
+			Reset();
+			GpioSharp.Sleep(250);
+
 			if(Port != null && Port.IsOpen)
 			{
 				Log.SysLogText(LogLevel.DEBUG, "Closing Port");
@@ -589,11 +582,6 @@ namespace RaspiCommon.Devices.Spatial
 			Log.SysLogText(LogLevel.DEBUG, "OUTPUT!!!!!");
 			Log.SysLogHex(LogLevel.DEBUG, data);
 			Port.Write(data, 0, data.Length);
-		}
-
-		public void ClearDistanceVectors()
-		{
-			Array.Clear(Vectors, 0, Vectors.Length);
 		}
 
 		public override string ToString()

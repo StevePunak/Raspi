@@ -85,9 +85,11 @@
     <Compile Include="Data\Entities\Track\Landmark.cs" />
     <Compile Include="Data\Entities\Track\DRGridLocation.cs" />
     <Compile Include="Data\Entities\Track\PointMarker.cs" />
+    <Compile Include="Devices\Analog\ADS1115.cs" />
     <Compile Include="Devices\Chassis\Chassis.cs" />
     <Compile Include="Devices\Chassis\ChassisMetrics.cs" />
     <Compile Include="Devices\Chassis\XiaorTankTracks.cs" />
+    <Compile Include="Devices\Compass\MqttCompass.cs" />
     <Compile Include="Devices\Compass\NullCompass.cs" />
     <Compile Include="Devices\Devices.cs" />
     <Compile Include="Devices\GamePads\GamePadTypes.cs" />
@@ -118,6 +120,8 @@
     <Compile Include="Devices\Optics\RaspiCamCv.cs" />
     <Compile Include="Devices\Optics\Types.cs" />
     <Compile Include="Devices\RobotArms\MeArm.cs" />
+    <Compile Include="Devices\RobotArms\RobotArm.cs" />
+    <Compile Include="Devices\Spatial\LidarBase.cs" />
     <Compile Include="Devices\Spatial\NetworkLidar.cs" />
     <Compile Include="Extensions\GraphicsExtensions.cs" />
     <Compile Include="Extensions\LidarVectorExtensions.cs" />
@@ -180,6 +184,7 @@
     <Compile Include="Spatial\LidarImaging\IImageEnvironment.cs" />
     <Compile Include="Spatial\Types.cs" />
     <Compile Include="Types.cs" />
+    <Compile Include="WiringPi.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

@@ -23,23 +23,8 @@ namespace TrackBot.Network
 		public event SpinStepReceivedHandler SpinLeft;
 		public event SpinStepReceivedHandler SpinRight;
 
-		public RemoteMqttController(String clientID)
-			: base(Program.Config.MqttPublicHost, clientID, new List<String>() {
-																			MqttTypes.CommandsTopic,
-																			MqttTypes.ArmClawTopic,
-																			MqttTypes.ArmElevationTopic,
-																			MqttTypes.ArmRotationTopic,
-																			MqttTypes.ArmThrustTopic,
-																			MqttTypes.RaspiCameraSetParametersTopic,
-																			MqttTypes.BotSpeedTopic,
-																			MqttTypes.BotSpinStepLeftDegreesTopic,
-																			MqttTypes.BotSpinStepRightDegreesTopic,
-																			MqttTypes.BotSpinStepLeftTimeTopic,
-																			MqttTypes.BotSpinStepRightTimeTopic,
-																			MqttTypes.BotMoveTimeTopic,
-																			MqttTypes.BotPanTopic,
-																			MqttTypes.BotTiltTopic,
-																		  })
+		public RemoteMqttController(String clientID, List<String> topics)
+			: base(Program.Config.MqttPublicHost, clientID, topics)
 		{
 			ArmRotation += delegate { };
 			ArmElevation += delegate { };
@@ -52,6 +37,7 @@ namespace TrackBot.Network
 
 		protected override void OnLidarClientInboundSubscribedMessage(MqttClient client, PublishMessage packet)
 		{
+			Log.SysLogText(LogLevel.DEBUG, $"MQTT IN: {packet.Topic}");
 			if(packet.Topic == MqttTypes.ArmRotationTopic)
 			{
 				int percent = BitConverter.ToInt32(packet.Message, 0);

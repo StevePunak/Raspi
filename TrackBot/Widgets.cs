@@ -57,6 +57,7 @@ namespace TrackBot
 		public Lift Lift { get; private set; }
 
 		public LSM9D51CompassAccelerometer GyMag { get; private set; }
+		public MqttCompass MqttCompass { get; private set; }
 		public IImageEnvironment ImageEnvironment { get; private set; }
 		public ILandscape Landscape { get; private set; }
 		public SpatialPoll SpatialPollThread { get; private set; }
@@ -81,8 +82,6 @@ namespace TrackBot
 		public SolidColorAnalysis LEDImageAnalysis { get; private set; }
 
 		public PanTilt PanTilt { get; private set; }
-
-		public NetworkLidar NetworkLidar;
 
 		static Widgets _instance;
 		public static Widgets Instance
@@ -116,42 +115,46 @@ namespace TrackBot
 
 		public void StartWidgets()
 		{
-			StartServoController();
-			StartPanTilt();
-			StartChassis();
-			StartDatabase();
-			StartCommandServer();
-			StartRangeFinders();
-			StartTracks();
-			StartSpatial();
-			StartActivities();
-			StartLift();
-			StartCamera();
-			StartSaveImageThread();
-			StartSpatialPolling();
-			StartDeadReckoningEnvironment();
-			StartRobotArm();
+			if(Program.Config.ServoControllerEnabled) 					StartServoController();
+			if(Program.Config.PanTiltEnabled) 							StartPanTilt();
+			if(Program.Config.ChassisEnabled) 							StartChassis();
+			if(Program.Config.DatabaseEnabled) 							StartDatabase();
+			if(Program.Config.CommandServerEnabled) 					StartCommandServer();
+			if(Program.Config.RangeFindersEnabled) 						StartRangeFinders();
+			if(Program.Config.TracksEnabled) 							StartTracks();
+			if(Program.Config.PhysicalCompassEnabled) 					StartPhysicalCompass();
+			if(Program.Config.MqttCompassEnabled)						StartMqttCompass();
+			if(Program.Config.LidarEnabled) 							StartLidar();
+			if(Program.Config.ActivitiesEnabled) 						StartActivities();
+			if(Program.Config.LiftEnabled) 								StartLift();
+			if(Program.Config.CameraEnabled) 							StartCamera();
+			if(Program.Config.SaveImageThreadEnabled) 					StartSaveImageThread();
+			if(Program.Config.SpatialPollingEnabled) 					StartSpatialPolling();
+			if(Program.Config.DeadReckoningEnvironmentEnabled) 			StartDeadReckoningEnvironment();
+			if(Program.Config.RobotArmEnabled) 							StartRobotArm();
 		}
 
 		public void StopWidgets()
 		{
-			StopRobotArm();
-			StopDeadReckoningEnvironment();
-			StopCamera();
-			StopCommandServer();
-			StopSpatialPolling();
-			StopLift();
-			StopActivities();
-			Tracks.Stop();
-			StopRangeFinders();
-			StopSpatial();
-			GpioSharp.DeInit();
-			StopSaveImageThread();
-			StopDatabase();
-			StopChassis();
-			StopPanTilt();
-			StopServoController();
+			if(Program.Config.RobotArmEnabled) 							StopRobotArm();
+			if(Program.Config.DeadReckoningEnvironmentEnabled) 			StopDeadReckoningEnvironment();
+			if(Program.Config.CameraEnabled) 							StopCamera();
+			if(Program.Config.CommandServerEnabled) 					StopCommandServer();
+			if(Program.Config.SpatialPollingEnabled) 					StopSpatialPolling();
+			if(Program.Config.LiftEnabled) 								StopLift();
+			if(Program.Config.ActivitiesEnabled) 						StopActivities();
+			if(Program.Config.TracksEnabled)							Tracks.Stop();
+			if(Program.Config.RangeFindersEnabled) 						StopRangeFinders();
+			if(Program.Config.PhysicalCompassEnabled) 					StopPhysicalCompass();
+			if(Program.Config.MqttCompassEnabled)						StopMqttCompass();
+			if(Program.Config.LidarEnabled) 							StopLidar();
+			if(Program.Config.SaveImageThreadEnabled) 					StopSaveImageThread();
+			if(Program.Config.DatabaseEnabled) 							StopDatabase();
+			if(Program.Config.ChassisEnabled) 							StopChassis();
+			if(Program.Config.PanTiltEnabled) 							StopPanTilt();
+			if(Program.Config.ServoControllerEnabled) 					StopServoController();
 
+			GpioSharp.DeInit();
 			foreach(ThreadBase thread in ThreadBase.GetRunningThreads())
 			{
 				Log.SysLogText(LogLevel.DEBUG, "Remaining: {0}", thread);
@@ -275,7 +278,33 @@ namespace TrackBot
 		private void StartCommandServer()
 		{
 			Console.WriteLine("Starting Mqqt Command Client");
-			CommandServer = new RemoteMqttController(String.Format("raspi.{0}", Environment.MachineName));
+			List <String> topics = new List<String>()
+			{
+				MqttTypes.CommandsTopic,
+			};
+			if(Program.Config.RobotArmEnabled)
+			{
+				topics.Add(MqttTypes.ArmClawTopic);
+				topics.Add(MqttTypes.ArmElevationTopic);
+				topics.Add(MqttTypes.ArmRotationTopic);
+				topics.Add(MqttTypes.ArmThrustTopic);
+			}
+			if(Program.Config.CameraEnabled)
+			{
+				topics.Add(MqttTypes.RaspiCameraSetParametersTopic);
+			}
+			if(Program.Config.TracksEnabled)
+			{
+				topics.Add(MqttTypes.BotSpeedTopic);
+				topics.Add(MqttTypes.BotSpinStepLeftDegreesTopic);
+				topics.Add(MqttTypes.BotSpinStepRightDegreesTopic);
+				topics.Add(MqttTypes.BotSpinStepLeftTimeTopic);
+				topics.Add(MqttTypes.BotSpinStepRightTimeTopic);
+				topics.Add(MqttTypes.BotMoveTimeTopic);
+				topics.Add(MqttTypes.BotPanTopic);
+				topics.Add(MqttTypes.BotTiltTopic);
+			}
+			CommandServer = new RemoteMqttController(String.Format("raspi.{0}", Environment.MachineName), topics);
 			CommandServer.Start();
 		}
 
@@ -355,45 +384,42 @@ namespace TrackBot
 			Lift.Stop();
 		}
 
-		private void StartSpatial()
+		private void StartMqttCompass()
+		{
+			MqttCompass = new MqttCompass(Program.Config.MqttClusterHost, MqttTypes.BearingTopic);
+			MqttCompass.Start();
+		}
+
+		private void StopMqttCompass()
+		{
+			MqttCompass.Stop();
+		}
+
+		private void StartPhysicalCompass()
 		{
 			GyMag = new LSM9D51CompassAccelerometer();
 			GyMag.MagneticDeviation = Program.Config.MagneticDeviation;
 			GyMag.XAdjust = Program.Config.CompassXAdjust;
 			GyMag.YAdjust = Program.Config.CompassYAdjust;
 			GyMag.NewBearing += OnNewBearing;
+		}
 
-			List<String> ports = new List<String>(SerialPort.GetPortNames());
-			ports.TerminateAll();
-			if(ports.Contains(Program.Config.LidarComPort) == true)
-			{
-				if(Program.Config.MqttPublicHost == null)
-				{
-					Program.Config.MqttPublicHost = "192.168.0.50";
-					Program.Config.Save();
-				}
-				ImageEnvironment = new TrackLidar(Program.Config.LidarMetersSquare, Program.Config.LidarPixelsPerMeter, Program.Config.LidarSpinEnablePin);
-				ImageEnvironment.BarriersChanged += OnImageEnvironment_BarriersChanged;
-				ImageEnvironment.LandmarksChanged += OnImageEnvironment_LandmarksChanged;
-				ImageEnvironment.FuzzyPathChanged += OnImageEnvironment_FuzzyPathChanged;
-			}
-			else
-			{
-				Console.WriteLine("Lidar com port {0} does not exist... initializing virtual environment", Program.Config.LidarComPort);
-				ImageEnvironment = new VirtualEnvironment();
-			}
+		private void StopPhysicalCompass()
+		{
+		}
 
-			StartTelemetryServer();
+		private void StartLidar()
+		{
+			ImageEnvironment = new TrackLidar(Program.Config.LidarMetersSquare, Program.Config.LidarPixelsPerMeter, Program.Config.LidarSpinEnablePin);
+			ImageEnvironment.BarriersChanged += OnImageEnvironment_BarriersChanged;
+			ImageEnvironment.LandmarksChanged += OnImageEnvironment_LandmarksChanged;
+			ImageEnvironment.FuzzyPathChanged += OnImageEnvironment_FuzzyPathChanged;
 
 			ImageEnvironment.Start();
 		}
 
-		private void StopSpatial()
+		private void StopLidar()
 		{
-			if(ImageEnvironment is TrackLidar)
-			{
-				StopTelemetryServer();
-			}
 			ImageEnvironment.Stop();
 		}
 
