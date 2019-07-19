@@ -19,7 +19,7 @@ namespace Testing
 		{
 			bool fileRead = false;
 
-			NetworkLidar lidar = new NetworkLidar("thufir:5959");
+			NetworkLidar lidar = new NetworkLidar("thufir:5959", .25);
 			lidar.RangeBlobReceived += OnClientRangeBlobReceived;
 			if(fileRead)
 			{

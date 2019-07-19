@@ -8,9 +8,9 @@ using KanoopCommon.Logging;
 using KanoopCommon.Threading;
 using MQTT;
 
-namespace MQTT.Examples
+namespace MQTT.ClientThreads
 {
-	public abstract class PublishThread : MqttExampleThread
+	public abstract class PublishThread : MqttClientThread
 	{
 		protected abstract byte[] GetMessage();
 

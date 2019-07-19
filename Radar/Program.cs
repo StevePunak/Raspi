@@ -188,7 +188,7 @@ namespace Radar
 			Config.RemoteImageDirectory = @"\\raspi\pi\images";
 			Config.FaceCascadeFile = @"c:\pub\classify\cascades\haarcascade_frontalface_default.xml";
 			Config.BatonCascadeFile = @"c:\pub\classify\cascades\baton_cascade.xml";
-			Config.LidarServer = "thufir:5959";
+			Config.LidarServer = "raspi:5959";
 		}
 
 		static void TestImage()

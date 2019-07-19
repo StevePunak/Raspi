@@ -144,8 +144,10 @@ namespace RaspiCommon.Devices.Optics
 
 		public override string ToString()
 		{
-			return String.Format("Delay: {0} {1}X{2} {3} FH: {4} FV: {5}  Br {6} Effect: {7} Color: {8} Ex {9} Mtr {10} AWB {11} Co {12} Sat {13}",
-				SnapshotDelay, Width, Height, ImageType, FlipHorizontal, FlipVertical, Brightness, ImageEffect, ColorEffect, Exposure, MeteringMode, AutoWhiteBalance, Contrast, Saturation);
+			return String.Format("Delay: {0} {1}X{2} {3} FH: {4} FV: {5}  Br {6} Effect: {7} Color: {8} Ex {9} Mtr {10} AWB {11} Co {12} Sat {13} FlipH: {14}  FlipV: {15}",
+				SnapshotDelay, Width, Height, ImageType, FlipHorizontal, FlipVertical,
+				Brightness, ImageEffect, ColorEffect, Exposure, MeteringMode, AutoWhiteBalance, 
+				Contrast, Saturation, FlipHorizontal, FlipVertical);
 		}
 	}
 }

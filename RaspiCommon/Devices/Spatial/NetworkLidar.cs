@@ -9,34 +9,27 @@ using RaspiCommon.Network;
 
 namespace RaspiCommon.Devices.Spatial
 {
-	public class NetworkLidar
+	public class NetworkLidar : LidarBase
 	{
 		public static readonly TimeSpan VectorExpiry = TimeSpan.FromSeconds(1);
 
-		public event RangeBlobReceivedHandler RangeBlobReceived;
-
 		public String HostAddress { get; set; }
 		public RPLidarClient Client { get; private set; }
-		public List<LidarVector> Vectors { get; private set; }
-		public Double VectorAngle { get; private set; }
 
-		public NetworkLidar(String hostAddress)
+		public NetworkLidar(String hostAddress, Double vectorSize)
+			: base(vectorSize)
 		{
 			HostAddress = hostAddress;
 			Client = new RPLidarClient(HostAddress);
 			Client.RangeBlobReceived += OnClientRangeBlobReceived;
-			ResizeVectors(.25);        // default to 1/4 degree
+			ResizeVectors(vectorSize);        // default to 1/4 degree
 
 			RangeBlobReceived += delegate { };
 		}
 
-		public void Start()
+		public override void Start()
 		{
 			Client.Connect();
-		}
-
-		public void Stop()
-		{
 		}
 
 		private void OnClientRangeBlobReceived(LidarVector[] inputVectors)
@@ -55,22 +48,21 @@ namespace RaspiCommon.Devices.Spatial
 					Vectors[x].RefreshTime = now;
 				}
 			}
-			LidarVector[] copy = Vectors.ToArray();
-			RangeBlobReceived(copy);
+			EmitRangeBlobReceived();
 		}
 
-		private void ResizeVectors(Double vectorAngle)
+		private void ResizeVectors(Double vectorSize)
 		{
 			List<LidarVector> vectors = new List<LidarVector>();
-			for(Double bearing = 0;bearing < 360;bearing += vectorAngle)
+			for(Double bearing = 0;bearing < 360;bearing += vectorSize)
 			{
 				vectors.Add(new LidarVector()
 				{
 					BearingAndRange = new BearingAndRange() { Bearing = bearing, Range = 0 },
 				});
 			}
-			Vectors = vectors;
-			VectorAngle = vectorAngle;
+			Vectors = vectors.ToArray();
+			VectorSize = vectorSize;
 		}
 	}
 }

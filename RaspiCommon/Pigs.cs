@@ -26,7 +26,10 @@ namespace RaspiCommon
 			{
 				_client = null;
 			}
-			_client = new TcpClient("raspi", 8888);
+			String pigsHost = "localhost";
+			int pigsPort = 8888;
+			Log.SysLogText(LogLevel.DEBUG, $"Connect PIGS to {pigsHost}:{pigsPort}");
+			_client = new TcpClient(pigsHost, pigsPort);
 		}
 
 		public static void SendCommand(PigCommand command)
@@ -36,7 +39,6 @@ namespace RaspiCommon
 				Start();
 			}
 			byte[] serialized = command.Serialize();
-			Log.SysLogHex(LogLevel.DEBUG, serialized);
 			_client.Client.Send(serialized);
 		}
 

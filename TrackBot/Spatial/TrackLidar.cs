@@ -33,13 +33,13 @@ namespace TrackBot.Spatial
 		public Double VectorSize { get { return Lidar.VectorSize; } }
 		public IVector[] Vectors { get { return Lidar.Vectors; } }
 
-		public GpioPin SpinPin { get; set; }
+		public GpioPin SpinPin { get { return Lidar.SpinPin; } set { Lidar.SpinPin = value; } }
 
 		public TrackLidar(Double metersSquare, Double pixelsPerMeter, GpioPin spinPin)
 			: base(metersSquare, pixelsPerMeter)
 		{
+			Lidar = new NetworkLidar(Program.Config.LidarServer, .25);
 			SpinPin = spinPin;
-			Lidar = new RPLidar(Program.Config.LidarComPort, .25);
 			Lidar.Offset = Program.Config.LidarOffsetDegrees;
 			RangeFuzz = Program.Config.RangeFuzz;
 			Log.SysLogText(LogLevel.DEBUG, "Range fuzz is {0:0}°", RangeFuzz);
@@ -49,29 +49,11 @@ namespace TrackBot.Spatial
 		{
 			Lidar.Start();
 			Log.SysLogText(LogLevel.DEBUG, "Retrieving LIDAR info");
-			if(Lidar.GetDeviceInfo())
-			{
-				Log.SysLogText(LogLevel.DEBUG, "Retrieved LIDAR info");
-				Pigs.SetMode(SpinPin, PinMode.Output);
-				Pigs.SetOutputPin(SpinPin, PinState.High);
-				Lidar.StartScan();
-				Log.SysLogText(LogLevel.DEBUG, "LIDAR scan started");
-			}
-			else
-			{
-
-			}
 		}
 
 		public void Stop()
 		{
-			Pigs.SetOutputPin(SpinPin, PinState.Low);
-			Lidar.StopScan();
-			GpioSharp.Sleep(250);
-			Lidar.Reset();
-			GpioSharp.Sleep(250);
 			Lidar.Stop();
-
 			Log.SysLogText(LogLevel.DEBUG, "LIDAR stopped");
 		}
 

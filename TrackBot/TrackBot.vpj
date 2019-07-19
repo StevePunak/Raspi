@@ -1,0 +1,419 @@
+<!DOCTYPE Project SYSTEM "http://www.slickedit.com/dtd/vse/10.0/vpj.dtd">
+<Project
+	WorkingDir="."
+	OutputFile="%bd%&lt;e.exe"
+	Version="10.0"
+	VendorName="SlickEdit"
+	TemplateName="C# - Mono">
+	<Files>
+		<Folder
+			Name="Source Files"
+			Filters="*.cs"
+			GUID="{01A871D6-1611-4674-8624-D1494AACFAB6}">
+			<F N="Spatial/Activity.cs"/>
+			<F N="Spatial/ActivityException.cs"/>
+			<F N="Spatial/Area.cs"/>
+			<F N="TTY/ArmCommand.cs"/>
+			<F N="Properties/AssemblyInfo.cs"/>
+			<F N="TTY/Backward.cs"/>
+			<F N="Tracks/BotTracks.cs"/>
+			<F N="TTY/CalibrateCompass.cs"/>
+			<F N="TTY/CalibrateSpeed.cs"/>
+			<F N="TTY/CameraOffset.cs"/>
+			<F N="Spatial/Cell.cs"/>
+			<F N="TTY/ClearGrid.cs"/>
+			<F N="TTY/CommandBase.cs"/>
+			<F N="TTY/CommandException.cs"/>
+			<F N="TTY/DebugAngle.cs"/>
+			<F N="TTY/DumpCommand.cs"/>
+			<F N="TTY/DumpDistances.cs"/>
+			<F N="TTY/DumpThreads.cs"/>
+			<F N="TTY/ExitCommand.cs"/>
+			<F N="TTY/FindPath.cs"/>
+			<F N="Spatial/FindTwoLEDs.cs"/>
+			<F N="TTY/Forward.cs"/>
+			<F N="TTY/GoCommand.cs"/>
+			<F N="Spatial/GoToDestination.cs"/>
+			<F N="Spatial/GotoLED.cs"/>
+			<F N="TTY/GrabImage.cs"/>
+			<F N="Spatial/Grid.cs"/>
+			<F N="TTY/ImageParameter.cs"/>
+			<F N="TTY/LandmarkCommand.cs"/>
+			<F N="ForkLift/Lift.cs"/>
+			<F N="TTY/LiftMove.cs"/>
+			<F N="TTY/MotorLeftCommand.cs"/>
+			<F N="TTY/MotorRightCommand.cs"/>
+			<F N="TTY/NextCommand.cs"/>
+			<F N="System/Performance.cs"/>
+			<F N="TTY/Pins.cs"/>
+			<F N="Program.cs"/>
+			<F N="Network/RadarController.cs"/>
+			<F N="Network/RemoteMqttController.cs"/>
+			<F N="TTY/Render.cs"/>
+			<F N="TTY/Roam.cs"/>
+			<F N="Spatial/RoamAndSeekUltraSound.cs"/>
+			<F N="TTY/SaveConfig.cs"/>
+			<F N="SaveImageThread.cs"/>
+			<F N="Servos/ServoController.cs"/>
+			<F N="TTY/SetCommand.cs"/>
+			<F N="TTY/SetLidarOffset.cs"/>
+			<F N="TTY/SetMagneticDeviation.cs"/>
+			<F N="Spatial/SpatialPoll.cs"/>
+			<F N="TTY/SpinClockwise.cs"/>
+			<F N="TTY/SpinCounterClockwise.cs"/>
+			<F N="TTY/StandardSpeed.cs"/>
+			<F N="TTY/StartActivity.cs"/>
+			<F N="TTY/Status.cs"/>
+			<F N="TTY/StopActivity.cs"/>
+			<F N="TTY/StoppingDistance.cs"/>
+			<F N="TTY/Terminal.cs"/>
+			<F N="TTY/Test.cs"/>
+			<F N="Testing.cs"/>
+			<F N="TrackBotException.cs"/>
+			<F N="Spatial/TrackLidar.cs"/>
+			<F N="Spatial/TravelLongestPath.cs"/>
+			<F N="Tracks/TravelThread.cs"/>
+			<F N="TTY/TurnToBearing.cs"/>
+			<F N="Spatial/Types.cs"/>
+			<F N="Spatial/VirtualEnvironment.cs"/>
+			<F N="Widgets.cs"/>
+		</Folder>
+		<Folder
+			Name="Resource Files"
+			Filters=""
+			GUID="{712A8449-C13C-44D2-A591-642634E3C454}">
+			<F N="../../../../bin/findqmake"/>
+		</Folder>
+		<Folder
+			Name="Bitmaps"
+			Filters=""
+			GUID="{946EF005-3F1A-4AC8-97B5-2DF0D1F58414}"/>
+		<Folder
+			Name="Other Files"
+			Filters=""
+			GUID="{F9FC719A-4206-4B27-8FB8-6CEF7B79FBF7}"/>
+	</Files>
+	<Config
+		Name="Debug"
+		Type="mono"
+		DebugCallbackName="mono"
+		OutputFile="%bdTrackBot.exe"
+		CompilerConfigName="">
+		<Menu>
+			<Target
+				Name="Compile"
+				Dialog="_mono_options_form Compiler"
+				MenuCaption="&amp;Compile"
+				CaptureOutputWith="ProcessBuffer"
+				SaveOption="SaveCurrent"
+				RunFromDir="%rw">
+				<Exec CmdLine="mcs -debug -target:module -out:%bd%n.obj %f"/>
+			</Target>
+			<Target
+				Name="Build"
+				Dialog="_mono_options_form Compiler"
+				MenuCaption="&amp;Build"
+				CaptureOutputWith="ProcessBuffer"
+				SaveOption="SaveWorkspaceFiles"
+				RunFromDir="%rw">
+				<Exec CmdLine='mcs -debug -target:exe -out:"%o" %{*.cs}'/>
+			</Target>
+			<Target
+				Name="Debug"
+				Dialog="_mono_options_form Interpreter"
+				MenuCaption="&amp;Debug"
+				RunFromDir="%rw"
+				BuildFirst="1"
+				CaptureOutputWith="ProcessBuffer"
+				Deletable="0">
+				<Exec CmdLine='mono --debugger-agent="transport=dt_socket,server=y,suspend=y,address=localhost:8000" "%o"'/>
+			</Target>
+			<Target
+				Name="DebugVS"
+				MenuCaption="Debug - &amp;Visual Studio"
+				SaveOption="SaveNone"
+				RunFromDir="%rw">
+				<Exec CmdLine='devenv "%o"'/>
+			</Target>
+			<Target
+				Name="Execute"
+				Dialog="_mono_options_form Interpreter"
+				MenuCaption="E&amp;xecute"
+				SaveOption="SaveNone"
+				RunFromDir="%rw"
+				CaptureOutputWith="ProcessBuffer">
+				<Exec CmdLine='mono "%o"'/>
+			</Target>
+			<Target
+				Name="Mono Options"
+				MenuCaption="Mono &amp;Options..."
+				ShowOnMenu="HideIfNoCmdLine"
+				Deletable="0">
+				<Exec
+					CmdLine="mono_options"
+					Type="Slick-C"/>
+			</Target>
+		</Menu>
+		<PreBuildCommands StopOnError="0">
+			<Exec CmdLine="mkdir %bd"/>
+		</PreBuildCommands>
+	</Config>
+	<Config
+		Name="Release"
+		Type="mono"
+		DebugCallbackName="mono"
+		OutputFile="%bdTrackBot.exe"
+		CompilerConfigName="">
+		<Menu>
+			<Target
+				Name="Compile"
+				Dialog="_mono_options_form Compiler"
+				MenuCaption="&amp;Compile"
+				CaptureOutputWith="ProcessBuffer"
+				SaveOption="SaveCurrent"
+				RunFromDir="%rw">
+				<Exec CmdLine="mcs -release -target:module -out:%bd%n.obj %f"/>
+			</Target>
+			<Target
+				Name="Build"
+				Dialog="_mono_options_form Compiler"
+				MenuCaption="&amp;Build"
+				CaptureOutputWith="ProcessBuffer"
+				SaveOption="SaveWorkspaceFiles"
+				RunFromDir="%rw">
+				<Exec CmdLine='mcs -release -target:exe -out:"%o" %{*.cs}'/>
+			</Target>
+			<Target
+				Name="Debug"
+				Dialog="_mono_options_form Interpreter"
+				MenuCaption="&amp;Debug"
+				RunFromDir="%rw"
+				BuildFirst="1"
+				CaptureOutputWith="ProcessBuffer"
+				Deletable="0">
+				<Exec CmdLine='mono --debugger-agent="transport=dt_socket,server=y,suspend=y,address=localhost:8000" "%o"'/>
+			</Target>
+			<Target
+				Name="DebugVS"
+				MenuCaption="Debug - &amp;Visual Studio"
+				SaveOption="SaveNone"
+				RunFromDir="%rw">
+				<Exec CmdLine='devenv "%o"'/>
+			</Target>
+			<Target
+				Name="Execute"
+				Dialog="_mono_options_form Interpreter"
+				MenuCaption="E&amp;xecute"
+				SaveOption="SaveNone"
+				RunFromDir="%rw"
+				CaptureOutputWith="ProcessBuffer">
+				<Exec CmdLine='mono "%o"'/>
+			</Target>
+			<Target
+				Name="Mono Options"
+				MenuCaption="Mono &amp;Options..."
+				ShowOnMenu="HideIfNoCmdLine"
+				Deletable="0">
+				<Exec
+					CmdLine="mono_options"
+					Type="Slick-C"/>
+			</Target>
+		</Menu>
+		<PreBuildCommands StopOnError="0">
+			<Exec CmdLine="mkdir %bd"/>
+		</PreBuildCommands>
+	</Config>
+	<Config
+		Name="Debug_CSC"
+		Type="mono"
+		DebugCallbackName="mono"
+		OutputFile="%bdTrackBot.exe"
+		CompilerConfigName="">
+		<Menu>
+			<Target
+				Name="Compile"
+				Dialog="_mono_options_form Compiler"
+				MenuCaption="&amp;Compile"
+				CaptureOutputWith="ProcessBuffer"
+				SaveOption="SaveCurrent"
+				RunFromDir="%rw">
+				<Exec CmdLine="csc -debug:portable -target:module -out:%bd%n.obj %f"/>
+			</Target>
+			<Target
+				Name="Build"
+				Dialog="_mono_options_form Compiler"
+				MenuCaption="&amp;Build"
+				CaptureOutputWith="ProcessBuffer"
+				SaveOption="SaveWorkspaceFiles"
+				RunFromDir="%rw">
+				<Exec CmdLine='csc -debug:portable -target:exe -out:"%o" %{*.cs}'/>
+			</Target>
+			<Target
+				Name="Debug"
+				Dialog="_mono_options_form Interpreter"
+				MenuCaption="&amp;Debug"
+				RunFromDir="%rw"
+				BuildFirst="1"
+				CaptureOutputWith="ProcessBuffer"
+				Deletable="0">
+				<Exec CmdLine='mono --debugger-agent="transport=dt_socket,server=y,suspend=y,address=localhost:8000" "%o"'/>
+			</Target>
+			<Target
+				Name="DebugVS"
+				MenuCaption="Debug - &amp;Visual Studio"
+				SaveOption="SaveNone"
+				RunFromDir="%rw">
+				<Exec CmdLine='devenv "%o"'/>
+			</Target>
+			<Target
+				Name="Execute"
+				Dialog="_mono_options_form Interpreter"
+				MenuCaption="E&amp;xecute"
+				SaveOption="SaveNone"
+				RunFromDir="%rw"
+				CaptureOutputWith="ProcessBuffer">
+				<Exec CmdLine='mono "%o"'/>
+			</Target>
+			<Target
+				Name="Mono Options"
+				MenuCaption="Mono &amp;Options..."
+				ShowOnMenu="HideIfNoCmdLine"
+				Deletable="0">
+				<Exec
+					CmdLine="mono_options"
+					Type="Slick-C"/>
+			</Target>
+		</Menu>
+		<PreBuildCommands StopOnError="0">
+			<Exec CmdLine="mkdir %bd"/>
+		</PreBuildCommands>
+	</Config>
+	<Config
+		Name="Release"
+		Type="mono"
+		DebugCallbackName="mono"
+		OutputFile="%bdTrackBot.exe">
+		<Menu>
+			<Target
+				Name="Compile"
+				Dialog="_mono_options_form Compiler"
+				MenuCaption="&amp;Compile"
+				CaptureOutputWith="ProcessBuffer"
+				SaveOption="SaveCurrent"
+				RunFromDir="%rw">
+				<Exec CmdLine="csc -release -target:module -out:%bd%n.obj %f"/>
+			</Target>
+			<Target
+				Name="Build"
+				Dialog="_mono_options_form Compiler"
+				MenuCaption="&amp;Build"
+				CaptureOutputWith="ProcessBuffer"
+				SaveOption="SaveWorkspaceFiles"
+				RunFromDir="%rw">
+				<Exec CmdLine='mcs -release -target:exe -out:"%o" %{*.cs}'/>
+			</Target>
+			<Target
+				Name="Debug"
+				Dialog="_mono_options_form Interpreter"
+				MenuCaption="&amp;Debug"
+				RunFromDir="%rw"
+				BuildFirst="1"
+				CaptureOutputWith="ProcessBuffer"
+				Deletable="0">
+				<Exec CmdLine='mono --debugger-agent="transport=dt_socket,server=y,suspend=y,address=localhost:8000" "%o"'/>
+			</Target>
+			<Target
+				Name="DebugVS"
+				MenuCaption="Debug - &amp;Visual Studio"
+				SaveOption="SaveNone"
+				RunFromDir="%rw">
+				<Exec CmdLine='devenv "%o"'/>
+			</Target>
+			<Target
+				Name="Execute"
+				Dialog="_mono_options_form Interpreter"
+				MenuCaption="E&amp;xecute"
+				SaveOption="SaveNone"
+				RunFromDir="%rw"
+				CaptureOutputWith="ProcessBuffer">
+				<Exec CmdLine='mono "%o"'/>
+			</Target>
+			<Target
+				Name="Mono Options"
+				MenuCaption="Mono &amp;Options..."
+				ShowOnMenu="HideIfNoCmdLine"
+				Deletable="0">
+				<Exec
+					CmdLine="mono_options"
+					Type="Slick-C"/>
+			</Target>
+		</Menu>
+		<PreBuildCommands StopOnError="0">
+			<Exec CmdLine="mkdir %bd"/>
+		</PreBuildCommands>
+	</Config>
+	<Config
+		Name="Release"
+		Type="mono"
+		DebugCallbackName="mono"
+		OutputFile="%bdTrackBot.exe">
+		<Menu>
+			<Target
+				Name="Compile"
+				Dialog="_mono_options_form Compiler"
+				MenuCaption="&amp;Compile"
+				CaptureOutputWith="ProcessBuffer"
+				SaveOption="SaveCurrent"
+				RunFromDir="%rw">
+				<Exec CmdLine="csc -release -target:module -out:%bd%n.obj %f"/>
+			</Target>
+			<Target
+				Name="Build"
+				Dialog="_mono_options_form Compiler"
+				MenuCaption="&amp;Build"
+				CaptureOutputWith="ProcessBuffer"
+				SaveOption="SaveWorkspaceFiles"
+				RunFromDir="%rw">
+				<Exec CmdLine='csc -release -target:exe -out:"%o" %{*.cs}'/>
+			</Target>
+			<Target
+				Name="Debug"
+				Dialog="_mono_options_form Interpreter"
+				MenuCaption="&amp;Debug"
+				RunFromDir="%rw"
+				BuildFirst="1"
+				CaptureOutputWith="ProcessBuffer"
+				Deletable="0">
+				<Exec CmdLine='mono --debugger-agent="transport=dt_socket,server=y,suspend=y,address=localhost:8000" "%o"'/>
+			</Target>
+			<Target
+				Name="DebugVS"
+				MenuCaption="Debug - &amp;Visual Studio"
+				SaveOption="SaveNone"
+				RunFromDir="%rw">
+				<Exec CmdLine='devenv "%o"'/>
+			</Target>
+			<Target
+				Name="Execute"
+				Dialog="_mono_options_form Interpreter"
+				MenuCaption="E&amp;xecute"
+				SaveOption="SaveNone"
+				RunFromDir="%rw"
+				CaptureOutputWith="ProcessBuffer">
+				<Exec CmdLine='mono "%o"'/>
+			</Target>
+			<Target
+				Name="Mono Options"
+				MenuCaption="Mono &amp;Options..."
+				ShowOnMenu="HideIfNoCmdLine"
+				Deletable="0">
+				<Exec
+					CmdLine="mono_options"
+					Type="Slick-C"/>
+			</Target>
+		</Menu>
+		<PreBuildCommands StopOnError="0">
+			<Exec CmdLine="mkdir %bd"/>
+		</PreBuildCommands>
+	</Config>
+</Project>

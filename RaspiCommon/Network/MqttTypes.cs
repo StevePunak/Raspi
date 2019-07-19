@@ -81,6 +81,7 @@ namespace RaspiCommon.Network
 
 		// realtime feedback (telemetry)
 		public const String SpeedAndBearingTopic = "trackbot/telemetry/speedandbearing";
+		public const String Voltage1Topic = "trackbot/telemetry/voltage/1";
 
 	}
 }
