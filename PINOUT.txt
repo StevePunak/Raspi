@@ -1,0 +1,143 @@
+ActivitiesEnabled             False
+BatonCascadeFile              
+BearingFuzz                   0
+BlueThresholds                Color [Blue] Threshold 150, 70
+BotImage                      tank.png
+CameraBearingOffset           4
+CameraEnabled                 False
+CameraParameters              Delay: 00:00:00 800X600 Jpeg FH: True FV: True  Br 0 Effect:  Color:  Ex  Mtr  AWB  Co 0 Sat 0 FlipH: True  FlipV: True
+ChassisEnabled                False
+ClawLeftPin                   Pin22
+ClawLeftPinMax                1700
+ClawLeftPinMin                800
+ClawPin                       Pin17
+ClawPinMax                    1600
+ClawPinMin                    600
+ClawRightPin                  Pin27
+ClawRightPinMax               2200
+ClawRightPinMin               800
+ClawRotationPin               Pin18
+ClawRotationPinMax            2000
+ClawRotationPinMin            1000
+CommandServerEnabled          False
+CompassXAdjust                0.0788900032639503
+CompassYAdjust                -0.339570019394159
+ConfigFile                    robo.config
+DatabaseEnabled               False
+DBCredentials                 Driver=MySQL Native Driver;UID=raspi;PWD=pi;Server=raspi;Database=trackbot
+DeadReckoningEnvironmentEnabledFalse
+DeadReckoningEnvironmentName  ManCave
+EigenRecognizerFile           /home/pi/classify/faces.eigen
+EscControlPinPin              Unset
+FaceCascadeFile               /home/pi/classify/haarcascade_frontalface_default.xml
+FaceDetectSize                {Width=100, Height=100}
+FaceRecognizeSize             {Width=300, Height=300}
+FacialDBCredentials           Driver=MySQL Native Driver;UID=trackbot;PWD=trackbot;Server=thufir;Database=facial
+FisherRecognizerFile          /home/pi/classify/faces.fisher
+FullScaleImages               False
+GamePadType                   ZD
+GreenThresholds               Color [Green] Threshold 150, 100
+IgnoreRows                    0
+Landmarks                     RaspiCommon.Spatial.LidarImaging.ImageVectorList
+LandscapeName                 Man Cave
+LastAnalyticsTabIndex         0
+LastAuthToken                 
+LastRadarWindowLocation       {X=0,Y=0}
+LastRadarWindowSize           {Width=0, Height=0}
+LBPHRecognizerFile            /home/pi/classify/faces.lbph
+LEDTravelHistory              RaspiCommon.Devices.Optics.LEDTravelHistoryEntryList
+LeftTrackAdjust               0
+LidarComPort                  /dev/ttyS0
+LidarEnabled                  False
+LidarMetersSquare             10
+LidarOffsetDegrees            270
+LidarPixelsPerMeter           50
+LidarServer                   raspi:5959
+LidarSpinEnablePin            Pin24
+LiftEnabled                   False
+LiftInputPin1                 Pin12
+LiftInputPin2                 Pin16
+LiftInputPin3                 Pin20
+LiftInputPin4                 Pin21
+LogFileName                   /var/log/robo/robo.log
+MagneticDeviation             165
+MaxRangeDetect                0.5
+MetersPerSecondAtPower
+  70                          0.343193620689655
+  75                          0.307541206896552
+  80                          0.314171896551724
+  85                          0.318093879310345
+  90                          0.347446120689655
+  95                          0.35708275862069
+  100                         0.4700275
+MqttClusterHost               raspi3
+MqttCompassEnabled            False
+MqttPublicHost                192.168.0.50
+PanPin                        Pin06
+PanTiltEnabled                False
+PathsToGet                    4
+PhysicalCompassEnabled        False
+PinSelectionControls
+  listGpioTracksRightA1       Pin27
+  listGpioTracksLeftA1        Pin04
+  listGpioTracksLeftA2        Pin17
+  listGpioTracksRightA2       Pin22
+  listGpioTracksRightEna      Pin06
+  listGpioTracksLeftEna       Pin05
+  listGpioEscControlPin       Unset
+  listGpioRangeFinderOuput    Pin20
+  listGpioRangeFinderInput    Pin21
+  listGpioServo               Unset
+  listGpioStepperB1           Unset
+  listGpioStepperB2           Unset
+  listGpioStepperA1           Unset
+  listGpioStepperA2           Unset
+ProcessingMetrics             RaspiCommon.Spatial.LidarImaging.ProcessingMetrics
+RampDown                      00:00:00.0500000
+RampUp                        00:00:00.0500000
+RangeFinderEchoPins
+  Front                       Pin26
+  Rear                        Pin23
+RangeFinderInputPin           Pin25
+RangeFindersEnabled           False
+RangeFuzz                     15
+RedThresholds                 Color [Red] Threshold 150, 70
+RemoteImageDirectory          /home/pi/images
+RightTrackAdjust              0
+RobotArmEnabled               False
+SaveImageLocation             /var/www/html/grid.png
+SaveImageThreadEnabled        False
+ServoControllerEnabled        False
+ServoPin                      Unset
+ShortRangeClearance           0.3
+SnapshotUrl                   http://127.0.0.1:8085/?action=snapshot
+SpatialPollingEnabled         False
+SplitLeftToRightPosition      0
+SplitRadarPosition            0
+SplitTopToBottomPosition      0
+StandardSpeed                 100
+StepperA1Pin                  Unset
+StepperA2Pin                  Unset
+StepperB1Pin                  Unset
+StepperB2Pin                  Unset
+StopDistance                  0.15
+StoppingDistance              0.4
+TiltPin                       Pin19
+TracksEnabled                 False
+TracksHardwarePWM             False
+TracksLeftA1Pin               Pin10
+TracksLeftA2Pin               Pin09
+TracksLeftB1Pin               Unset
+TracksLeftB2Pin               Unset
+TracksLeftDirectionPin        Unset
+TracksLeftEnaPin              Pin04
+TracksLeftStepPin             Unset
+TracksRightA1Pin              Pin11
+TracksRightA2Pin              Pin13
+TracksRightB1Pin              Unset
+TracksRightB2Pin              Unset
+TracksRightDirectionPin       Unset
+TracksRightEnaPin             Pin05
+TracksRightStepPin            Unset
+TracksSpeed                   0
+
