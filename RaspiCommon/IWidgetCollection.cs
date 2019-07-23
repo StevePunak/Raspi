@@ -7,6 +7,7 @@ using RaspiCommon.Devices.Chassis;
 using RaspiCommon.Devices.Compass;
 using RaspiCommon.Devices.Locomotion;
 using RaspiCommon.Devices.Optics;
+using RaspiCommon.Devices.Spatial;
 using RaspiCommon.Network;
 using RaspiCommon.Spatial;
 using RaspiCommon.Spatial.LidarImaging;

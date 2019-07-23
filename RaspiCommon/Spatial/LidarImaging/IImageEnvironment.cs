@@ -15,6 +15,7 @@ namespace RaspiCommon.Spatial.LidarImaging
 		event FuzzyPathChangedHandler FuzzyPathChanged;
 		event LandmarksChangedHandler LandmarksChanged;
 		event BarriersChangedHandler BarriersChanged;
+		event CompassOffsetChangedHandler CompassOffsetChanged;
 
 		void Start();
 		void Stop();

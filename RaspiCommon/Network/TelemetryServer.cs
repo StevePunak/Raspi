@@ -20,6 +20,7 @@ using RaspiCommon.Devices.Chassis;
 using RaspiCommon.Devices.Compass;
 using RaspiCommon.Devices.Locomotion;
 using RaspiCommon.Devices.Optics;
+using RaspiCommon.Devices.Spatial;
 using RaspiCommon.Lidar;
 using RaspiCommon.Lidar.Environs;
 using RaspiCommon.Spatial;
@@ -46,6 +47,7 @@ namespace RaspiCommon.Network
 
 		private FuzzyPath _fuzzyPath;
 		private bool _sendFuzzyPath;
+		private bool _sendInitialData;
 
 		private ImageVectorList _landmarks;
 		private EnvironmentInfo _environmentInfo;
@@ -84,6 +86,7 @@ namespace RaspiCommon.Network
 			Widgets.DistanceLeft += OnWidgets_DistanceLeft;
 			Widgets.DeadReckoningEnvironmentReceived += OnDeadReckoningLandscapeReceived;
 			Widgets.CameraImagesAnalyzed += OnCameraImagesAnalyzed;
+			Widgets.ImageEnvironment.CompassOffsetChanged += OnEnvironment_CompassOffsetChanged;
 
 			ImageDirectory = Camera.ImageDirectory;
 			
@@ -99,6 +102,7 @@ namespace RaspiCommon.Network
 
 		protected override bool OnStart()
 		{
+			Log.SysLogText(LogLevel.DEBUG, "***** Telemetery server starting");
 			return base.OnStart();
 		}
 
@@ -139,6 +143,10 @@ namespace RaspiCommon.Network
 					if(_sendDeadReckoningEnvironment)
 					{
 						SendDeadReckoningEnvironment();
+					}
+					if(_sendInitialData)
+					{
+						SendInitialData();
 					}
 				}
 
@@ -268,6 +276,16 @@ namespace RaspiCommon.Network
 				LidarPosition = Widgets.Chassis.LidarPosition
 			};
 			Client.Publish(MqttTypes.ChassisMetricsTopic, chassisMetrics.Serialize(), true);
+
+			Log.LogText(LogLevel.DEBUG, $"********************* Sending lidar offset {Widgets.ImageEnvironment.CompassOffset}");
+			LidarMetrics lidarMetrics = new LidarMetrics()
+			{
+				Offset = Widgets.ImageEnvironment.CompassOffset,
+			};
+			Client.Publish(MqttTypes.LidarMetricsTopic, lidarMetrics.Serialize(), true);
+			Log.LogText(LogLevel.DEBUG, $"********************* Lidar offset sent");
+
+			_sendInitialData = false;
 		}
 
 		void SendRangeData()
@@ -287,6 +305,11 @@ namespace RaspiCommon.Network
 		{
 			_fuzzyPath = path.Clone();
 			_sendFuzzyPath = true;
+		}
+
+		private void OnEnvironment_CompassOffsetChanged(double offset)
+		{
+			_sendInitialData = true;
 		}
 
 		private void OnEnvironment_LandmarksChanged(ImageVectorList landmarks)

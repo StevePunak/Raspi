@@ -22,6 +22,9 @@ namespace TrackBot.Spatial
 {
 	class TrackLidar : LidarEnvironment, IImageEnvironment
 	{
+
+		public event CompassOffsetChangedHandler CompassOffsetChanged;
+
 		public Double Range { get { return FuzzyRangeAtBearing(Widgets.Instance.Chassis, Widgets.Instance.GyMag.Bearing, RangeFuzz); } }
 		public Double CompassOffset { get { return Lidar.Offset; } set { Lidar.Offset = value; } }
 		public Size PixelSize { get { return new Size((int)(PixelsPerMeter * MetersSquare), (int)(PixelsPerMeter * MetersSquare)); } }
@@ -38,11 +41,19 @@ namespace TrackBot.Spatial
 		public TrackLidar(Double metersSquare, Double pixelsPerMeter, GpioPin spinPin)
 			: base(metersSquare, pixelsPerMeter)
 		{
+			CompassOffsetChanged += delegate { };
+
 			Lidar = new NetworkLidar(Program.Config.LidarServer, .25);
+			Lidar.CompassOffsetChanged += OnLidarCompassOffsetChanged;
 			SpinPin = spinPin;
 			Lidar.Offset = Program.Config.LidarOffsetDegrees;
 			RangeFuzz = Program.Config.RangeFuzz;
 			Log.SysLogText(LogLevel.DEBUG, "Range fuzz is {0:0}°", RangeFuzz);
+		}
+
+		private void OnLidarCompassOffsetChanged(double offset)
+		{
+			CompassOffsetChanged(offset);
 		}
 
 		public void Start()

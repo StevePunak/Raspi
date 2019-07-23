@@ -139,6 +139,8 @@ namespace Radar
 		NetworkLidar _lidarClient;
 		LidarVector[] _vectors;
 
+		Double LidarOffset { get; set; }
+
 		public RadarForm()
 		{
 			_capture = null;
@@ -237,7 +239,10 @@ namespace Radar
 				_gamepad.RightTriggerChanged += OnGampadRightTriggerChanged;
 				_gamepad.Start();
 
-				_lidarClient = new NetworkLidar(Program.Config.LidarServer, .25);
+				_lidarClient = new NetworkLidar(Program.Config.LidarServer, .25)
+				{
+					Offset = LidarOffset
+				};
 				_lidarClient.RangeBlobReceived += OnLidarClientRangeBlobReceived;
 				_lidarClient.Start();
 
@@ -252,9 +257,15 @@ namespace Radar
 			}
 		}
 
-		private void OnLidarClientRangeBlobReceived(LidarVector[] vectors)
+		private void OnLidarClientRangeBlobReceived(DateTime timestamp, LidarVector[] vectors)
 		{
+			int index = 0;
+
 			_vectors = vectors;
+			if(_vectors[index].Range != 0)
+			{
+				Log.SysLogText(LogLevel.DEBUG, $"Range is {vectors[index]} at {timestamp.ToStandardFormat(true)}");
+			}
 		}
 
 		void StartVideoFeed()
@@ -486,6 +497,7 @@ namespace Radar
 					MqttTypes.CameraLastImageTopic,
 					MqttTypes.CameraLastAnalysisTopic,
 					MqttTypes.SpeedAndBearingTopic,
+					MqttTypes.LidarMetricsTopic,
 				});
 			_client.LandscapeMetricsReceived += OnLandscapeMetricsReceived;
 			_client.ImageMetricsReceived += OnImageMetricsReceived;
@@ -495,11 +507,22 @@ namespace Radar
 			_client.CameraImageReceived += OnCameraImageReceived;
 			_client.CameraImageAnalyzed += OnCameraImageAnalyzed;
 			_client.SpeedAndBearing += OnSpeedAndBearingReceived;
+			_client.LidarOffsetReceived += OnLidarOffsetReceived;
 			_client.Start();
 
 			_mqqtController = new RaspiControlClient(Program.Config.MqttPublicHost, MqttClient.MakeRandomID(Text));
 			_clawControl = new ClawControl(_mqqtController);
 			_panTilt = new PanTiltControl(_mqqtController);
+		}
+
+		private void OnLidarOffsetReceived(double lidarOffset)
+		{
+			LidarOffset = lidarOffset;
+			if(_lidarClient != null)
+			{
+				_lidarClient.Offset = lidarOffset;
+			}
+			Log.SysLogText(LogLevel.DEBUG, $"Lidar offset changed to {LidarOffset}");
 		}
 
 		private void OnSpeedAndBearingReceived(SpeedAndBearing speedAndBearing)

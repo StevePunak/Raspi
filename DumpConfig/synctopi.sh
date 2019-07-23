@@ -1,5 +1,5 @@
-﻿#!/bin/bash
-echo "Syncing files to pi"
-#rsync -ruvzh * pi@raspi:~/opt/trackbot
-#rsync -ruvzh * pi@raspi2:~/opt/trackbot
-rsync -ruvzh * pi@raspi3:~/opt/trackbot
+#!/bin/bash
+echo "Syncing files to pi's from $ProjectDir and 1 is $1"
+rsync -ruvzh $1/* pi@raspi1:~/opt/trackbot
+#rsync -ruvzh $1/* pi@raspi2:~/opt/testing
+rsync -ruvzh $1/* pi@raspi3:~/opt/trackbot

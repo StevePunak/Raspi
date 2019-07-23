@@ -18,7 +18,6 @@ namespace TrackBotCommon.Testing
 		public ClassifierTest(String inputFile)
 		{
 			ClassifyImage();
-			return;
 			String annoFile = @"c:\pub\classify\baton\positive\annotations.txt";
 			String imageDirectory = Path.Combine(Path.GetDirectoryName(annoFile), "fullimages");
 			String outputDirectory = Path.Combine(Path.GetDirectoryName(annoFile), "partimages");

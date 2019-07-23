@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using KanoopCommon.Geometry;
 using RaspiCommon.Lidar;
 using RaspiCommon.Network;
+using KanoopCommon.Extensions;
 
 namespace RaspiCommon.Devices.Spatial
 {
@@ -32,8 +33,9 @@ namespace RaspiCommon.Devices.Spatial
 			Client.Connect();
 		}
 
-		private void OnClientRangeBlobReceived(LidarVector[] inputVectors)
+		private void OnClientRangeBlobReceived(DateTime timestamp, LidarVector[] rawInputVectors)
 		{
+			LidarVector[] inputVectors = LidarVector.AdjustForBearing(rawInputVectors, Offset);
 			DateTime now = DateTime.UtcNow;
 			for(int x = 0;x < inputVectors.Length;x++)
 			{
@@ -48,7 +50,7 @@ namespace RaspiCommon.Devices.Spatial
 					Vectors[x].RefreshTime = now;
 				}
 			}
-			EmitRangeBlobReceived();
+			EmitRangeBlobReceived(timestamp);
 		}
 
 		private void ResizeVectors(Double vectorSize)

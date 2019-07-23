@@ -25,6 +25,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DumpConfig", "DumpConfig\Du
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KanoopCommon", "..\KanoopCommon\KanoopCommon.csproj", "{5C9D80A6-6FC0-4B59-B1CF-D2EC261B4B00}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ServoTest", "ServoTest\ServoTest.csproj", "{679F1250-BC3F-4F3F-A75E-5C5128F900C6}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -143,6 +145,18 @@ Global
 		{5C9D80A6-6FC0-4B59-B1CF-D2EC261B4B00}.Release|x64.Build.0 = Release|Any CPU
 		{5C9D80A6-6FC0-4B59-B1CF-D2EC261B4B00}.Release|x86.ActiveCfg = Release|Any CPU
 		{5C9D80A6-6FC0-4B59-B1CF-D2EC261B4B00}.Release|x86.Build.0 = Release|Any CPU
+		{679F1250-BC3F-4F3F-A75E-5C5128F900C6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{679F1250-BC3F-4F3F-A75E-5C5128F900C6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{679F1250-BC3F-4F3F-A75E-5C5128F900C6}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{679F1250-BC3F-4F3F-A75E-5C5128F900C6}.Debug|x64.Build.0 = Debug|Any CPU
+		{679F1250-BC3F-4F3F-A75E-5C5128F900C6}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{679F1250-BC3F-4F3F-A75E-5C5128F900C6}.Debug|x86.Build.0 = Debug|Any CPU
+		{679F1250-BC3F-4F3F-A75E-5C5128F900C6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{679F1250-BC3F-4F3F-A75E-5C5128F900C6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{679F1250-BC3F-4F3F-A75E-5C5128F900C6}.Release|x64.ActiveCfg = Release|Any CPU
+		{679F1250-BC3F-4F3F-A75E-5C5128F900C6}.Release|x64.Build.0 = Release|Any CPU
+		{679F1250-BC3F-4F3F-A75E-5C5128F900C6}.Release|x86.ActiveCfg = Release|Any CPU
+		{679F1250-BC3F-4F3F-A75E-5C5128F900C6}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

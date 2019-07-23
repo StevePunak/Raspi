@@ -1,5 +1,10 @@
-﻿#!/bin/bash
-echo "Syncing files to pi"
-#rsync -ruvzh * pi@raspi1:~/opt/trackbot
-#rsync -ruvzh * pi@raspi2:~/opt/trackbot
-rsync -ruvzh * pi@raspi3:~/opt/trackbot
+#!/bin/bash
+echo "Syncing files to pis from $ProjectDir and 1 is $1"
+HOSTS="raspi1 raspi2"
+OUTPUT_DIRECTORY=/home/pi/opt/trackbot
+for host in $HOSTS
+do
+	rsync -ruvzh $1/*.exe pi@$host:$OUTPUT_DIRECTORY
+	rsync -ruvzh $1/*.dll pi@$host:$OUTPUT_DIRECTORY
+	rsync -ruvzh $1/*.so pi@$host:$OUTPUT_DIRECTORY
+done

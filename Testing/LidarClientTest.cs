@@ -19,7 +19,10 @@ namespace Testing
 		{
 			bool fileRead = false;
 
-			NetworkLidar lidar = new NetworkLidar("thufir:5959", .25);
+			NetworkLidar lidar = new NetworkLidar("raspi1:5959", .25)
+			{
+				Offset = 90
+			};
 			lidar.RangeBlobReceived += OnClientRangeBlobReceived;
 			if(fileRead)
 			{
@@ -45,7 +48,7 @@ namespace Testing
 			Thread.Sleep(TimeSpan.FromDays(1));
 		}
 
-		private void OnClientRangeBlobReceived(LidarVector[] vectors)
+		private void OnClientRangeBlobReceived(DateTime timestamp, LidarVector[] vectors)
 		{
 			foreach(LidarVector vector in vectors)
 			{

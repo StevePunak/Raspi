@@ -17,6 +17,7 @@ using MQTT.Packets;
 using RaspiCommon.Devices.Chassis;
 using RaspiCommon.Devices.Locomotion;
 using RaspiCommon.Devices.Optics;
+using RaspiCommon.Devices.Spatial;
 using RaspiCommon.Lidar;
 using RaspiCommon.Lidar.Environs;
 using RaspiCommon.Spatial;
@@ -40,6 +41,7 @@ namespace RaspiCommon.Network
 		public event CameraImageReceivedHandler CameraImageReceived;
 		public event CameraImagesAnalyzedHandler CameraImageAnalyzed;
 		public event SpeedAndBearingReceivedHandler SpeedAndBearing;
+		public event LidarOffsetReceivedHandler LidarOffsetReceived;
 
 		public LidarVector[] Vectors;
 
@@ -94,7 +96,7 @@ namespace RaspiCommon.Network
 				if(packet.Topic == MqttTypes.RangeBlobTopic)
 				{
 					LidarVector.LoadFromRangeBlob(Vectors, packet.Message);
-					RangeBlobReceived(Vectors);
+					RangeBlobReceived(DateTime.UtcNow, Vectors);
 				}
 				else
 				{
@@ -161,6 +163,10 @@ namespace RaspiCommon.Network
 					else if(packet.Topic == MqttTypes.SpeedAndBearingTopic)
 					{
 						SpeedAndBearing(new SpeedAndBearing(packet.Message));
+					}
+					else if(packet.Topic == MqttTypes.LidarMetricsTopic)
+					{
+						LidarOffsetReceived(new LidarMetrics(packet.Message).Offset);
 					}
 				}
 			}

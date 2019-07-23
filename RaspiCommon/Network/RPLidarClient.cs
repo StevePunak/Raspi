@@ -105,7 +105,7 @@ namespace RaspiCommon.Network
 
 		private void ProcessBuffer()
 		{
-			List<LidarVector[]> rangeArrays = new List<LidarVector[]>();
+			Dictionary<DateTime, LidarVector[]> rangeArrays = new Dictionary<DateTime, LidarVector[]>();
 
 			bool gotNewChunk = false;
 			do
@@ -122,9 +122,10 @@ namespace RaspiCommon.Network
 						// dump start marker
 						byte[] dump = br.ReadBytes(StartMarker.Length);
 						int vectorCount = ByteOrder.NetworkToHost(br.ReadUInt16());
-						int sequence = ByteOrder.NetworkToHost(br.ReadUInt16());
+						UInt64 msSinceEpoch = ByteOrder.NetworkToHost(br.ReadUInt64());
+						DateTime timeStamp = DateTimeExtensions.FromMillisecondsSinceEpoch(msSinceEpoch);
 						int additionalBytesNeeded = vectorCount * sizeof(Double);
-						if(bytesFromStartMarker >= HeaderSize + additionalBytesNeeded + sizeof(UInt16) + sizeof(UInt16))
+						if(bytesFromStartMarker >= HeaderSize + additionalBytesNeeded + sizeof(UInt16) + sizeof(UInt64))
 						{
 							List<LidarVector> vectors = new List<LidarVector>();
 							Double bearing = 0;
@@ -141,7 +142,8 @@ namespace RaspiCommon.Network
 
 								vectors.Add(vector);
 							}
-							rangeArrays.Add(vectors.ToArray());
+							while(rangeArrays.ContainsKey(timeStamp)) timeStamp = timeStamp.AddMilliseconds(1);
+							rangeArrays.Add(timeStamp, vectors.ToArray());
 
 							totalBytesProcessed = HeaderSize + additionalBytesNeeded;
 							gotNewChunk = true;
@@ -155,9 +157,9 @@ namespace RaspiCommon.Network
 				}
 			} while(gotNewChunk);
 
-			foreach(LidarVector[] vectorSet in rangeArrays)
+			foreach(KeyValuePair<DateTime, LidarVector[]> vectorSet in rangeArrays)
 			{
-				RangeBlobReceived(vectorSet);
+				RangeBlobReceived(vectorSet.Key, vectorSet.Value);
 			}
 		}
 
