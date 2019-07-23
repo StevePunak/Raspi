@@ -63,6 +63,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ADS1115Test.cs" />
+    <Compile Include="BMP280Test.cs" />
     <Compile Include="ClawControlTest.cs" />
     <Compile Include="FrameGrabTest.cs" />
     <Compile Include="ImageConvert.cs" />
@@ -111,13 +112,14 @@
     <Content Include="haarcascade_frontalface_alt_tree.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <None Include="postbuild.bat" />
     <None Include="tank.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>%25windir%25\sysnative\bash.exe -c "`echo '$(ProjectDir)synctopi.sh' | sed -re 's/\\\\/\//g; s/([A-Z]):/\/mnt\/\L\1\E/i;'`"</PostBuildEvent>
+    <PostBuildEvent>%25windir%25\sysnative\bash.exe -c "`echo '$(ProjectDir)synctopi.sh $(ProjectDir)$(OutDir)' | sed -re 's/\\\\/\//g; s/([A-Z]):/\/mnt\/\L\1\E/g;'`"</PostBuildEvent>
   </PropertyGroup>
   <Import Project="..\packages\EMGU.CV.4.1.0.3420\build\EMGU.CV.targets" Condition="Exists('..\packages\EMGU.CV.4.1.0.3420\build\EMGU.CV.targets')" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

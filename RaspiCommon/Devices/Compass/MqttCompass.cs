@@ -23,6 +23,8 @@ namespace RaspiCommon.Devices.Compass
 			: base(serverAddress, $"{Environment.MachineName}-CompassClient-{DateTime.UtcNow.ToMillisecondsSinceEpoch()}", new List<string>() { topic })
 		{
 			Bearing = 0;
+
+			NewBearing += delegate { };
 		}
 	}
 }

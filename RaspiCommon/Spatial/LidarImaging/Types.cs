@@ -9,5 +9,5 @@ namespace RaspiCommon.Spatial.LidarImaging
 	public delegate void FuzzyPathChangedHandler(FuzzyPath path);
 	public delegate void LandmarksChangedHandler(ImageVectorList landmarks);
 	public delegate void BarriersChangedHandler(BarrierList barriers);
-
+	public delegate void CompassOffsetChangedHandler(Double offset);
 }

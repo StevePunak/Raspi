@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using Emgu.CV;
 using Emgu.CV.CvEnum;
 using Emgu.CV.Structure;
+using KanoopCommon.Extensions;
 using KanoopCommon.Geometry;
 using KanoopCommon.Logging;
 using RaspiCommon.Extensions;
@@ -78,6 +79,20 @@ namespace RaspiCommon.Lidar
 			CvInvoke.Rectangle(mat, rect, new Bgr(Color.LightSalmon).MCvScalar);
 
 			return mat;
+		}
+
+		public static LidarVector[] AdjustForBearing(LidarVector[] input, Double offset)
+		{
+			LidarVector[] output = new LidarVector[input.Length];
+
+			int outputIndex = (int)((Double)(offset / (360.0 / (Double)input.Length)));
+			for(int inputIndex = 0;inputIndex < input.Length;inputIndex++)
+			{
+				output[outputIndex] = input[inputIndex];
+				if(++outputIndex >= output.Length)
+					outputIndex = 0;
+			}
+			return output;
 		}
 
 		public override string ToString()

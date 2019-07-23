@@ -18,6 +18,7 @@ namespace TrackBot.Spatial
 		public event FuzzyPathChangedHandler FuzzyPathChanged;
 		public event LandmarksChangedHandler LandmarksChanged;
 		public event BarriersChangedHandler BarriersChanged;
+		public event CompassOffsetChangedHandler CompassOffsetChanged;
 
 		public double Range { get; set; }
 
@@ -57,6 +58,7 @@ namespace TrackBot.Spatial
 			FuzzyPathChanged += delegate {};
 			LandmarksChanged += delegate {};
 			BarriersChanged += delegate {};
+			CompassOffsetChanged += delegate {};
 
 			FuzzyPathChanged(new FuzzyPath());
 			LandmarksChanged(new ImageVectorList());

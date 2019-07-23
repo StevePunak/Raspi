@@ -85,16 +85,6 @@
     <Compile Include="Testing\ClassifierTest.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\KanoopCommon\KanoopCommon.csproj">
-      <Project>{5c9d80a6-6fc0-4b59-b1cf-d2ec261b4b00}</Project>
-      <Name>KanoopCommon</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\RaspiCommon\RaspiCommon.csproj">
-      <Project>{0194337C-274D-42F2-A1DB-0166F0AC73EB}</Project>
-      <Name>RaspiCommon</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
     <Content Include="License-LGPL.txt" />
   </ItemGroup>
   <ItemGroup>
@@ -107,6 +97,16 @@
     <EmbeddedResource Include="Controls\BotDash.resx">
       <DependentUpon>BotDash.cs</DependentUpon>
     </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\KanoopCommon\KanoopCommon.csproj">
+      <Project>{5c9d80a6-6fc0-4b59-b1cf-d2ec261b4b00}</Project>
+      <Name>KanoopCommon</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\RaspiCommon\RaspiCommon.csproj">
+      <Project>{0194337c-274d-42f2-a1db-0166f0ac73eb}</Project>
+      <Name>RaspiCommon</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="..\packages\EMGU.CV.3.4.3.3016\build\EMGU.CV.targets" Condition="Exists('..\packages\EMGU.CV.3.4.3.3016\build\EMGU.CV.targets')" />

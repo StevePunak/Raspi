@@ -37,6 +37,7 @@ namespace RaspiCommon
 		public bool SpatialPollingEnabled { get; set; }
 		public bool DeadReckoningEnvironmentEnabled { get; set; }
 		public bool RobotArmEnabled { get; set; }
+		public bool TelemetryServerEnabled { get; set; }
 
 		public String LogFileName
 		{
@@ -330,5 +331,118 @@ namespace RaspiCommon
 				? CONFIG_FILE
 				: Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "robo.config");
 		}
+
+		public void SetDefaults()
+		{
+#if zero
+			RemoteImageDirectory = "/home/pi/images";
+			RadarHost = "192.168.0.50";
+			BlueThresholds = new ColorThreshold(Color.Blue, 150, 70);
+			GreenThresholds = new ColorThreshold(Color.Green, 150, 100);
+			RedThresholds = new ColorThreshold(Color.Red, 150, 70);
+			CameraParameters = new RaspiCameraParameters();
+
+			CameraBearingOffset = 4;
+
+#endif
+			LidarComPort = "/dev/ttyS0";
+			LidarServer = "raspi:5959";
+
+			// 11 13 5    10 9 4
+			TracksLeftA1Pin = GpioPin.Pin10;
+			TracksLeftA2Pin = GpioPin.Pin09;
+			TracksLeftEnaPin = GpioPin.Pin04;
+
+			TracksRightA1Pin = GpioPin.Pin11;
+			TracksRightA2Pin = GpioPin.Pin13;
+			TracksRightEnaPin = GpioPin.Pin05;
+
+			ClawRotationPin = GpioPin.Pin18;
+			ClawLeftPin = GpioPin.Pin22;
+			ClawRightPin = GpioPin.Pin27;
+			ClawPin = GpioPin.Pin17;
+
+			ClawRotationPinMin = 1000;
+			ClawRotationPinMax = 2000;
+			ClawLeftPinMin = 800;
+			ClawLeftPinMax = 1700;
+			ClawRightPinMin = 800;
+			ClawRightPinMax = 2200;
+			ClawPinMin = 600;
+			ClawPinMax = 1600;
+
+			PanPin = GpioPin.Pin06;
+			TiltPin = GpioPin.Pin19;
+
+			LidarSpinEnablePin = GpioPin.Pin24;
+
+			SnapshotUrl = "http://127.0.0.1:8085/?action=snapshot";
+
+			EigenRecognizerFile = Path.Combine(RaspiPaths.ClassifyRoot, "faces.eigen");
+			LBPHRecognizerFile = Path.Combine(RaspiPaths.ClassifyRoot, "faces.lbph");
+			FisherRecognizerFile = Path.Combine(RaspiPaths.ClassifyRoot, "faces.fisher");
+			FaceCascadeFile = Path.Combine(RaspiPaths.ClassifyRoot, "haarcascade_frontalface_default.xml");
+			MqttClusterHost = "raspi2";
+			MqttPublicHost = "thufir";
+			MqttPublicHost = "192.168.0.50";
+
+			if(Environment.MachineName.Contains("raspi1"))
+			{
+				SetConfigDefaultsRaspi1();
+			}
+			if(Environment.MachineName.Contains("raspi2"))
+			{
+				SetConfigDefaultsRaspi2();
+			}
+			Save();
+#if zero
+			CameraParameters.SnapshotDelay = TimeSpan.FromMilliseconds(1500);
+#endif
+		}
+
+		void SetConfigDefaultsRaspi1()
+		{
+			ServoControllerEnabled = true;
+			PanTiltEnabled = true;
+			ChassisEnabled = true;
+			DatabaseEnabled = true;
+			CommandServerEnabled = true;
+			RangeFindersEnabled = true;
+			TracksEnabled = true;
+			PhysicalCompassEnabled = true;
+			MqttCompassEnabled = true;
+			LidarEnabled = true;
+			ActivitiesEnabled = true;
+			LiftEnabled = true;
+			CameraEnabled = false;
+			SaveImageThreadEnabled = true;
+			SpatialPollingEnabled = true;
+			DeadReckoningEnvironmentEnabled = true;
+			RobotArmEnabled = true;
+			TelemetryServerEnabled = true;
+		}
+
+		void SetConfigDefaultsRaspi2()
+		{
+			ServoControllerEnabled = false;
+			PanTiltEnabled = false;
+			ChassisEnabled = false;
+			DatabaseEnabled = false;
+			CommandServerEnabled = true;
+			RangeFindersEnabled = false;
+			TracksEnabled = false;
+			PhysicalCompassEnabled = false;
+			MqttCompassEnabled = false;
+			LidarEnabled = false;
+			ActivitiesEnabled = false;
+			LiftEnabled = false;
+			CameraEnabled = true;
+			SaveImageThreadEnabled = false;
+			SpatialPollingEnabled = false;
+			DeadReckoningEnvironmentEnabled = false;
+			RobotArmEnabled = false;
+			TelemetryServerEnabled = true;
+		}
+
 	}
 }

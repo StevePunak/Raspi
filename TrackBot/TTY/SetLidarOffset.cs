@@ -28,8 +28,10 @@ namespace TrackBot.TTY
 				Widgets.Instance.ImageEnvironment.CompassOffset = value;
 				Program.Config.LidarOffsetDegrees = value;
 				Program.Config.Save();
+				Console.WriteLine("SLO 1");
 
 				Widgets.Instance.ImageEnvironment.PointsToBitmap().Save(Program.Config.SaveImageLocation);
+				Console.WriteLine("SLO 2");
 			}
 			return true;
 		}

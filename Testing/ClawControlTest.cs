@@ -12,7 +12,6 @@ namespace Testing
 {
 	class ClawControlTest
 	{
-		Double Minimum = 0;
 		Double Maximum = 2.5;
 
 		RobotArm Arm { get; set; }

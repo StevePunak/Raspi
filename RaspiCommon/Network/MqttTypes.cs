@@ -19,7 +19,7 @@ namespace RaspiCommon.Network
 	public delegate void LandscapeMetricsReceivedHandler(LandscapeMetrics metrics);
 
 	public delegate void ImageLandmarksReceivedHandler(ImageVectorList vectors);
-	public delegate void RangeBlobReceivedHandler(LidarVector[] vectors);
+	public delegate void RangeBlobReceivedHandler(DateTime timestamp, LidarVector[] vectors);
 	public delegate void ImageMetricsReceivedHandler(ImageMetrics metrics);
 	public delegate void ChassisMetricsReceivedHandler(ChassisMetrics metrics);
 	public delegate void SpeedAndBearingReceivedHandler(SpeedAndBearing speedAndBearing);
@@ -28,6 +28,7 @@ namespace RaspiCommon.Network
 	public delegate void FuzzyPathReceivedHandler(FuzzyPath path);
 	public delegate void CameraImageReceivedHandler(List<String> imageFiles);
 	public delegate void CameraImagesAnalyzedHandler(ImageAnalysis analysis);
+	public delegate void LidarOffsetReceivedHandler(Double lidarOffset);
 
 	public delegate void DeadReckoningEnvironmentReceivedHandler(DeadReckoningEnvironment environment);
 
@@ -50,6 +51,7 @@ namespace RaspiCommon.Network
 		// widgets
 		public const String BearingTopic = "trackbot/widgets/compass/bearing";
 		public const String ChassisMetricsTopic = "trackbot/widgets/chassis/metrics";
+		public const String LidarMetricsTopic = "trackbot/widgets/lidar/metrics";
 
 		// lidar
 		public const String RangeBlobTopic = "trackbot/lidar/rangeblob";

@@ -86,6 +86,7 @@
     <Compile Include="Data\Entities\Track\DRGridLocation.cs" />
     <Compile Include="Data\Entities\Track\PointMarker.cs" />
     <Compile Include="Devices\Analog\ADS1115.cs" />
+    <Compile Include="Devices\Analog\BMP280.cs" />
     <Compile Include="Devices\Chassis\Chassis.cs" />
     <Compile Include="Devices\Chassis\ChassisMetrics.cs" />
     <Compile Include="Devices\Chassis\XiaorTankTracks.cs" />
@@ -122,6 +123,7 @@
     <Compile Include="Devices\RobotArms\MeArm.cs" />
     <Compile Include="Devices\RobotArms\RobotArm.cs" />
     <Compile Include="Devices\Spatial\LidarBase.cs" />
+    <Compile Include="Devices\Spatial\LidarMetrics.cs" />
     <Compile Include="Devices\Spatial\NetworkLidar.cs" />
     <Compile Include="Extensions\GraphicsExtensions.cs" />
     <Compile Include="Extensions\LidarVectorExtensions.cs" />

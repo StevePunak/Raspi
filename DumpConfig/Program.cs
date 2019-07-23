@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -33,6 +34,11 @@ namespace DumpConfig
 				Console.WriteLine($"Dumping: {configFileName}");
 				ConfigFile  configFile = new ConfigFile(configFileName);
 				RaspiConfig config = (RaspiConfig)configFile.GetConfiguration(typeof(RaspiConfig));
+				config.RangeFinderEchoPins = new Dictionary<RFDir, GpioPin>()
+				{
+					{ RFDir.Front,      GpioPin.Pin26 },
+					{ RFDir.Rear,       GpioPin.Pin23 },
+				};
 
 				List<PropertyInfo> properties = new List<PropertyInfo>(typeof(RaspiConfig).GetProperties());
 				properties.Sort(delegate (PropertyInfo x, PropertyInfo y)
@@ -42,7 +48,23 @@ namespace DumpConfig
 
 				foreach(PropertyInfo property in properties)
 				{
-					Console.WriteLine("{0}{1}", property.Name.PadRight(30), property.GetValue(config));
+					// iterate dictionaries
+					List<Type> interfaceTypes = new List<Type>(property.PropertyType.GetInterfaces());
+					Type dictionaryType = interfaceTypes.Find(t => t.Name.Contains("IDictionary"));
+					if(dictionaryType != null)
+					{
+						Type keyType = dictionaryType.GetGenericArguments()[0];
+						Type valueType = dictionaryType.GetGenericArguments()[1];
+						Console.WriteLine("{0}", property.Name);
+						foreach(DictionaryEntry entry in property.GetValue(config) as IDictionary)
+						{
+							Console.WriteLine("  {0}{1}", entry.Key.ToString().PadRight(28), entry.Value.ToString());
+						}
+					}
+					else
+					{
+						Console.WriteLine("{0}{1}", property.Name.PadRight(30), property.GetValue(config));
+					}
 				}
 			}
 			catch(Exception e)

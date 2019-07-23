@@ -132,10 +132,12 @@ namespace TrackBot
 			if(Program.Config.SpatialPollingEnabled) 					StartSpatialPolling();
 			if(Program.Config.DeadReckoningEnvironmentEnabled) 			StartDeadReckoningEnvironment();
 			if(Program.Config.RobotArmEnabled) 							StartRobotArm();
+			if(Program.Config.TelemetryServerEnabled)					StartTelemetryServer();
 		}
 
 		public void StopWidgets()
 		{
+			if(Program.Config.TelemetryServerEnabled)					StopTelemetryServer();
 			if(Program.Config.RobotArmEnabled) 							StopRobotArm();
 			if(Program.Config.DeadReckoningEnvironmentEnabled) 			StopDeadReckoningEnvironment();
 			if(Program.Config.CameraEnabled) 							StopCamera();
