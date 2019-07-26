@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using KanoopCommon.Geometry;
 using KanoopCommon.Logging;
 using KanoopCommon.Threading;
+using RaspiCommon.PiGpio;
 
 namespace RaspiCommon.Devices.MotorControl
 {

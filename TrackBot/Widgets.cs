@@ -56,7 +56,7 @@ namespace TrackBot
 		public Dictionary<RFDir, HCSR04_RangeFinder> RangeFinders { get; private set; }
 		public Lift Lift { get; private set; }
 
-		public LSM9D51CompassAccelerometer GyMag { get; private set; }
+		public LSM9DS1CompassAccelerometer GyMag { get; private set; }
 		public MqttCompass MqttCompass { get; private set; }
 		public IImageEnvironment ImageEnvironment { get; private set; }
 		public ILandscape Landscape { get; private set; }
@@ -399,7 +399,7 @@ namespace TrackBot
 
 		private void StartPhysicalCompass()
 		{
-			GyMag = new LSM9D51CompassAccelerometer();
+			GyMag = new LSM9DS1CompassAccelerometer();
 			GyMag.MagneticDeviation = Program.Config.MagneticDeviation;
 			GyMag.XAdjust = Program.Config.CompassXAdjust;
 			GyMag.YAdjust = Program.Config.CompassYAdjust;

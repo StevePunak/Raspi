@@ -1,0 +1,463 @@
+<!DOCTYPE Project SYSTEM "http://www.slickedit.com/dtd/vse/10.0/vpj.dtd">
+<Project
+	WorkingDir="."
+	OutputFile="%bd%&lt;e.exe"
+	Version="10.0"
+	VendorName="SlickEdit"
+	TemplateName="C# - Mono">
+	<Files>
+		<Folder
+			Name="Source Files"
+			Filters="*.cs"
+			GUID="{8788F2EE-E0A9-47B3-82DE-39F80BF5F0CC}">
+			<F N="Devices/Analog/ADS1115.cs"/>
+			<F N="Properties/AssemblyInfo.cs"/>
+			<F N="Devices/Optics/Classifiers/BatonFinder.cs"/>
+			<F N="Devices/Analog/BMP280.cs"/>
+			<F N="Devices/Optics/Camera.cs"/>
+			<F N="Devices/Chassis/Chassis.cs"/>
+			<F N="Devices/Chassis/ChassisMetrics.cs"/>
+			<F N="GraphicalHelp/ColoredObjectCandidate.cs"/>
+			<F N="Devices/Optics/ColoredObjectPosition.cs"/>
+			<F N="Devices/Optics/ColorThreshold.cs"/>
+			<F N="Spatial/DeadReckoning/DeadReckoningEnvironment.cs"/>
+			<F N="Devices/Devices.cs"/>
+			<F N="Spatial/Drawing.cs"/>
+			<F N="Spatial/DeadReckoning/DRGrid.cs"/>
+			<F N="Data/Entities/Track/DRGridLocation.cs"/>
+			<F N="Spatial/DeadReckoning/DRMatrix.cs"/>
+			<F N="Devices/MotorControl/DRV8825StepperControl.cs"/>
+			<F N="Spatial/EnvironmentInfo.cs"/>
+			<F N="Devices/MotorControl/ESC.cs"/>
+			<F N="Lidar/ExpressScanResponse.cs"/>
+			<F N="Devices/Optics/Classifiers/FaceFinder.cs"/>
+			<F N="Data/Entities/Facial/FaceName.cs"/>
+			<F N="Devices/Optics/FacePrediction.cs"/>
+			<F N="Data/DataSource/FacialDataSource.cs"/>
+			<F N="Data/Entities/Facial/FacialImage.cs"/>
+			<F N="Devices/Optics/FoundObject.cs"/>
+			<F N="Spatial/LidarImaging/FuzzyPath.cs"/>
+			<F N="Devices/GamePads/GamePadTypes.cs"/>
+			<F N="GpioSharp.cs"/>
+			<F N="Extensions/GraphicsExtensions.cs"/>
+			<F N="Spatial/DeadReckoning/GridCell.cs"/>
+			<F N="Devices/Spatial/HCSR04_RangeFinder.cs"/>
+			<F N="Devices/Compass/ICompass.cs"/>
+			<F N="Spatial/LidarImaging/IImageEnvironment.cs"/>
+			<F N="Spatial/ILandscape.cs"/>
+			<F N="Devices/Optics/ImageAnalysis.cs"/>
+			<F N="Spatial/LidarImaging/ImageBarrier.cs"/>
+			<F N="Spatial/LidarImaging/ImageMetrics.cs"/>
+			<F N="Spatial/LidarImaging/ImageVector.cs"/>
+			<F N="Devices/Locomotion/IMotorizedChassis.cs"/>
+			<F N="PiGpio/IPigsGpio.cs"/>
+			<F N="IWidgetCollection.cs"/>
+			<F N="Devices/MotorControl/L298N_DC_MotorControl.cs"/>
+			<F N="Devices/Locomotion/L298N_DC_TankTracks.cs"/>
+			<F N="Data/Entities/Track/Landmark.cs"/>
+			<F N="Data/Entities/Track/Landscape.cs"/>
+			<F N="Spatial/LandscapeMetrics.cs"/>
+			<F N="Devices/Optics/LED.cs"/>
+			<F N="Devices/Optics/LEDTravelHistoryEntry.cs"/>
+			<F N="Devices/Spatial/LidarBase.cs"/>
+			<F N="Lidar/LidarCommand.cs"/>
+			<F N="Lidar/Environs/LidarEnvironment.cs"/>
+			<F N="Devices/Spatial/LidarMetrics.cs"/>
+			<F N="Lidar/LidarProtocol.cs"/>
+			<F N="Lidar/LidarResponse.cs"/>
+			<F N="Lidar/LidarSample.cs"/>
+			<F N="Lidar/LidarTypes.cs"/>
+			<F N="Lidar/LidarVector.cs"/>
+			<F N="Extensions/LidarVectorExtensions.cs"/>
+			<F N="Lidar/Environs/LinePair.cs"/>
+			<F N="Devices/Compass/LSM9D51CompassAccelerometer.cs"/>
+			<F N="GraphicalHelp/MatEvaluation.cs"/>
+			<F N="Devices/RobotArms/MeArm.cs"/>
+			<F N="Devices/Optics/MJpegStreamerCamera.cs"/>
+			<F N="Devices/Optics/MotionDaemonCamera.cs"/>
+			<F N="Devices/Locomotion/MoveStep.cs"/>
+			<F N="Devices/Compass/MqttCompass.cs"/>
+			<F N="Network/MqttTypes.cs"/>
+			<F N="Devices/Spatial/NetworkLidar.cs"/>
+			<F N="Devices/Optics/NullCamera.cs"/>
+			<F N="Devices/Compass/NullCompass.cs"/>
+			<F N="OpenCvExceptionHandler.cs"/>
+			<F N="Extensions/OpenCvExtensions.cs"/>
+			<F N="Devices/Optics/PanTilt.cs"/>
+			<F N="System/Performance.cs"/>
+			<F N="PigCommand.cs"/>
+			<F N="PiGpio/Pigs.cs"/>
+			<F N="PiGpio/PigsDirect.cs"/>
+			<F N="PigsException.cs"/>
+			<F N="PiGpio/PigsIP.cs"/>
+			<F N="Data/Entities/Track/PointMarker.cs"/>
+			<F N="Spatial/LidarImaging/ProcessingMetrics.cs"/>
+			<F N="Devices/MotorControl/PWMMotorDriver.cs"/>
+			<F N="Devices/Optics/RaspiCamCv.cs"/>
+			<F N="Devices/Optics/RaspiCameraParameters.cs"/>
+			<F N="Devices/Optics/RaspiCameraV2.cs"/>
+			<F N="Network/RaspiCluster.cs"/>
+			<F N="RaspiConfig.cs"/>
+			<F N="Network/RaspiControlClient.cs"/>
+			<F N="RaspiException.cs"/>
+			<F N="RaspiPaths.cs"/>
+			<F N="Devices/RobotArms/RobotArm.cs"/>
+			<F N="Devices/Spatial/RPLidar.cs"/>
+			<F N="Network/RPLidarClient.cs"/>
+			<F N="Lidar/ScanResponse.cs"/>
+			<F N="Devices/Servos/Servo.cs"/>
+			<F N="Devices/Servos/ServoMoveThread.cs"/>
+			<F N="Devices/Servos/ServoParameters.cs"/>
+			<F N="Devices/Optics/SolidColorAnalysis.cs"/>
+			<F N="Devices/Locomotion/SpeedAndBearing.cs"/>
+			<F N="Network/TelemetryClient.cs"/>
+			<F N="Network/TelemetryServer.cs"/>
+			<F N="Devices/Optics/Classifiers/ThingFinder.cs"/>
+			<F N="Data/DataSource/TrackDataSource.cs"/>
+			<F N="Devices/Locomotion/TrackSpeed.cs"/>
+			<F N="Types.cs"/>
+			<F N="Devices/Optics/Types.cs"/>
+			<F N="Spatial/Types.cs"/>
+			<F N="Spatial/DeadReckoning/Types.cs"/>
+			<F N="Spatial/LidarImaging/Types.cs"/>
+			<F N="Utility.cs"/>
+			<F N="WiringPi.cs"/>
+			<F N="Devices/Chassis/XiaorTankTracks.cs"/>
+		</Folder>
+		<Folder
+			Name="Resource Files"
+			Filters=""
+			GUID="{5A746168-D672-4817-82E0-3828C21F1990}"/>
+		<Folder
+			Name="Bitmaps"
+			Filters=""
+			GUID="{63436C6A-03CA-423E-B2E9-33CF6DF3F610}"/>
+		<Folder
+			Name="Other Files"
+			Filters=""
+			GUID="{577F8B5A-1803-47FC-A182-2C36E2FFD3EE}"/>
+	</Files>
+	<Config
+		Name="Debug"
+		Type="mono"
+		DebugCallbackName="mono"
+		OutputFile="%bdRaspiCommon.exe"
+		CompilerConfigName="">
+		<Menu>
+			<Target
+				Name="Compile"
+				Dialog="_mono_options_form Compiler"
+				MenuCaption="&amp;Compile"
+				CaptureOutputWith="ProcessBuffer"
+				SaveOption="SaveCurrent"
+				RunFromDir="%rw">
+				<Exec CmdLine="mcs -debug -target:module -out:%bd%n.obj %f"/>
+			</Target>
+			<Target
+				Name="Build"
+				Dialog="_mono_options_form Compiler"
+				MenuCaption="&amp;Build"
+				CaptureOutputWith="ProcessBuffer"
+				SaveOption="SaveWorkspaceFiles"
+				RunFromDir="%rw">
+				<Exec CmdLine='mcs -debug -target:exe -out:"%o" %{*.cs}'/>
+			</Target>
+			<Target
+				Name="Debug"
+				Dialog="_mono_options_form Interpreter"
+				MenuCaption="&amp;Debug"
+				RunFromDir="%rw"
+				BuildFirst="1"
+				CaptureOutputWith="ProcessBuffer"
+				Deletable="0">
+				<Exec CmdLine='mono --debugger-agent="transport=dt_socket,server=y,suspend=y,address=localhost:8000" "%o"'/>
+			</Target>
+			<Target
+				Name="DebugVS"
+				MenuCaption="Debug - &amp;Visual Studio"
+				SaveOption="SaveNone"
+				RunFromDir="%rw">
+				<Exec CmdLine='devenv "%o"'/>
+			</Target>
+			<Target
+				Name="Execute"
+				Dialog="_mono_options_form Interpreter"
+				MenuCaption="E&amp;xecute"
+				SaveOption="SaveNone"
+				RunFromDir="%rw"
+				CaptureOutputWith="ProcessBuffer">
+				<Exec CmdLine='mono "%o"'/>
+			</Target>
+			<Target
+				Name="Mono Options"
+				MenuCaption="Mono &amp;Options..."
+				ShowOnMenu="HideIfNoCmdLine"
+				Deletable="0">
+				<Exec
+					CmdLine="mono_options"
+					Type="Slick-C"/>
+			</Target>
+		</Menu>
+		<PreBuildCommands StopOnError="0">
+			<Exec CmdLine="mkdir %bd"/>
+		</PreBuildCommands>
+	</Config>
+	<Config
+		Name="Release"
+		Type="mono"
+		DebugCallbackName="mono"
+		OutputFile="%bdRaspiCommon.exe"
+		CompilerConfigName="">
+		<Menu>
+			<Target
+				Name="Compile"
+				Dialog="_mono_options_form Compiler"
+				MenuCaption="&amp;Compile"
+				CaptureOutputWith="ProcessBuffer"
+				SaveOption="SaveCurrent"
+				RunFromDir="%rw">
+				<Exec CmdLine="mcs -release -target:module -out:%bd%n.obj %f"/>
+			</Target>
+			<Target
+				Name="Build"
+				Dialog="_mono_options_form Compiler"
+				MenuCaption="&amp;Build"
+				CaptureOutputWith="ProcessBuffer"
+				SaveOption="SaveWorkspaceFiles"
+				RunFromDir="%rw">
+				<Exec CmdLine='mcs -release -target:exe -out:"%o" %{*.cs}'/>
+			</Target>
+			<Target
+				Name="Debug"
+				Dialog="_mono_options_form Interpreter"
+				MenuCaption="&amp;Debug"
+				RunFromDir="%rw"
+				BuildFirst="1"
+				CaptureOutputWith="ProcessBuffer"
+				Deletable="0">
+				<Exec CmdLine='mono --debugger-agent="transport=dt_socket,server=y,suspend=y,address=localhost:8000" "%o"'/>
+			</Target>
+			<Target
+				Name="DebugVS"
+				MenuCaption="Debug - &amp;Visual Studio"
+				SaveOption="SaveNone"
+				RunFromDir="%rw">
+				<Exec CmdLine='devenv "%o"'/>
+			</Target>
+			<Target
+				Name="Execute"
+				Dialog="_mono_options_form Interpreter"
+				MenuCaption="E&amp;xecute"
+				SaveOption="SaveNone"
+				RunFromDir="%rw"
+				CaptureOutputWith="ProcessBuffer">
+				<Exec CmdLine='mono "%o"'/>
+			</Target>
+			<Target
+				Name="Mono Options"
+				MenuCaption="Mono &amp;Options..."
+				ShowOnMenu="HideIfNoCmdLine"
+				Deletable="0">
+				<Exec
+					CmdLine="mono_options"
+					Type="Slick-C"/>
+			</Target>
+		</Menu>
+		<PreBuildCommands StopOnError="0">
+			<Exec CmdLine="mkdir %bd"/>
+		</PreBuildCommands>
+	</Config>
+	<Config
+		Name="Debug_CSC"
+		Type="mono"
+		DebugCallbackName="mono"
+		OutputFile="%bdRaspiCommon.exe"
+		CompilerConfigName="">
+		<Menu>
+			<Target
+				Name="Compile"
+				Dialog="_mono_options_form Compiler"
+				MenuCaption="&amp;Compile"
+				CaptureOutputWith="ProcessBuffer"
+				SaveOption="SaveCurrent"
+				RunFromDir="%rw">
+				<Exec CmdLine="csc -debug:portable -target:module -out:%bd%n.obj %f"/>
+			</Target>
+			<Target
+				Name="Build"
+				Dialog="_mono_options_form Compiler"
+				MenuCaption="&amp;Build"
+				CaptureOutputWith="ProcessBuffer"
+				SaveOption="SaveWorkspaceFiles"
+				RunFromDir="%rw">
+				<Exec CmdLine='csc -debug:portable -target:exe -out:"%o" %{*.cs}'/>
+			</Target>
+			<Target
+				Name="Debug"
+				Dialog="_mono_options_form Interpreter"
+				MenuCaption="&amp;Debug"
+				RunFromDir="%rw"
+				BuildFirst="1"
+				CaptureOutputWith="ProcessBuffer"
+				Deletable="0">
+				<Exec CmdLine='mono --debugger-agent="transport=dt_socket,server=y,suspend=y,address=localhost:8000" "%o"'/>
+			</Target>
+			<Target
+				Name="DebugVS"
+				MenuCaption="Debug - &amp;Visual Studio"
+				SaveOption="SaveNone"
+				RunFromDir="%rw">
+				<Exec CmdLine='devenv "%o"'/>
+			</Target>
+			<Target
+				Name="Execute"
+				Dialog="_mono_options_form Interpreter"
+				MenuCaption="E&amp;xecute"
+				SaveOption="SaveNone"
+				RunFromDir="%rw"
+				CaptureOutputWith="ProcessBuffer">
+				<Exec CmdLine='mono "%o"'/>
+			</Target>
+			<Target
+				Name="Mono Options"
+				MenuCaption="Mono &amp;Options..."
+				ShowOnMenu="HideIfNoCmdLine"
+				Deletable="0">
+				<Exec
+					CmdLine="mono_options"
+					Type="Slick-C"/>
+			</Target>
+		</Menu>
+		<PreBuildCommands StopOnError="0">
+			<Exec CmdLine="mkdir %bd"/>
+		</PreBuildCommands>
+	</Config>
+	<Config
+		Name="Release"
+		Type="mono"
+		DebugCallbackName="mono"
+		OutputFile="%bdRaspiCommon.exe">
+		<Menu>
+			<Target
+				Name="Compile"
+				Dialog="_mono_options_form Compiler"
+				MenuCaption="&amp;Compile"
+				CaptureOutputWith="ProcessBuffer"
+				SaveOption="SaveCurrent"
+				RunFromDir="%rw">
+				<Exec CmdLine="csc -release -target:module -out:%bd%n.obj %f"/>
+			</Target>
+			<Target
+				Name="Build"
+				Dialog="_mono_options_form Compiler"
+				MenuCaption="&amp;Build"
+				CaptureOutputWith="ProcessBuffer"
+				SaveOption="SaveWorkspaceFiles"
+				RunFromDir="%rw">
+				<Exec CmdLine='mcs -release -target:exe -out:"%o" %{*.cs}'/>
+			</Target>
+			<Target
+				Name="Debug"
+				Dialog="_mono_options_form Interpreter"
+				MenuCaption="&amp;Debug"
+				RunFromDir="%rw"
+				BuildFirst="1"
+				CaptureOutputWith="ProcessBuffer"
+				Deletable="0">
+				<Exec CmdLine='mono --debugger-agent="transport=dt_socket,server=y,suspend=y,address=localhost:8000" "%o"'/>
+			</Target>
+			<Target
+				Name="DebugVS"
+				MenuCaption="Debug - &amp;Visual Studio"
+				SaveOption="SaveNone"
+				RunFromDir="%rw">
+				<Exec CmdLine='devenv "%o"'/>
+			</Target>
+			<Target
+				Name="Execute"
+				Dialog="_mono_options_form Interpreter"
+				MenuCaption="E&amp;xecute"
+				SaveOption="SaveNone"
+				RunFromDir="%rw"
+				CaptureOutputWith="ProcessBuffer">
+				<Exec CmdLine='mono "%o"'/>
+			</Target>
+			<Target
+				Name="Mono Options"
+				MenuCaption="Mono &amp;Options..."
+				ShowOnMenu="HideIfNoCmdLine"
+				Deletable="0">
+				<Exec
+					CmdLine="mono_options"
+					Type="Slick-C"/>
+			</Target>
+		</Menu>
+		<PreBuildCommands StopOnError="0">
+			<Exec CmdLine="mkdir %bd"/>
+		</PreBuildCommands>
+	</Config>
+	<Config
+		Name="Release"
+		Type="mono"
+		DebugCallbackName="mono"
+		OutputFile="%bdRaspiCommon.exe">
+		<Menu>
+			<Target
+				Name="Compile"
+				Dialog="_mono_options_form Compiler"
+				MenuCaption="&amp;Compile"
+				CaptureOutputWith="ProcessBuffer"
+				SaveOption="SaveCurrent"
+				RunFromDir="%rw">
+				<Exec CmdLine="csc -release -target:module -out:%bd%n.obj %f"/>
+			</Target>
+			<Target
+				Name="Build"
+				Dialog="_mono_options_form Compiler"
+				MenuCaption="&amp;Build"
+				CaptureOutputWith="ProcessBuffer"
+				SaveOption="SaveWorkspaceFiles"
+				RunFromDir="%rw">
+				<Exec CmdLine='csc -release -target:exe -out:"%o" %{*.cs}'/>
+			</Target>
+			<Target
+				Name="Debug"
+				Dialog="_mono_options_form Interpreter"
+				MenuCaption="&amp;Debug"
+				RunFromDir="%rw"
+				BuildFirst="1"
+				CaptureOutputWith="ProcessBuffer"
+				Deletable="0">
+				<Exec CmdLine='mono --debugger-agent="transport=dt_socket,server=y,suspend=y,address=localhost:8000" "%o"'/>
+			</Target>
+			<Target
+				Name="DebugVS"
+				MenuCaption="Debug - &amp;Visual Studio"
+				SaveOption="SaveNone"
+				RunFromDir="%rw">
+				<Exec CmdLine='devenv "%o"'/>
+			</Target>
+			<Target
+				Name="Execute"
+				Dialog="_mono_options_form Interpreter"
+				MenuCaption="E&amp;xecute"
+				SaveOption="SaveNone"
+				RunFromDir="%rw"
+				CaptureOutputWith="ProcessBuffer">
+				<Exec CmdLine='mono "%o"'/>
+			</Target>
+			<Target
+				Name="Mono Options"
+				MenuCaption="Mono &amp;Options..."
+				ShowOnMenu="HideIfNoCmdLine"
+				Deletable="0">
+				<Exec
+					CmdLine="mono_options"
+					Type="Slick-C"/>
+			</Target>
+		</Menu>
+		<PreBuildCommands StopOnError="0">
+			<Exec CmdLine="mkdir %bd"/>
+		</PreBuildCommands>
+	</Config>
+</Project>

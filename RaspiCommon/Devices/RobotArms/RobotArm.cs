@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using KanoopCommon.Extensions;
 using KanoopCommon.Logging;
 using RaspiCommon.Devices.Servos;
+using RaspiCommon.PiGpio;
 
 namespace RaspiCommon.Devices.RobotArms
 {

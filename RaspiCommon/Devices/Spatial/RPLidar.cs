@@ -18,6 +18,7 @@ using KanoopCommon.Serial;
 using KanoopCommon.Threading;
 using RaspiCommon;
 using RaspiCommon.Lidar;
+using RaspiCommon.PiGpio;
 
 namespace RaspiCommon.Devices.Spatial
 {

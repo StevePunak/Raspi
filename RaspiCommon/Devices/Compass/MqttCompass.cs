@@ -24,7 +24,9 @@ namespace RaspiCommon.Devices.Compass
 		{
 			Bearing = 0;
 
-			NewBearing += delegate { };
+			NewBearing += delegate {};
+
+			NewBearing(0);
 		}
 	}
 }

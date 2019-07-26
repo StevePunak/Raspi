@@ -58,7 +58,7 @@ namespace Radar
 
 		static void Test()
 		{
-			String directory = @"c:\pub\tmp\images\unclassified";
+			//String directory = @"c:\pub\tmp\images\unclassified";
 			//LoadTrainingImagesIntoDatabase();
 			//SaveTrainingImagesToFiles(directory);
 			//TrainModel();

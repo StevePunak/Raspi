@@ -155,7 +155,7 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>%25windir%25\sysnative\bash.exe -c "`echo '$(ProjectDir)synctopi.sh $(ProjectDir)$(OutDir)' | sed -re 's/\\\\/\//g; s/([A-Z]):/\/mnt\/\L\1\E/g;'`"</PostBuildEvent>
+    <PostBuildEvent>%25windir%25\sysnative\bash.exe -c "`echo '$(SolutionDir)synctopi.sh $(ProjectDir)$(OutDir) trackbot' | sed -re 's/\\\\/\//g; s/([A-Z]):/\/mnt\/\L\1\E/g;'`"</PostBuildEvent>
   </PropertyGroup>
   <Import Project="..\packages\EMGU.CV.3.4.3.3016\build\EMGU.CV.targets" Condition="Exists('..\packages\EMGU.CV.3.4.3.3016\build\EMGU.CV.targets')" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
