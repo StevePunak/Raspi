@@ -154,7 +154,7 @@ namespace TrackBot.Tracks
 
 		public void SetStart()
 		{
-			StartLocation = new GridLocation(Widgets.Instance.ImageEnvironment.Location, Widgets.Instance.GyMag.Bearing);
+			StartLocation = new GridLocation(Widgets.Instance.ImageEnvironment.Location, Widgets.Instance.Compass.Bearing);
 			StartCalcTime = DateTime.UtcNow;
 		}
 
@@ -167,7 +167,7 @@ namespace TrackBot.Tracks
 			if(Program.Config.MetersPerSecondAtPower.TryGetValue(LastSpeed, out metersPerSecond))
 			{
 				Double metersTraveled = elapsed.TotalSeconds * metersPerSecond;
-				Double diff = Degrees.AngularDifference(StartLocation.Bearing, Widgets.Instance.GyMag.Bearing);
+				Double diff = Degrees.AngularDifference(StartLocation.Bearing, Widgets.Instance.Compass.Bearing);
 				if(diff > 8)
 				{
 					Console.WriteLine("Unable to calculate with {0:0.00}° difference", diff);
@@ -411,11 +411,11 @@ namespace TrackBot.Tracks
 			TimeSpan timeToRun;
 			Double speedMPS;
 
-			Log.SysLogText(LogLevel.DEBUG, "Start move {0} meters at {1:0.00} distance from nearest obstacle", meters, Widgets.Instance.ImageEnvironment.FuzzyRangeAtBearing(Widgets.Instance.Chassis, Widgets.Instance.GyMag.Bearing, Widgets.Instance.ImageEnvironment.RangeFuzz));
+			Log.SysLogText(LogLevel.DEBUG, "Start move {0} meters at {1:0.00} distance from nearest obstacle", meters, Widgets.Instance.ImageEnvironment.FuzzyRangeAtBearing(Widgets.Instance.Chassis, Widgets.Instance.Compass.Bearing, Widgets.Instance.ImageEnvironment.RangeFuzz));
 			if(TryGetTimeForDistance(meters, motorSpeed, out timeToRun, out speedMPS))
 			{
 				timeToRun += direction == Direction.Forward ? RampUp : -RampDown;
-				Line line = new Line(Widgets.Instance.ImageEnvironment.Location, FlatGeo.GetPoint(Widgets.Instance.ImageEnvironment.Location, Widgets.Instance.GyMag.Bearing, meters));
+				Line line = new Line(Widgets.Instance.ImageEnvironment.Location, FlatGeo.GetPoint(Widgets.Instance.ImageEnvironment.Location, Widgets.Instance.Compass.Bearing, meters));
 
 				DateTime start = DateTime.UtcNow;
 				TimeSpan interval = TimeSpan.FromMilliseconds(10);
@@ -430,13 +430,13 @@ namespace TrackBot.Tracks
 				Speed = direction == Direction.Forward ? motorSpeed : -motorSpeed;
 				while(DateTime.UtcNow < start + timeToRun)
 				{
-					GpioSharp.Sleep(interval);
+					Thread.Sleep(interval);
 					metersTraveled += metersPerInterval;
 
-					Widgets.Instance.ImageEnvironment.RelativeLocation = FlatGeo.GetPoint(Widgets.Instance.ImageEnvironment.Location, Widgets.Instance.GyMag.Bearing, metersPerInterval);
+					Widgets.Instance.ImageEnvironment.RelativeLocation = FlatGeo.GetPoint(Widgets.Instance.ImageEnvironment.Location, Widgets.Instance.Compass.Bearing, metersPerInterval);
 //					Log.SysLogText(LogLevel.DEBUG, "Moved to {0}", Widgets.Instance.Environment.Location);
 
-					if(direction == Direction.Forward && Widgets.Instance.ImageEnvironment.FuzzyRangeAtBearing(Widgets.Instance.Chassis, Widgets.Instance.GyMag.Bearing, Widgets.Instance.ImageEnvironment.RangeFuzz) <= Program.Config.StopDistance)
+					if(direction == Direction.Forward && Widgets.Instance.ImageEnvironment.FuzzyRangeAtBearing(Widgets.Instance.Chassis, Widgets.Instance.Compass.Bearing, Widgets.Instance.ImageEnvironment.RangeFuzz) <= Program.Config.StopDistance)
 					{
 						Console.WriteLine("Stopping due to range");
 						result = false;
@@ -453,7 +453,7 @@ namespace TrackBot.Tracks
 			}
 
 			Log.SysLogText(LogLevel.DEBUG, "Stopped move {0} meters at {1:0.00} distance from nearest obstacle", 
-				meters, Widgets.Instance.ImageEnvironment.FuzzyRangeAtBearing(Widgets.Instance.Chassis, Widgets.Instance.GyMag.Bearing, Widgets.Instance.ImageEnvironment.RangeFuzz));
+				meters, Widgets.Instance.ImageEnvironment.FuzzyRangeAtBearing(Widgets.Instance.Chassis, Widgets.Instance.Compass.Bearing, Widgets.Instance.ImageEnvironment.RangeFuzz));
 			return result;
 		}
 
@@ -481,7 +481,7 @@ namespace TrackBot.Tracks
 			int spinSpeed = speed == 0 ? Widgets.Instance.Tracks.Fast : speed;
 			NewDestinationBearing(to);
 
-			Double from = Widgets.Instance.GyMag.Bearing;
+			Double from = Widgets.Instance.Compass.Bearing;
 			Double diff = 0;
 
 			if(direction == SpinDirection.None)
@@ -498,7 +498,7 @@ namespace TrackBot.Tracks
 			Double bearing = 0;
 			while(DateTime.UtcNow < start + TimeSpan.FromSeconds(5))
 			{
-				bearing = Widgets.Instance.GyMag.Bearing;
+				bearing = Widgets.Instance.Compass.Bearing;
 				diff = Degrees.AngularDifference(to, bearing);
 				if(bearing.AngularDifference(to, direction) > 180)
 				{
@@ -512,7 +512,7 @@ namespace TrackBot.Tracks
 				{
 					break;
 				}
-				GpioSharp.Sleep(TimeSpan.FromMilliseconds(10));
+				Thread.Sleep(TimeSpan.FromMilliseconds(10));
 			}
 
 			Log.SysLogText(LogLevel.DEBUG, "Turn To Bearing finished at {0:0.00}°", bearing);

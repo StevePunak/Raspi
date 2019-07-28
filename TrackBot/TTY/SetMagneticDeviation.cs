@@ -25,7 +25,7 @@ namespace TrackBot.TTY
 				{
 					throw new CommandException("Value must be between -359 and 359.9");
 				}
-				Widgets.Instance.GyMag.MagneticDeviation = value;
+				Widgets.Instance.Compass.MagneticDeviation = value;
 				Program.Config.MagneticDeviation = value;
 				Program.Config.Save();
 			}

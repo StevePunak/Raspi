@@ -10,6 +10,7 @@ namespace RaspiCommon.Devices.Compass
 	public class NullCompass : ICompass
 	{
 		public double Bearing { get; set; }
+		public double MagneticDeviation { get; set; }
 
 		public event NewBearingHandler NewBearing;
 
@@ -17,6 +18,14 @@ namespace RaspiCommon.Devices.Compass
 		{
 			NewBearing += delegate {};
 			NewBearing(0);
+		}
+
+		public void Start()
+		{
+		}
+
+		public void Stop()
+		{
 		}
 	}
 }

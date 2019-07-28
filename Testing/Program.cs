@@ -52,23 +52,41 @@ namespace Testing
 
 		static PointCloud2D PointCloud { get; set; }
 
+		static TestBase TestCase;
+
 		static void Main(string[] args)
 		{
 			OpenLog();
 			OpenConfig();
 
-			Test();
+			Console.CancelKeyPress += OnConsoleCancelKeyPress;
+
+			StartTest();
+			TestCase.WaitForCompletion();
 
 			Console.WriteLine("Done");
 		}
 
-		private static void Test()
+		private static void OnConsoleCancelKeyPress(object sender, ConsoleCancelEventArgs e)
 		{
+			if(TestCase != null)
+				TestCase.Stop();
+			e.Cancel = true;
+		}
+
+		private static void StartTest()
+		{
+			TestCase = new ImageTest();
+			TestCase = new MqttCompassTest();
+			//TestCase = new MqttTest();
+			//TestCase = new HCSR04Test();
+			//TestCase = new DevTest();
+			//TestCase = new PigsTest();
 			//new BMP280Test();
 			//new ADS1115Test();
 			//new ClawControlTest();
 			//new WiringPiTest();
-			new LidarClientTest();
+			//new LidarClientTest();
 			//new PigsTest();
 			//new SerialTest();
 			//new LidarTest();
@@ -81,6 +99,11 @@ namespace Testing
 			//TrainModel();
 			//MoveImages(directory);
 			//DetectFaces(directory);
+		}
+
+		private static void Test()
+		{
+
 		}
 
 		private static void DetectFaces(string directory)

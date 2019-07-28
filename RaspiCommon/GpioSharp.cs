@@ -8,6 +8,7 @@ using KanoopCommon.Extensions;
 using KanoopCommon.Threading;
 using RaspiCommon.Devices.MotorControl;
 using RaspiCommon.Devices.Spatial;
+using RaspiCommon.PiGpio;
 
 namespace RaspiCommon
 {
@@ -38,10 +39,7 @@ namespace RaspiCommon
 				}
 			}
 
-			if(Pigs.Running)
-			{
-				Pigs.Stop();
-			}
+			Pigs.Stop();
 		}
 
 		[DllImport("libgpiosharp.so")]

@@ -58,7 +58,7 @@ namespace RaspiCommon.Network
 		public EnvironmentInfo EnvironmentInfo { get; private set; }
 
 		public TelemetryClient(String host, String clientID, List<String> topics)
-			: base(host, clientID, topics)
+			: base(typeof(TelemetryClient).Name, host, clientID, topics)
 		{
 			Vectors = new LidarVector[(int)(360 / VectorSize)];
 			for(int offset = 0;offset < Vectors.Length;offset++)

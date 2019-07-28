@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using KanoopCommon.Geometry;
 using RaspiCommon;
@@ -29,7 +30,7 @@ namespace TrackBot.TTY
 
 			while(DateTime.UtcNow < startTime + TimeSpan.FromMilliseconds(time))
 			{
-				GpioSharp.Sleep(TimeSpan.FromMilliseconds(25));
+				Thread.Sleep(TimeSpan.FromMilliseconds(25));
 			}
 
 			Widgets.Instance.Tracks.Stop();

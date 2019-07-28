@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using KanoopCommon.Extensions;
 using RaspiCommon;
 using RaspiCommon.Devices.Analog;
+using RaspiCommon.PiGpio;
 
 namespace ServoTest
 {

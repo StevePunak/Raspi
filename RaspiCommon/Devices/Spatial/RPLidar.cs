@@ -8,6 +8,7 @@ using System.IO;
 using System.IO.Ports;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using KanoopCommon;
 using KanoopCommon.Extensions;
@@ -18,6 +19,7 @@ using KanoopCommon.Serial;
 using KanoopCommon.Threading;
 using RaspiCommon;
 using RaspiCommon.Lidar;
+using RaspiCommon.PiGpio;
 
 namespace RaspiCommon.Devices.Spatial
 {
@@ -157,9 +159,9 @@ namespace RaspiCommon.Devices.Spatial
 		{
 			Pigs.SetOutputPin(SpinPin, PinState.Low);
 			StopScan();
-			GpioSharp.Sleep(250);
+			Thread.Sleep(250);
 			Reset();
-			GpioSharp.Sleep(250);
+			Thread.Sleep(250);
 
 			if(Port != null && Port.IsOpen)
 			{

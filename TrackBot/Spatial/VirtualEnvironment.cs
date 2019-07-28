@@ -63,6 +63,7 @@ namespace TrackBot.Spatial
 			FuzzyPathChanged(new FuzzyPath());
 			LandmarksChanged(new ImageVectorList());
 			BarriersChanged(new BarrierList());
+			CompassOffsetChanged(0);
 		}
 
 		public double FuzzyRangeAtBearing(double bearing, double fuzz = 2)

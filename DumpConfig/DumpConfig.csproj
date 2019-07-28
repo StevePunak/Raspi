@@ -48,6 +48,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+    <None Include="libcvextern.so">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\KanoopCommon\KanoopCommon.csproj">
@@ -61,6 +64,6 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>%25windir%25\sysnative\bash.exe -c "`echo '$(ProjectDir)synctopi.sh $(ProjectDir)$(OutDir)' | sed -re 's/\\\\/\//g; s/([A-Z]):/\/mnt\/\L\1\E/g;'`"</PostBuildEvent>
+    <PostBuildEvent>%25windir%25\sysnative\bash.exe -c "`echo '$(SolutionDir)synctopi.sh $(ProjectDir)$(OutDir) trackbot' | sed -re 's/\\\\/\//g; s/([A-Z]):/\/mnt\/\L\1\E/g;'`"</PostBuildEvent>
   </PropertyGroup>
 </Project>

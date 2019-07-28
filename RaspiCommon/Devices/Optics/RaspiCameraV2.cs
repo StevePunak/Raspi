@@ -20,17 +20,17 @@ namespace RaspiCommon.Devices.Optics
 
 		#region Private Properties
 
-		protected String SnapshotDelayString { get { return Parameters.SnapshotDelay != TimeSpan.Zero ? String.Format("-t {0}", (int)Parameters.SnapshotDelay.TotalMilliseconds) : String.Empty; } }
-		protected String WidthString { get { return Parameters.Width != 0 ? String.Format("-w {0}", Parameters.Width) : String.Empty; } }
-		protected String HeightString { get { return Parameters.Height != 0 ? String.Format("-h {0}", Parameters.Height) : String.Empty; } }
-		protected String ContrastString { get { return Parameters.Contrast != 0 ? String.Format("-co {0}", Parameters.Contrast) : String.Empty; } }
-		protected String SaturationString { get { return Parameters.Saturation != 0 ? String.Format("-sa {0}", Parameters.Saturation) : String.Empty; } }
-		protected String ImageEffectString { get { return String.IsNullOrEmpty(Parameters.ImageEffect) ? String.Empty : String.Format("-ifx {0}", Parameters.ImageEffect); } }
-		protected String ColorEffectString { get { return String.IsNullOrEmpty(Parameters.ColorEffect) ? String.Empty : String.Format("-cfx {0}", Parameters.ColorEffect); } }
-		protected String ExposureString { get { return String.IsNullOrEmpty(Parameters.Exposure) ? String.Empty : String.Format("-ex {0}", Parameters.Exposure); } }
-		protected String AutoWhiteBalanceString { get { return String.IsNullOrEmpty(Parameters.AutoWhiteBalance) ? String.Empty : String.Format("-awb {0}", Parameters.AutoWhiteBalance); } }
-		protected String MeteringModeString { get { return String.IsNullOrEmpty(Parameters.MeteringMode) ? String.Empty : String.Format("-mm {0}", Parameters.MeteringMode); } }
-		protected String ImageTypeString
+		protected virtual String SnapshotDelayString { get { return Parameters.SnapshotDelay != TimeSpan.Zero ? String.Format("-t {0}", (int)Parameters.SnapshotDelay.TotalMilliseconds) : String.Empty; } }
+		protected virtual String WidthString { get { return Parameters.Width != 0 ? String.Format("--width {0}", Parameters.Width) : String.Empty; } }
+		protected virtual String HeightString { get { return Parameters.Height != 0 ? String.Format("--height {0}", Parameters.Height) : String.Empty; } }
+		protected virtual String ContrastString { get { return Parameters.Contrast != 0 ? String.Format("-co {0}", Parameters.Contrast) : String.Empty; } }
+		protected virtual String SaturationString { get { return Parameters.Saturation != 0 ? String.Format("-sa {0}", Parameters.Saturation) : String.Empty; } }
+		protected virtual String ImageEffectString { get { return String.IsNullOrEmpty(Parameters.ImageEffect) ? String.Empty : String.Format("-ifx {0}", Parameters.ImageEffect); } }
+		protected virtual String ColorEffectString { get { return String.IsNullOrEmpty(Parameters.ColorEffect) ? String.Empty : String.Format("-cfx {0}", Parameters.ColorEffect); } }
+		protected virtual String ExposureString { get { return String.IsNullOrEmpty(Parameters.Exposure) ? String.Empty : String.Format("-ex {0}", Parameters.Exposure); } }
+		protected virtual String AutoWhiteBalanceString { get { return String.IsNullOrEmpty(Parameters.AutoWhiteBalance) ? String.Empty : String.Format("-awb {0}", Parameters.AutoWhiteBalance); } }
+		protected virtual String MeteringModeString { get { return String.IsNullOrEmpty(Parameters.MeteringMode) ? String.Empty : String.Format("-mm {0}", Parameters.MeteringMode); } }
+		protected virtual String ImageTypeString
 		{
 			get
 			{

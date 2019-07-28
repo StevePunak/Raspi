@@ -44,7 +44,7 @@ namespace TrackBot
 		{
 			if(Drawing)
 			{
-				Log.SysLogText(LogLevel.DEBUG, "Creating image with bearing {0:0.00}°  Lidar: {1:0.00}°", Widgets.Instance.GyMag.Bearing, Widgets.Instance.ImageEnvironment.Bearing);
+				Log.SysLogText(LogLevel.DEBUG, "Creating image with bearing {0:0.00}°  Lidar: {1:0.00}°", Widgets.Instance.Compass.Bearing, Widgets.Instance.ImageEnvironment.Bearing);
 				Mat mat = Widgets.Instance.ImageEnvironment.PointsToBitmap();
 
 				mat.Save(STANDARD_SAVE_LOCATION);

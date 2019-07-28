@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using KanoopCommon.Geometry;
 using KanoopCommon.Logging;
@@ -27,12 +28,12 @@ namespace RaspiCommon
 				do
 				{
 					Log.SysLogText(LogLevel.DEBUG, "{0}: Sleeping for {1} more seconds", label, seconds);
-					GpioSharp.Sleep(1000);
+					Thread.Sleep(1000);
 				} while(--seconds > 0);
 			}
 			else
 			{
-				GpioSharp.Sleep(time);
+				Thread.Sleep(time);
 			}
 		}
 

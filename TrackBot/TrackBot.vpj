@@ -9,7 +9,7 @@
 		<Folder
 			Name="Source Files"
 			Filters="*.cs"
-			GUID="{01A871D6-1611-4674-8624-D1494AACFAB6}">
+			GUID="{E2623D18-646C-45DB-A2C1-E36DCE8EACE6}">
 			<F N="Spatial/Activity.cs"/>
 			<F N="Spatial/ActivityException.cs"/>
 			<F N="Spatial/Area.cs"/>
@@ -81,17 +81,15 @@
 		<Folder
 			Name="Resource Files"
 			Filters=""
-			GUID="{712A8449-C13C-44D2-A591-642634E3C454}">
-			<F N="../../../../bin/findqmake"/>
-		</Folder>
+			GUID="{4DC1EF1C-0418-468F-8A1F-85723DA33A32}"/>
 		<Folder
 			Name="Bitmaps"
 			Filters=""
-			GUID="{946EF005-3F1A-4AC8-97B5-2DF0D1F58414}"/>
+			GUID="{F0EC3DD2-6782-45D8-AAD8-623C70AF3AB6}"/>
 		<Folder
 			Name="Other Files"
 			Filters=""
-			GUID="{F9FC719A-4206-4B27-8FB8-6CEF7B79FBF7}"/>
+			GUID="{10AC3699-FE6E-4883-9C6D-FBFB7F30DBDF}"/>
 	</Files>
 	<Config
 		Name="Debug"

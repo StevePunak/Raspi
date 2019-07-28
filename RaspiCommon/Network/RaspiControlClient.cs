@@ -46,6 +46,11 @@ namespace RaspiCommon.Network
 
 		#region Public Methods
 
+		protected void Stop()
+		{
+			Client.Stop();
+		}
+
 		public void SendCommand(String command)
 		{
 			Send(MqttTypes.CommandsTopic, command, false);

@@ -6,7 +6,10 @@ using System.Threading.Tasks;
 
 namespace RaspiCommon
 {
-	public delegate void GPIOInputCallback(GpioPin pin, EdgeType edgeType, UInt64 nanoseconds);
+	public delegate void GpioInputCallback(GpioPin pin, EdgeType edgeType, UInt64 microseconds);
+
+	[Obsolete]
+	public delegate void GpioInputCallbackDeprecated(GpioPin pin, EdgeType edgeType, UInt64 nanoseconds);
 
 	public enum TravelResult
 	{
@@ -60,13 +63,21 @@ namespace RaspiCommon
 	public enum EdgeType
 	{
 		Rising =  0x0001,
-		Falling = 0x0002
+		Falling = 0x0002,
+		Both = Rising | Falling
 	}
 
 	public enum PinState
 	{
 		Low = 0,
 		High = 1
+	}
+
+	public enum PullUp
+	{
+		Off = 0,
+		Down = 1,
+		Up = 2,
 	}
 
 	public enum PinMode

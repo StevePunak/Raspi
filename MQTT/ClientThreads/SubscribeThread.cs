@@ -14,8 +14,8 @@ namespace MQTT.ClientThreads
 
 		public QOSTypes QOS { get; set; }
 
-		public SubscribeThread(String brokerAddress, String clientID, List<String> topics)
-			: base(typeof(SubscribeThread).Name, brokerAddress, clientID, topics)
+		public SubscribeThread(String name, String brokerAddress, String clientID, List<String> topics)
+			: base(name, brokerAddress, clientID, topics)
 		{
 			Interval = TimeSpan.FromSeconds(1);
 

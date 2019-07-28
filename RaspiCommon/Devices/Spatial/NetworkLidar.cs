@@ -33,6 +33,12 @@ namespace RaspiCommon.Devices.Spatial
 			Client.Connect();
 		}
 
+		public override void Stop()
+		{
+			Client.Client.Client.Close();
+			base.Stop();
+		}
+
 		private void OnClientRangeBlobReceived(DateTime timestamp, LidarVector[] rawInputVectors)
 		{
 			LidarVector[] inputVectors = LidarVector.AdjustForBearing(rawInputVectors, Offset);

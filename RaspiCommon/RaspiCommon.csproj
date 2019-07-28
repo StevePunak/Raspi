@@ -142,6 +142,9 @@
     <Compile Include="OpenCvExceptionHandler.cs" />
     <Compile Include="Devices\Servos\ServoMoveThread.cs" />
     <Compile Include="Devices\Servos\ServoParameters.cs" />
+    <Compile Include="PiGpio\IPigsGpio.cs" />
+    <Compile Include="PiGpio\PigsDirect.cs" />
+    <Compile Include="PiGpio\PigsIP.cs" />
     <Compile Include="RaspiPaths.cs" />
     <Compile Include="Spatial\DeadReckoning\DeadReckoningEnvironment.cs" />
     <Compile Include="Spatial\DeadReckoning\DRGrid.cs" />
@@ -166,10 +169,10 @@
     <Compile Include="Lidar\LidarVector.cs" />
     <Compile Include="Devices\Spatial\RPLidar.cs" />
     <Compile Include="Lidar\ScanResponse.cs" />
-    <Compile Include="Devices\Compass\LSM9D51CompassAccelerometer.cs" />
+    <Compile Include="Devices\Compass\LSM9DS1CompassAccelerometer.cs" />
     <Compile Include="Devices\MotorControl\PWMMotorDriver.cs" />
     <Compile Include="PigCommand.cs" />
-    <Compile Include="Pigs.cs" />
+    <Compile Include="PiGpio\Pigs.cs" />
     <Compile Include="PigsException.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RaspiConfig.cs" />

@@ -37,5 +37,7 @@ namespace RaspiCommon
 		Camera Camera { get; }
 		TrackSpeed TrackSpeed { get; }
 		PanTilt PanTilt { get; }
+
+		bool HasImageEnvironment { get; }
 	}
 }

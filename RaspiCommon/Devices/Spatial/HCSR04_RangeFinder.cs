@@ -9,23 +9,12 @@ using KanoopCommon.Extensions;
 using KanoopCommon.Logging;
 using KanoopCommon.Threading;
 using RaspberrySharp.IO.GeneralPurpose;
+using RaspiCommon.PiGpio;
 
 namespace RaspiCommon.Devices.Spatial
 {
 	public class HCSR04_RangeFinder
 	{
-		[DllImport("libgpiosharp.so")]
-		public static extern int RegisterDeviceCallback(IntPtr cb, GpioPin gpioPin, EdgeType edgeType, InputSetting input);
-
-		[DllImport("libgpiosharp.so")]
-		public static extern void UnregisterCallback(GpioPin pin);
-
-		[DllImport("libgpiosharp.so")]
-		public static extern void SetOutputPin(GpioPin pin, PinState state);
-
-		[DllImport("libgpiosharp.so")]
-		public static extern void PulsePin(GpioPin pin, UInt32 microseconds);
-
 		static MutexLock _lock;
 		static Dictionary<GpioPin, TriggerThread> _triggerThreads;
 
@@ -48,15 +37,17 @@ namespace RaspiCommon.Devices.Spatial
 
 			protected override bool OnRun()
 			{
-				PulsePin(TriggerPin, 10);
+				Pigs.SetOutputPin(TriggerPin, PinState.High);
+				Sleep(1);
+				Pigs.SetOutputPin(TriggerPin, PinState.Low);
 				return true;
 			}
 		}
 
-		GpioPin _triggerPin, _echoPin;
+		GpioPin TriggerPin { get; set; }
+		GpioPin EchoPin { get; set; }
 
 		UInt64 _startSweep;
-
 		TriggerThread _triggerThread;
 
 		public TimeSpan Interval { get { return _triggerThread.Interval; } set { _triggerThread.Interval = value; } }
@@ -66,7 +57,6 @@ namespace RaspiCommon.Devices.Spatial
 		}
 
 		public Double Range { get; private set; }
-
 		public RFDir Direction { get; private set; }
 
 		static Dictionary<GpioPin, HCSR04_RangeFinder> _rangeFinders;
@@ -83,32 +73,31 @@ namespace RaspiCommon.Devices.Spatial
 			Log.SysLogText(LogLevel.DEBUG, "Instantiating range finder on Echo {0}  Trigger {1}", echoPin, triggerPin);
 			_lock.Lock();
 
-			_echoPin = echoPin;
-			_triggerPin = triggerPin;
+			EchoPin = echoPin;
+			TriggerPin = triggerPin;
 			Range = 99;
 			Direction = direction;
 
-			if(_triggerThreads.TryGetValue(_triggerPin, out _triggerThread) == false)
+			if(_triggerThreads.TryGetValue(TriggerPin, out _triggerThread) == false)
 			{
-				_triggerThread = new TriggerThread(_triggerPin);
-				_triggerThreads.Add(_triggerPin, _triggerThread);
+				_triggerThread = new TriggerThread(TriggerPin);
+				_triggerThreads.Add(TriggerPin, _triggerThread);
 			}
 			_triggerThread.Count++;
 
-			if(_rangeFinders.ContainsKey(_echoPin) == false)
+			if(_rangeFinders.ContainsKey(EchoPin) == false)
 			{
 				_rangeFinders.Add(echoPin, this);
 			}
 			else
 			{
-				_rangeFinders[_echoPin] = this;
+				_rangeFinders[EchoPin] = this;
 			}
 			_lock.Unlock();
 		}
 
-		public static void OnPinEdge(GpioPin pin, EdgeType edgeType, UInt64 nanoseconds)
+		public static void OnPinEdge(GpioPin pin, EdgeType edgeType, UInt64 microseconds)
 		{
-
 			try
 			{
 				HCSR04_RangeFinder rangeFinder;
@@ -117,12 +106,12 @@ namespace RaspiCommon.Devices.Spatial
 				{
 					if(edgeType == EdgeType.Rising)
 					{
-						rangeFinder._startSweep = nanoseconds;
+						rangeFinder._startSweep = microseconds;
 					}
 					else
 					{
-						Double meters = (Double)(nanoseconds - rangeFinder._startSweep);
-						meters = meters / 5800000;
+						Double meters = (Double)(microseconds - rangeFinder._startSweep);
+						meters = meters / 5800;
 						if(meters < 1)
 						{
 							rangeFinder.Range = meters;
@@ -133,7 +122,7 @@ namespace RaspiCommon.Devices.Spatial
 			catch(Exception e)
 			{
 				Console.WriteLine("EXCEPTION PinEdge {0}", e.Message);
-				Console.WriteLine("EXCEPTION PinEdge pin {0} {1} {2}", pin, edgeType, nanoseconds);
+				Console.WriteLine("EXCEPTION PinEdge pin {0} {1} {2}", pin, edgeType, microseconds);
 			}
 			finally
 			{
@@ -145,8 +134,7 @@ namespace RaspiCommon.Devices.Spatial
 		{
 			Log.SysLogText(LogLevel.DEBUG, "-------------    Starting range finder (State {0}", _triggerThread.State);
 
-			IntPtr callback = Marshal.GetFunctionPointerForDelegate(new GPIOInputCallback(OnPinEdge));
-			RegisterDeviceCallback(callback, _echoPin, EdgeType.Falling | EdgeType.Rising, InputSetting.OpenSource);
+			Pigs.StartInputPin(EchoPin, EdgeType.Both, OnPinEdge);
 
 			_lock.Lock();
 			if(!Running)
@@ -165,10 +153,10 @@ namespace RaspiCommon.Devices.Spatial
 			if(_triggerThread.Count == 1)       // we are the last one
 			{
 				_triggerThread.Stop();
-				_triggerThreads.Remove(_echoPin);
+				_triggerThreads.Remove(EchoPin);
 			}
 			_triggerThread.Count--;
-			UnregisterCallback(_echoPin);
+			Pigs.StopInputPin(EchoPin);
 			_lock.Unlock();
 		}
 

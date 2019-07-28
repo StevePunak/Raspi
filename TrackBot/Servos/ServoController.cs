@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using KanoopCommon.Logging;
 using RaspiCommon;
 using RaspiCommon.Devices.Servos;
+using RaspiCommon.PiGpio;
 
 namespace TrackBot.Servos
 {

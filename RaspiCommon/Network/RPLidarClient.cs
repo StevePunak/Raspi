@@ -56,7 +56,7 @@ namespace RaspiCommon.Network
 		{
 			try
 			{
-				Log.SysLogText(LogLevel.INFO, $"Attempting to connect to {ServerAddress}");
+				Log.SysLogText(LogLevel.INFO, $"RPLidar TCP client Attempting to connect to {ServerAddress}");
 				Reset();
 				Client = new TcpClientClient();
 				Client.DataReceived += OnClientDataReceived;

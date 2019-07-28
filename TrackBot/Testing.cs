@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using RaspiCommon;
 using RaspiCommon.Devices.Spatial;
@@ -17,7 +18,7 @@ namespace TrackBot
 
 			while(true)
 			{
-				GpioSharp.Sleep(1000);
+				Thread.Sleep(1000);
 				Console.WriteLine("Range: {0:0.000}m", rangeFinder.Range);
 			}
 		}

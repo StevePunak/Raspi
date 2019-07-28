@@ -9,6 +9,7 @@ using RaspiCommon;
 using KanoopCommon.Logging;
 using RaspiCommon.Spatial.LidarImaging;
 using TrackBot.System;
+using System.Threading;
 
 namespace TrackBot.Spatial
 {
@@ -128,20 +129,20 @@ namespace TrackBot.Spatial
 		{
 			bool result = false;
 
-			Double currentForwardRange = Widgets.Instance.ImageEnvironment.FuzzyRangeAtBearing(Widgets.Instance.Chassis, Widgets.Instance.GyMag.Bearing, Widgets.Instance.ImageEnvironment.RangeFuzz);
+			Double currentForwardRange = Widgets.Instance.ImageEnvironment.FuzzyRangeAtBearing(Widgets.Instance.Chassis, Widgets.Instance.Compass.Bearing, Widgets.Instance.ImageEnvironment.RangeFuzz);
 			Log.LogText(LogLevel.DEBUG, "Sitting at {0:0.000}m from forward obstacle with a destination of {1}", currentForwardRange, Destination);
 			if(currentForwardRange < FORWARD_COLLISION_WARNING)
 			{
 				Log.LogText(LogLevel.DEBUG, "Backing it up");
 				Widgets.Instance.Tracks.BackwardTime(TimeSpan.FromMilliseconds(500), Widgets.Instance.Tracks.Slow);
-				GpioSharp.Sleep(TimeSpan.FromSeconds(1.5));
+				Thread.Sleep(TimeSpan.FromSeconds(1.5));
 			}
 
 			Log.LogText(LogLevel.DEBUG, "Turn to bearing {0:0.00}°", Destination.Bearing);
 
 			Widgets.Instance.Tracks.TurnToBearing(Destination.Bearing);
 
-			Double diff = Widgets.Instance.GyMag.Bearing.AngularDifference(Destination.Bearing);
+			Double diff = Widgets.Instance.Compass.Bearing.AngularDifference(Destination.Bearing);
 			if(diff > MAX_BEARING_DIFFERENTIAL)
 			{
 				Console.WriteLine("We are stuck! Angular difference of {0:0.0}° too damn high", diff);
@@ -152,7 +153,7 @@ namespace TrackBot.Spatial
 			{
 				Console.WriteLine("Rotated to within {0:0.0}° of {1:0.0}°", diff, Destination.Bearing);
 
-				GpioSharp.Sleep(TimeSpan.FromSeconds(5));
+				Thread.Sleep(TimeSpan.FromSeconds(5));
 
 				Widgets.Instance.Tracks.SetStart();
 				SwitchState(ActivityStates.TravelToDest);
@@ -177,7 +178,7 @@ namespace TrackBot.Spatial
 			bool result = true;
 
 			// make sure we are not hitting anything
-			if(Widgets.Instance.ImageEnvironment.FuzzyRangeAtBearing(Widgets.Instance.Chassis, Widgets.Instance.GyMag.Bearing, Widgets.Instance.ImageEnvironment.RangeFuzz) < FORWARD_COLLISION_WARNING)
+			if(Widgets.Instance.ImageEnvironment.FuzzyRangeAtBearing(Widgets.Instance.Chassis, Widgets.Instance.Compass.Bearing, Widgets.Instance.ImageEnvironment.RangeFuzz) < FORWARD_COLLISION_WARNING)
 			{
 				Console.WriteLine("activating emergency stop");
 				SwitchState(ActivityStates.Idle);
@@ -227,23 +228,23 @@ namespace TrackBot.Spatial
 			Log.SysLogText(LogLevel.DEBUG, "Going to move {0} {1} to try and get unstuck", UNSTUCK_FIDGET_DISTANCE, direction);
 
 			Widgets.Instance.Tracks.MoveMeters(direction, .3, Widgets.Instance.Tracks.StandardSpeed);
-			GpioSharp.Sleep(TimeSpan.FromSeconds(1));
+			Thread.Sleep(TimeSpan.FromSeconds(1));
 
 			SpinDirection spinDirection = Utility.GetClosestSpinDirection(Widgets.Instance.Compass.Bearing, Destination.Bearing);
 
 			Log.LogText(LogLevel.DEBUG, "Turn {0} to bearing {1:0.00}°", spinDirection, Destination.Bearing);
 			Widgets.Instance.Tracks.TurnToBearing(Destination.Bearing, spinDirection);
 
-			Double diff = Widgets.Instance.GyMag.Bearing.AngularDifference(Destination.Bearing);
+			Double diff = Widgets.Instance.Compass.Bearing.AngularDifference(Destination.Bearing);
 			if(diff > MAX_BEARING_DIFFERENTIAL)
 			{
 				spinDirection = spinDirection == SpinDirection.Clockwise ? SpinDirection.CounterClockwise : SpinDirection.Clockwise;
 
 				Log.LogText(LogLevel.DEBUG, "OK. Will try it {0}. Turn to bearing {1:0.00}°", spinDirection, Destination.Bearing);
-				GpioSharp.Sleep(TimeSpan.FromSeconds(1));
+				Thread.Sleep(TimeSpan.FromSeconds(1));
 				Widgets.Instance.Tracks.TurnToBearing(Destination.Bearing, spinDirection);
 
-				diff = Widgets.Instance.GyMag.Bearing.AngularDifference(Destination.Bearing);
+				diff = Widgets.Instance.Compass.Bearing.AngularDifference(Destination.Bearing);
 				if(diff > MAX_BEARING_DIFFERENTIAL)
 				{
 					if(--_unstuckTries > 0)

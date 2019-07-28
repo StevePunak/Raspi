@@ -81,7 +81,7 @@ namespace TrackBot.Spatial
 
 			Line longestLine = null;
 
-			Double startBearing = Widgets.Instance.GyMag.Bearing;
+			Double startBearing = Widgets.Instance.Compass.Bearing;
 			for(double x = 0;x < 360;x += 10)
 			{
 				Double bearing = startBearing.AddDegrees(x);
