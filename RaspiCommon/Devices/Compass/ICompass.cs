@@ -7,5 +7,9 @@ namespace RaspiCommon.Devices.Compass
 	{
 		event NewBearingHandler NewBearing;
 		Double Bearing { get; }
+		Double MagneticDeviation { get; set; }
+
+		void Start();
+		void Stop();
 	}
 }

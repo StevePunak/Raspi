@@ -9,12 +9,30 @@ using RaspiCommon.Network;
 
 namespace Testing
 {
-	class MqttTest
+	class MqttTest : TestBase
 	{
-		class MqttTestThread : SubscribeThread
+		protected override void Run()
 		{
-			public MqttTestThread()
-				: base("thufir", "test-client-101", new List<String>() { MqttTypes.Voltage1Topic })
+			TestSubscribeThread thread = new TestSubscribeThread();
+			thread.InboundSubscribedMessage += OnInboundSubscribedMessage;
+			thread.Start();
+
+			Double bearing = 0;
+			while(!Quit)
+			{
+				//byte[] output = BitConverter.GetBytes(bearing);
+				//thread.Client.Publish(MqttTypes.BearingTopic, output, false);
+				//if(++bearing >= 360) bearing = 0;
+
+				Console.WriteLine("Sleeping");
+				Sleep(1000);
+			}
+		}
+
+		class TestSubscribeThread : SubscribeThread
+		{
+			public TestSubscribeThread()
+				: base(typeof(TestSubscribeThread).Name, "thufir", "test-client-101", new List<String>() { MqttTypes.BearingTopic })
 			{
 			}
 
@@ -23,17 +41,13 @@ namespace Testing
 			}
 		}
 
-		public MqttTest()
-		{
-			MqttTestThread thread = new MqttTestThread();
-			thread.InboundSubscribedMessage += OnInboundSubscribedMessage;
-			thread.Start();
-
-			Thread.Sleep(10000000);
-		}
-
 		private void OnInboundSubscribedMessage(MQTT.MqttClient client, MQTT.Packets.PublishMessage packet)
 		{
+			if(packet.Topic == MqttTypes.BearingTopic)
+			{
+				Double bearing = BitConverter.ToDouble(packet.Message, 0);
+				Console.WriteLine($"bearing: {bearing}");
+			}
 		}
 	}
 }

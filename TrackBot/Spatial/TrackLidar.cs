@@ -25,7 +25,7 @@ namespace TrackBot.Spatial
 
 		public event CompassOffsetChangedHandler CompassOffsetChanged;
 
-		public Double Range { get { return FuzzyRangeAtBearing(Widgets.Instance.Chassis, Widgets.Instance.GyMag.Bearing, RangeFuzz); } }
+		public Double Range { get { return FuzzyRangeAtBearing(Widgets.Instance.Chassis, Widgets.Instance.Compass.Bearing, RangeFuzz); } }
 		public Double CompassOffset { get { return Lidar.Offset; } set { Lidar.Offset = value; } }
 		public Size PixelSize { get { return new Size((int)(PixelsPerMeter * MetersSquare), (int)(PixelsPerMeter * MetersSquare)); } }
 		public PointD PixelCenter { get { return new PointD((int)(PixelsPerMeter * MetersSquare) / 2, (int)(PixelsPerMeter * MetersSquare) / 2); } }

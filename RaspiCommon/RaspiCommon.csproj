@@ -169,7 +169,7 @@
     <Compile Include="Lidar\LidarVector.cs" />
     <Compile Include="Devices\Spatial\RPLidar.cs" />
     <Compile Include="Lidar\ScanResponse.cs" />
-    <Compile Include="Devices\Compass\LSM9D51CompassAccelerometer.cs" />
+    <Compile Include="Devices\Compass\LSM9DS1CompassAccelerometer.cs" />
     <Compile Include="Devices\MotorControl\PWMMotorDriver.cs" />
     <Compile Include="PigCommand.cs" />
     <Compile Include="PiGpio\Pigs.cs" />

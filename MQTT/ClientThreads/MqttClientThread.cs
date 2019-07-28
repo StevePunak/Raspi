@@ -42,6 +42,8 @@ namespace MQTT.ClientThreads
 			KeepAliveInterval = Constants.DefaultKeepAliveInterval;
 
 			Interval = TimeSpan.FromSeconds(1);
+
+			GetConnected();
 		}
 
 		public void Disconnect()

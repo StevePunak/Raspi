@@ -6,6 +6,7 @@ using System.IO.Ports;
 using System.Linq;
 using System.Net;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using KanoopCommon.Database;
 using KanoopCommon.Extensions;
@@ -23,6 +24,7 @@ using RaspiCommon.Devices.RobotArms;
 using RaspiCommon.Devices.Spatial;
 using RaspiCommon.Lidar.Environs;
 using RaspiCommon.Network;
+using RaspiCommon.PiGpio;
 using RaspiCommon.Spatial;
 using RaspiCommon.Spatial.DeadReckoning;
 using RaspiCommon.Spatial.LidarImaging;
@@ -56,9 +58,9 @@ namespace TrackBot
 		public Dictionary<RFDir, HCSR04_RangeFinder> RangeFinders { get; private set; }
 		public Lift Lift { get; private set; }
 
-		public LSM9DS1CompassAccelerometer GyMag { get; private set; }
-		public MqttCompass MqttCompass { get; private set; }
 		public IImageEnvironment ImageEnvironment { get; private set; }
+		public bool HasImageEnvironment { get { return ImageEnvironment !=null; } }
+
 		public ILandscape Landscape { get; private set; }
 		public SpatialPoll SpatialPollThread { get; private set; }
 
@@ -72,7 +74,7 @@ namespace TrackBot
 
 		public RemoteMqttController CommandServer { get; private set; }
 
-		public ICompass Compass { get { return GyMag; } }
+		public ICompass Compass { get; private set; }
 
 		public Chassis Chassis { get; private set; }
 
@@ -111,6 +113,8 @@ namespace TrackBot
 			BarriersChanged += delegate {};
 			DeadReckoningEnvironmentReceived += delegate {};
 			CameraImagesAnalyzed += delegate {};
+
+			Pigs.InterfaceType = Pigs.PigsType.Direct;
 		}
 
 		public void StartWidgets()
@@ -137,6 +141,7 @@ namespace TrackBot
 
 		public void StopWidgets()
 		{
+			Log.SysLogText(LogLevel.INFO, "Stopping Widgets");
 			if(Program.Config.TelemetryServerEnabled)					StopTelemetryServer();
 			if(Program.Config.RobotArmEnabled) 							StopRobotArm();
 			if(Program.Config.DeadReckoningEnvironmentEnabled) 			StopDeadReckoningEnvironment();
@@ -145,7 +150,7 @@ namespace TrackBot
 			if(Program.Config.SpatialPollingEnabled) 					StopSpatialPolling();
 			if(Program.Config.LiftEnabled) 								StopLift();
 			if(Program.Config.ActivitiesEnabled) 						StopActivities();
-			if(Program.Config.TracksEnabled)							Tracks.Stop();
+			if(Program.Config.TracksEnabled)							StopTracks();
 			if(Program.Config.RangeFindersEnabled) 						StopRangeFinders();
 			if(Program.Config.PhysicalCompassEnabled) 					StopPhysicalCompass();
 			if(Program.Config.MqttCompassEnabled)						StopMqttCompass();
@@ -156,11 +161,15 @@ namespace TrackBot
 			if(Program.Config.PanTiltEnabled) 							StopPanTilt();
 			if(Program.Config.ServoControllerEnabled) 					StopServoController();
 
-			GpioSharp.DeInit();
+			Log.SysLogText(LogLevel.INFO, "Stopping Pigs");
+			Pigs.Stop();
+
+			Log.SysLogText(LogLevel.INFO, "Stopping remaining threads");
 			foreach(ThreadBase thread in ThreadBase.GetRunningThreads())
 			{
-				Log.SysLogText(LogLevel.DEBUG, "Remaining: {0}", thread);
+				Log.SysLogText(LogLevel.DEBUG, "Remaining: {0} of type {1}", thread, thread.GetType());
 			}
+			Log.SysLogText(LogLevel.INFO, "Widgets Stopped");
 		}
 
 		private void StartPanTilt()
@@ -175,6 +184,7 @@ namespace TrackBot
 
 		private void StartServoController()
 		{
+			Log.SysLogText(LogLevel.INFO, $"Starting Servo Controller");
 			ServoController = new ServoController();
 			ServoController.Start();
 		}
@@ -186,6 +196,7 @@ namespace TrackBot
 
 		private void StartDeadReckoningEnvironment()
 		{
+			Log.SysLogText(LogLevel.INFO, $"Starting DR Environs");
 			TrackDataSource ds = DataSourceFactory.Create<TrackDataSource>(Program.Config.DBCredentials);
 			DeadReckoningEnvironment environment;
 			if(ds.GetDREnvironment(Program.Config.DeadReckoningEnvironmentName, out environment).ResultCode == DBResult.Result.Success)
@@ -238,6 +249,7 @@ namespace TrackBot
 
 		private void StartChassis()
 		{
+			Log.SysLogText(LogLevel.INFO, $"Starting Chassis");
 			Chassis = new XiaorTankTracks();
 			Chassis.Points.Add(ChassisParts.Lidar, new PointD(Chassis.Points[ChassisParts.RearLeft].X + .115, Chassis.Points[ChassisParts.FrontRight].Y + .120));
 			Chassis.Points.Add(ChassisParts.FrontRangeFinder, new PointD(Chassis.Width / 2, 0));
@@ -317,6 +329,7 @@ namespace TrackBot
 
 		private void StartDatabase()
 		{
+			Log.SysLogText(LogLevel.INFO, $"Starting database connection");
 			try
 			{
 				TrackBotLandscape landscape;
@@ -339,6 +352,7 @@ namespace TrackBot
 
 		private void StartTelemetryServer()
 		{
+			Log.SysLogText(LogLevel.INFO, $"Starting telemetry server");
 			Server = new TelemetryServer(this, Program.Config.MqttPublicHost, "trackbot-lidar")
 			{
 				ImageDirectory = "/home/pi/images"
@@ -354,6 +368,7 @@ namespace TrackBot
 
 		private void StartSpatialPolling()
 		{
+			Log.SysLogText(LogLevel.INFO, $"Starting spatial polling");
 			SpatialPollThread = new SpatialPoll();
 			SpatialPollThread.Start();
 		}
@@ -377,6 +392,7 @@ namespace TrackBot
 
 		private void StartLift()
 		{
+			Log.SysLogText(LogLevel.INFO, $"Starting lift");
 			Lift = new Lift();
 			Lift.Start();
 		}
@@ -388,22 +404,24 @@ namespace TrackBot
 
 		private void StartMqttCompass()
 		{
-			MqttCompass = new MqttCompass(Program.Config.MqttClusterHost, MqttTypes.BearingTopic);
-			MqttCompass.Start();
+			Log.SysLogText(LogLevel.INFO, $"Starting MQTT compass");
+			Compass = new MqttCompass(Program.Config.MqttClusterHost, MqttTypes.BearingTopic);
+			Compass.Start();
 		}
 
 		private void StopMqttCompass()
 		{
-			MqttCompass.Stop();
+			Compass.Stop();
 		}
 
 		private void StartPhysicalCompass()
 		{
-			GyMag = new LSM9DS1CompassAccelerometer();
-			GyMag.MagneticDeviation = Program.Config.MagneticDeviation;
-			GyMag.XAdjust = Program.Config.CompassXAdjust;
-			GyMag.YAdjust = Program.Config.CompassYAdjust;
-			GyMag.NewBearing += OnNewBearing;
+			LSM9DS1CompassAccelerometer gymag = new LSM9DS1CompassAccelerometer();
+			gymag.MagneticDeviation = Program.Config.MagneticDeviation;
+			gymag.XAdjust = Program.Config.CompassXAdjust;
+			gymag.YAdjust = Program.Config.CompassYAdjust;
+			gymag.NewBearing += OnNewBearing;
+			Compass = gymag;
 		}
 
 		private void StopPhysicalCompass()
@@ -498,6 +516,7 @@ namespace TrackBot
 
 		private void StopTracks()
 		{
+			Log.SysLogText(LogLevel.INFO, "Stopping ot tracks");
 			Tracks.LeftSpeed = 0;
 			Tracks.RightSpeed = 0;
 
@@ -561,7 +580,7 @@ namespace TrackBot
 
 		public Double GetRangeAtDirection(Direction direction, bool fuzzy = true)
 		{
-			Double bearing = Widgets.Instance.GyMag.Bearing;
+			Double bearing = Widgets.Instance.Compass.Bearing;
 			if(direction == Direction.Backward)
 			{
 				bearing = bearing.AddDegrees(180);

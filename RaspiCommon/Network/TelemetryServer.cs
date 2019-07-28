@@ -86,7 +86,10 @@ namespace RaspiCommon.Network
 			Widgets.DistanceLeft += OnWidgets_DistanceLeft;
 			Widgets.DeadReckoningEnvironmentReceived += OnDeadReckoningLandscapeReceived;
 			Widgets.CameraImagesAnalyzed += OnCameraImagesAnalyzed;
-			Widgets.ImageEnvironment.CompassOffsetChanged += OnEnvironment_CompassOffsetChanged;
+			if(RaspiConfig.Instance.SendSpeedAndBearingTelemetry)
+			{
+				Widgets.ImageEnvironment.CompassOffsetChanged += OnEnvironment_CompassOffsetChanged;
+			}
 
 			ImageDirectory = Camera.ImageDirectory;
 			
@@ -120,8 +123,6 @@ namespace RaspiCommon.Network
 				{
 					SendRangeData();
 
-					SendBearing();
-
 					SendSpeedAndBearing();
 
 					if(_sendFuzzyPath)
@@ -153,10 +154,16 @@ namespace RaspiCommon.Network
 			}
 			catch(Exception e)
 			{
-				Log.SysLogText(LogLevel.ERROR, "{0} EXCEPTION: {1}", Name, e.Message);
+				Log.SysLogText(LogLevel.ERROR, "{0} EXCEPTION: {1}\n{2}", Name, e.Message, GetFormattedStackTrace(e));
 				Interval = TimeSpan.FromSeconds(1);
 			}
 			return true;
+		}
+
+		protected override bool OnStop()
+		{
+			Client.Stop();
+			return base.OnStop();
 		}
 
 		private void OnCameraImagesAnalyzed(ImageAnalysis analysis)
@@ -181,40 +188,40 @@ namespace RaspiCommon.Network
 			_sendDeadReckoningEnvironment = false;
 		}
 
-		private void SendBearing()
-		{
-			Double forwardBearing = Widgets.Compass.Bearing;
-			Double backwardBearing = forwardBearing.AddDegrees(180);
-			Double forwardPrimaryRange = Widgets.ImageEnvironment.FuzzyRangeAtBearing(Widgets.Chassis, forwardBearing, 0);
-			Double backwardPrimaryRange = Widgets.ImageEnvironment.FuzzyRangeAtBearing(Widgets.Chassis, backwardBearing, 0);
-
-			if( forwardBearing != _environmentInfo.Bearing ||
-				forwardPrimaryRange != _environmentInfo.ForwardPrimaryRange ||
-				backwardPrimaryRange != _environmentInfo.BackwardPrimaryRange)
-			{
-				_environmentInfo.Bearing = forwardBearing;
-				_environmentInfo.ForwardPrimaryRange = forwardPrimaryRange;
-				_environmentInfo.BackwardPrimaryRange = backwardPrimaryRange;
-				_distancesChanged = true;
-			}
-
-			byte[] output = BitConverter.GetBytes(forwardBearing);
-			Client.Publish(MqttTypes.BearingTopic, output, true);
-		}
-
 		private void SendSpeedAndBearing()
 		{
-			SpeedAndBearing speed = new SpeedAndBearing()
+			if(RaspiConfig.Instance.SendRangeImagingTelemetry)
 			{
-				Bearing = Widgets.Compass.Bearing,
-				TrackSpeed = new TrackSpeed()
+				Double forwardBearing = Widgets.Compass.Bearing;
+				Double backwardBearing = forwardBearing.AddDegrees(180);
+				Double forwardPrimaryRange = Widgets.ImageEnvironment.FuzzyRangeAtBearing(Widgets.Chassis, forwardBearing, 0);
+				Double backwardPrimaryRange = Widgets.ImageEnvironment.FuzzyRangeAtBearing(Widgets.Chassis, backwardBearing, 0);
+
+				if(forwardBearing != _environmentInfo.Bearing ||
+					forwardPrimaryRange != _environmentInfo.ForwardPrimaryRange ||
+					backwardPrimaryRange != _environmentInfo.BackwardPrimaryRange)
 				{
-					LeftSpeed = Widgets.TrackSpeed.LeftSpeed,
-					RightSpeed = Widgets.TrackSpeed.RightSpeed,
-				},
-			};
-			byte[] output = speed.Serialize();
-			Client.Publish(MqttTypes.SpeedAndBearingTopic, output, false);
+					_environmentInfo.Bearing = forwardBearing;
+					_environmentInfo.ForwardPrimaryRange = forwardPrimaryRange;
+					_environmentInfo.BackwardPrimaryRange = backwardPrimaryRange;
+					_distancesChanged = true;
+				}
+			}
+
+			if(RaspiConfig.Instance.SendSpeedAndBearingTelemetry)
+			{
+				SpeedAndBearing speed = new SpeedAndBearing()
+				{
+					Bearing = Widgets.Compass.Bearing,
+					TrackSpeed = new TrackSpeed()
+					{
+						LeftSpeed = Widgets.TrackSpeed.LeftSpeed,
+						RightSpeed = Widgets.TrackSpeed.RightSpeed,
+					},
+				};
+				byte[] output = speed.Serialize();
+				Client.Publish(MqttTypes.SpeedAndBearingTopic, output, false);
+				}
 		}
 
 		private void SendFuzzyPath()
@@ -253,46 +260,55 @@ namespace RaspiCommon.Network
 		{
 			Log.LogText(LogLevel.DEBUG, "Sending initial data");
 
-			ImageMetrics imageMetrics = new ImageMetrics()
+			if(RaspiConfig.Instance.SendRangeImagingTelemetry)
 			{
-				MetersSquare = Widgets.ImageEnvironment.MetersSquare,
-				PixelsPerMeter = Widgets.ImageEnvironment.PixelsPerMeter
-			};
-			String output = KVPSerializer.Serialize(imageMetrics);
-			Client.Publish(MqttTypes.ImageMetricsTopic, output, true);
+				ImageMetrics imageMetrics = new ImageMetrics()
+				{
+					MetersSquare = Widgets.ImageEnvironment.MetersSquare,
+					PixelsPerMeter = Widgets.ImageEnvironment.PixelsPerMeter
+				};
+				String output = KVPSerializer.Serialize(imageMetrics);
+				Client.Publish(MqttTypes.ImageMetricsTopic, output, true);
 
-			LandscapeMetrics landscapeMetrics = new LandscapeMetrics()
-			{
-				MetersSquare = Widgets.Landscape.MetersSquare,
-				Name =  Widgets.Landscape.Name
-			};
-			output = KVPSerializer.Serialize(imageMetrics);
-			Client.Publish(MqttTypes.LandscapeMetricsTopic, output, true);
+				LandscapeMetrics landscapeMetrics = new LandscapeMetrics()
+				{
+					MetersSquare = Widgets.Landscape.MetersSquare,
+					Name =  Widgets.Landscape.Name
+				};
+				output = KVPSerializer.Serialize(imageMetrics);
+				Client.Publish(MqttTypes.LandscapeMetricsTopic, output, true);
 
-			ChassisMetrics chassisMetrics = new ChassisMetrics()
-			{
-				Length = Widgets.Chassis.Length,
-				Width = Widgets.Chassis.Width,
-				LidarPosition = Widgets.Chassis.LidarPosition
-			};
-			Client.Publish(MqttTypes.ChassisMetricsTopic, chassisMetrics.Serialize(), true);
+				Log.LogText(LogLevel.DEBUG, $"********************* Sending lidar offset {Widgets.ImageEnvironment.CompassOffset}");
+				LidarMetrics lidarMetrics = new LidarMetrics()
+				{
+					Offset = Widgets.ImageEnvironment.CompassOffset,
+				};
+				Client.Publish(MqttTypes.LidarMetricsTopic, lidarMetrics.Serialize(), true);
+				Log.LogText(LogLevel.DEBUG, $"********************* Lidar offset sent");
+			}
 
-			Log.LogText(LogLevel.DEBUG, $"********************* Sending lidar offset {Widgets.ImageEnvironment.CompassOffset}");
-			LidarMetrics lidarMetrics = new LidarMetrics()
+			if(RaspiConfig.Instance.SendChassisTelemetry)
 			{
-				Offset = Widgets.ImageEnvironment.CompassOffset,
-			};
-			Client.Publish(MqttTypes.LidarMetricsTopic, lidarMetrics.Serialize(), true);
-			Log.LogText(LogLevel.DEBUG, $"********************* Lidar offset sent");
+				ChassisMetrics chassisMetrics = new ChassisMetrics()
+				{
+					Length = Widgets.Chassis.Length,
+					Width = Widgets.Chassis.Width,
+					LidarPosition = Widgets.Chassis.LidarPosition
+				};
+				Client.Publish(MqttTypes.ChassisMetricsTopic, chassisMetrics.Serialize(), true);
+			}
 
 			_sendInitialData = false;
 		}
 
 		void SendRangeData()
 		{
-			//Log.LogText(LogLevel.DEBUG, "Sending Range Data");
-			byte[] output = Widgets.ImageEnvironment.MakeRangeBlob();
-			Client.Publish(MqttTypes.RangeBlobTopic, output);
+			if(RaspiConfig.Instance.SendRangeImagingTelemetry)
+			{
+				//Log.LogText(LogLevel.DEBUG, "Sending Range Data");
+				byte[] output = Widgets.ImageEnvironment.MakeRangeBlob();
+				Client.Publish(MqttTypes.RangeBlobTopic, output);
+			}
 		}
 
 		private void OnDeadReckoningLandscapeReceived(DeadReckoningEnvironment environment)

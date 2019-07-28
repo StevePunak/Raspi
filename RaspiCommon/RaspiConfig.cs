@@ -20,6 +20,9 @@ namespace RaspiCommon
 	{
 		const String CONFIG_FILE = "/var/robo/robo.config";
 
+		public static RaspiConfig Instance { get; private set; }
+
+		// widgets selection for this node
 		public bool ServoControllerEnabled { get; set; }
 		public bool PanTiltEnabled { get; set; }
 		public bool ChassisEnabled { get; set; }
@@ -38,6 +41,10 @@ namespace RaspiCommon
 		public bool DeadReckoningEnvironmentEnabled { get; set; }
 		public bool RobotArmEnabled { get; set; }
 		public bool TelemetryServerEnabled { get; set; }
+
+		public bool SendRangeImagingTelemetry { get; set; }
+		public bool SendSpeedAndBearingTelemetry { get; set; }
+		public bool SendChassisTelemetry { get; set; }
 
 		public String LogFileName
 		{
@@ -409,7 +416,7 @@ namespace RaspiCommon
 			CommandServerEnabled = true;
 			RangeFindersEnabled = true;
 			TracksEnabled = true;
-			PhysicalCompassEnabled = true;
+			PhysicalCompassEnabled = false;
 			MqttCompassEnabled = true;
 			LidarEnabled = true;
 			ActivitiesEnabled = true;
@@ -420,6 +427,9 @@ namespace RaspiCommon
 			DeadReckoningEnvironmentEnabled = true;
 			RobotArmEnabled = true;
 			TelemetryServerEnabled = true;
+			SendRangeImagingTelemetry = true;
+			SendSpeedAndBearingTelemetry = true;
+			SendChassisTelemetry = true;
 		}
 
 		void SetConfigDefaultsRaspi2()
@@ -432,7 +442,7 @@ namespace RaspiCommon
 			RangeFindersEnabled = false;
 			TracksEnabled = false;
 			PhysicalCompassEnabled = false;
-			MqttCompassEnabled = false;
+			MqttCompassEnabled = true;
 			LidarEnabled = false;
 			ActivitiesEnabled = false;
 			LiftEnabled = false;
@@ -442,7 +452,14 @@ namespace RaspiCommon
 			DeadReckoningEnvironmentEnabled = false;
 			RobotArmEnabled = false;
 			TelemetryServerEnabled = true;
+			SendRangeImagingTelemetry = false;
+			SendSpeedAndBearingTelemetry = false;
+			SendChassisTelemetry = false;
 		}
 
+		public RaspiConfig()
+		{
+			Instance = this;
+		}
 	}
 }

@@ -27,9 +27,6 @@ namespace TrackBot
 {
 	class Program
 	{
-		[DllImport("libgpiosharp.so")]
-		public static extern void PulsePin(GpioPin pin, UInt32 microseconds);
-
 		public static Log Log { get; private set; }
 		public static RaspiConfig Config { get; private set; }
 
@@ -38,6 +35,8 @@ namespace TrackBot
 			Console.WriteLine("Initializing...");
 
 			OpenLog(args.Contains("-c"));
+
+			Log.SystemLog.LogBanner("Started");
 
 			Console.WriteLine("Opening config...");
 			OpenConfig();
@@ -53,6 +52,7 @@ namespace TrackBot
 
 			Widgets.Instance.StopWidgets();
 
+			Log.SystemLog.LogBanner("Stopped");
 		}
 
 		private static void Test()

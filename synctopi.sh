@@ -29,6 +29,8 @@ do
 	if is_host_up $host; then
 		rsync -ruvzh $1/*.exe pi@$host:$OUTPUT_DIRECTORY
 		rsync -ruvzh $1/*.dll pi@$host:$OUTPUT_DIRECTORY
-		rsync -ruvzh $1/*.so pi@$host:$OUTPUT_DIRECTORY
+		if ls $1/*.so 1> /dev/null 2>&1;  then
+			rsync -ruvzh $1/*.so pi@$host:$OUTPUT_DIRECTORY
+		fi
 	fi
 done

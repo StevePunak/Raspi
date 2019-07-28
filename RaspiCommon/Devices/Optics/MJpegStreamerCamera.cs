@@ -62,14 +62,11 @@ namespace RaspiCommon.Devices.Optics
 		public override bool SnapPhoto(out Mat image)
 		{
 			image = null;
-			Log.LogText(LogLevel.DEBUG, "{0} SnapPhoto", this);
 			bool result = false;
 			try
 			{
 				String filename = String.Format("{0}/{1:0000}-{2}", ImageDirectory, ImageNumber, SaveNameEnd);
-				Log.LogText(LogLevel.DEBUG, "{0} SnapPhoto 1", this);
 				String parms = MakeParmsString();
-				Log.LogText(LogLevel.DEBUG, "{0} SnapPhoto 2 {1}", this, parms);
 
 				String args = String.Format("{0}", parms);
 				if(parms != _lastParms)
@@ -81,9 +78,7 @@ namespace RaspiCommon.Devices.Optics
 				}
 				_lastParms = parms;
 
-				Log.LogText(LogLevel.DEBUG, "{0} SnapPhoto 3", this);
-				EatX(filename);
-
+				GrabThatSnapshot(filename);
 				if(++ImageNumber > 9999)
 				{
 					ImageNumber = 0;
@@ -103,42 +98,19 @@ namespace RaspiCommon.Devices.Optics
 			return result;
 		}
 
-		void EatX(String filename)
-		{
-			Log.LogText(LogLevel.DEBUG, "{0} EATX", this);
-		}
-
 		void GrabThatSnapshot(String fileName)
 		{
 			try
 			{
-				Console.WriteLine("will grab 1");
-				Log.LogText(LogLevel.DEBUG, "Grab 1");
 				WebRequest request = WebRequest.Create(SnapshotUrl);
 
-				Console.WriteLine("will grab 2");
-				Log.LogText(LogLevel.DEBUG, "Grab 2");
 				using(WebResponse response = request.GetResponse())
 				using(Stream dataStream = response.GetResponseStream())
 				using(BinaryReader reader = new BinaryReader(dataStream))
 				{
-					Console.WriteLine("will grab 3");
-					Log.LogText(LogLevel.DEBUG, "Grab 3 reader {0} dataStream {1} reader {2}",
-						reader == null ? "NULL" : "not null",
-						dataStream == null ? "NULL" : "not null",
-						response == null ? "NULL" : "not null");
 					byte[] data = reader.ReadBytes(2000000);
-					using(MemoryStream ms = new MemoryStream(data))
-					{
-						Mat image = new Mat();
-						image.LoadFromByteArray(data);
-
-						image.Save(fileName);
-						LastSavedImage = image;
-					}
+					File.WriteAllBytes(fileName, data);
 				}
-				Console.WriteLine("will grab 99");
-				Log.LogText(LogLevel.DEBUG, "Grab 99");
 			}
 			catch(Exception e)
 			{

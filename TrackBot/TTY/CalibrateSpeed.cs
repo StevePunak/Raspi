@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using RaspiCommon;
 
@@ -27,10 +28,10 @@ namespace TrackBot.TTY
 
 				// move out
 				Widgets.Instance.Tracks.Speed = motorSpeed;
-				GpioSharp.Sleep(runtime);
+				Thread.Sleep(runtime);
 				Widgets.Instance.Tracks.Stop();
 
-				GpioSharp.Sleep(1000);
+				Thread.Sleep(1000);
 				Double endRange = Widgets.Instance.ImageEnvironment.Range;
 				Double speed = (startRange - endRange) / runtime.Seconds;
 				Console.WriteLine("travelled {0:00} meters in {1}ms for speed of {2:0.00}m/s", (startRange - endRange), runtime, speed);
@@ -39,10 +40,10 @@ namespace TrackBot.TTY
 
 				// move back
 				Widgets.Instance.Tracks.Speed = -motorSpeed;
-				GpioSharp.Sleep(runtime);
+				Thread.Sleep(runtime);
 				Widgets.Instance.Tracks.Stop();
 
-				GpioSharp.Sleep(1000);
+				Thread.Sleep(1000);
 			}
 			return true;
 		}

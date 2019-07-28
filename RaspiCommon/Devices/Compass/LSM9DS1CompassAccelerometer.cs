@@ -1,5 +1,6 @@
 using System;
 using System.Runtime.InteropServices;
+using System.Threading;
 using KanoopCommon.Extensions;
 using KanoopCommon.Logging;
 using KanoopCommon.Threading;
@@ -7,7 +8,7 @@ using RaspiCommon.Spatial;
 
 namespace RaspiCommon.Devices.Compass
 {
-	public class LSM9D51CompassAccelerometer : ICompass
+	public class LSM9DS1CompassAccelerometer : ICompass
 	{
 		public event NewBearingHandler NewBearing;
 
@@ -77,7 +78,7 @@ namespace RaspiCommon.Devices.Compass
 
 		MutexLock _lock;
 
-		public LSM9D51CompassAccelerometer()
+		public LSM9DS1CompassAccelerometer()
 		{
 			MinX = 99;
 			MaxX = -99;
@@ -110,7 +111,7 @@ namespace RaspiCommon.Devices.Compass
 					MinY = Math.Min(MinY, info.my);
 					MaxY = Math.Max(MaxY, info.my);
 					Log.SysLogText(LogLevel.DEBUG, "{0}    mx: {1}  my: {2}  minx {3} maxx {4} miny {5} maxy {6}", 100 - count, info.mx, info.my, MinX, MaxX, MinY, MaxY);
-					GpioSharp.Sleep(TimeSpan.FromSeconds(.1));
+					Thread.Sleep(TimeSpan.FromSeconds(.1));
 				}
 
 				Double xrange = (MaxX - MinX) / 2;
@@ -146,6 +147,14 @@ namespace RaspiCommon.Devices.Compass
 			//	inx, iny, adX, adY, degrees, MagneticDeviation, XAdjust, YAdjust);
 
 			return degrees;
+		}
+
+		public void Start()
+		{
+		}
+
+		public void Stop()
+		{
 		}
 	}
 }
