@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace RaspiCommon
 {
-	public delegate void GpioInputCallback(GpioPin pin, EdgeType edgeType, UInt64 microseconds);
+	public delegate void GpioInputCallback(GpioPin pin, EdgeType edgeType, UInt64 microseconds, UInt16 sequence);
 
 	[Obsolete]
 	public delegate void GpioInputCallbackDeprecated(GpioPin pin, EdgeType edgeType, UInt64 nanoseconds);

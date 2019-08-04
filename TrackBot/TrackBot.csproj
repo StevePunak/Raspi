@@ -103,6 +103,7 @@
     <Compile Include="TTY\LiftMove.cs" />
     <Compile Include="TTY\MotorRightCommand.cs" />
     <Compile Include="TTY\NextCommand.cs" />
+    <Compile Include="TTY\PigsLogCommand.cs" />
     <Compile Include="TTY\Pins.cs" />
     <Compile Include="TTY\Render.cs" />
     <Compile Include="TTY\Roam.cs" />

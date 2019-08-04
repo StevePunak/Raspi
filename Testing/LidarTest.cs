@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using RaspiCommon.Devices.Compass;
 using RaspiCommon.Devices.Spatial;
 
 namespace Testing
@@ -12,7 +13,8 @@ namespace Testing
 	{
 		public LidarTest()
 		{
-			RPLidar lidar = new RPLidar("/dev/ttyS0", 360.0/4);
+			NullCompass compass = new NullCompass();
+			RPLidar lidar = new RPLidar("/dev/ttyS0", 360.0/4, compass);
 			lidar.Sample += OnLidarSample;
 			lidar.Start();
 			lidar.GetDeviceInfo();

@@ -18,6 +18,7 @@ using KanoopCommon.Queueing;
 using KanoopCommon.Serial;
 using KanoopCommon.Threading;
 using RaspiCommon;
+using RaspiCommon.Devices.Compass;
 using RaspiCommon.Lidar;
 using RaspiCommon.PiGpio;
 
@@ -86,8 +87,8 @@ namespace RaspiCommon.Devices.Spatial
 			Reserved2 = 0x03,
 		}
 
-		public RPLidar(String portName, Double vectorSize)
-			: base(vectorSize)
+		public RPLidar(String portName, Double vectorSize, ICompass compass)
+			: base(vectorSize, compass)
 		{
 			RenderPixelsPerMeter = 50;
 

@@ -18,7 +18,7 @@ using RaspiCommon.Devices.Optics;
 using RaspiCommon.Devices.Optics.Classifiers;
 using RaspiCommon.Extensions;
 
-namespace Radar
+namespace Radar.MainDisplay
 {
 	public partial class RadarForm
 	{

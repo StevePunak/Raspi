@@ -30,7 +30,6 @@ namespace TrackBot.TTY
 				Program.Config.Save();
 				Console.WriteLine("SLO 1");
 
-				Widgets.Instance.ImageEnvironment.PointsToBitmap().Save(Program.Config.SaveImageLocation);
 				Console.WriteLine("SLO 2");
 			}
 			return true;

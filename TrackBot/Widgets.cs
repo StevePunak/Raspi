@@ -39,10 +39,10 @@ namespace TrackBot
 {
 	class Widgets : IWidgetCollection
 	{
-		public event ForwardPrimaryRangeHandler ForwardPrimaryRange;
-		public event BackwardPrimaryRangeHandler BackwardPrimaryRange;
-		public event ForwardSecondaryRangeHandler ForwardSecondaryRange;
-		public event BackwardSecondaryRangeHandler BackwardSecondaryRange;
+		public event RangeHandler ForwardPrimaryRange;
+		public event RangeHandler BackwardPrimaryRange;
+		public event RangeHandler ForwardSecondaryRange;
+		public event RangeHandler BackwardSecondaryRange;
 		public event NewDestinationBearingHandler NewDestinationBearing;
 		public event DistanceToTravelHandler DistanceToTravel;
 		public event DistanceLeftHandler DistanceLeft;
@@ -268,12 +268,12 @@ namespace TrackBot
 			{
 				ClawPinMin = Program.Config.ClawPinMin,
 				ClawPinMax = Program.Config.ClawPinMax,
-				ElevationPinMin = Program.Config.ClawLeftPinMin,
-				ElevationPinMax = Program.Config.ClawLeftPinMax,
+				LeftPinMin = Program.Config.ClawLeftPinMin,
+				LeftPinMax = Program.Config.ClawLeftPinMax,
 				RotationPinMin = Program.Config.ClawRotationPinMin,
 				RotationPinMax = Program.Config.ClawRotationPinMax,
-				ThrustPinMin = Program.Config.ClawRightPinMin,
-				ThrustPinMax = Program.Config.ClawRightPinMax,
+				RightPinMin = Program.Config.ClawRightPinMin,
+				RightPinMax = Program.Config.ClawRightPinMax,
 			};
 			CommandServer.ArmRotation += OnArmRotationCommand;
 			CommandServer.ArmElevation += OnArmElevationCommand;
@@ -405,8 +405,9 @@ namespace TrackBot
 		private void StartMqttCompass()
 		{
 			Log.SysLogText(LogLevel.INFO, $"Starting MQTT compass");
-			Compass = new MqttCompass(Program.Config.MqttClusterHost, MqttTypes.BearingTopic);
+			Compass = new MqttCompass(Program.Config.MqttClusterHost, MqttTypes.BearingTopic, MqttTypes.RawCompassDataTopic);
 			Compass.Start();
+			Compass.MagneticDeviation = Program.Config.MagneticDeviation;
 		}
 
 		private void StopMqttCompass()
@@ -416,6 +417,7 @@ namespace TrackBot
 
 		private void StartPhysicalCompass()
 		{
+			Log.SysLogText(LogLevel.INFO, "Sarting physical compass");
 			LSM9DS1CompassAccelerometer gymag = new LSM9DS1CompassAccelerometer();
 			gymag.MagneticDeviation = Program.Config.MagneticDeviation;
 			gymag.XAdjust = Program.Config.CompassXAdjust;
@@ -430,7 +432,7 @@ namespace TrackBot
 
 		private void StartLidar()
 		{
-			ImageEnvironment = new TrackLidar(Program.Config.LidarMetersSquare, Program.Config.LidarPixelsPerMeter, Program.Config.LidarSpinEnablePin);
+			ImageEnvironment = new TrackLidar(Program.Config.LidarMetersSquare, Program.Config.LidarPixelsPerMeter, Program.Config.LidarSpinEnablePin, Compass);
 			ImageEnvironment.BarriersChanged += OnImageEnvironment_BarriersChanged;
 			ImageEnvironment.LandmarksChanged += OnImageEnvironment_LandmarksChanged;
 			ImageEnvironment.FuzzyPathChanged += OnImageEnvironment_FuzzyPathChanged;
@@ -504,43 +506,43 @@ namespace TrackBot
 			Tracks.StartTracks();
 		}
 
-		public void SetForwardSecondaryRange(Double range)
+		public void SetForwardSecondaryRange(Double range, bool valid)
 		{
-			ForwardSecondaryRange(range);
+			ForwardSecondaryRange(range, valid);
 		}
 
-		public void SetBackwardSecondaryRange(Double range)
+		public void SetBackwardSecondaryRange(Double range, bool valid)
 		{
-			BackwardSecondaryRange(range);
+			BackwardSecondaryRange(range, valid);
 		}
 
 		private void StopTracks()
 		{
-			Log.SysLogText(LogLevel.INFO, "Stopping ot tracks");
+			Log.SysLogText(LogLevel.INFO, "Stopping tracks");
 			Tracks.LeftSpeed = 0;
 			Tracks.RightSpeed = 0;
 
 			Tracks.StopTracks();
 		}
 
-		private void OnForwardPrimaryRange(double range)
+		private void OnForwardPrimaryRange(double range, bool valid)
 		{
-			ForwardPrimaryRange(range);
+			ForwardPrimaryRange(range, valid);
 		}
 
-		private void OnBackwardPrimaryRange(double range)
+		private void OnBackwardPrimaryRange(double range, bool valid)
 		{
-			BackwardPrimaryRange(range);
+			BackwardPrimaryRange(range, valid);
 		}
 
-		private void OnForwardSecondaryRange(double range)
+		private void OnForwardSecondaryRange(double range, bool valid)
 		{
-			ForwardSecondaryRange(range);
+			ForwardSecondaryRange(range, valid);
 		}
 
-		private void OnBackwardSecondaryRange(double range)
+		private void OnBackwardSecondaryRange(double range, bool valid)
 		{
-			BackwardSecondaryRange(range);
+			BackwardSecondaryRange(range, valid);
 		}
 
 		private void OnNewDestinationBearing(double bearing)
@@ -626,12 +628,12 @@ namespace TrackBot
 
 		private void OnArmThrustCommand(int percent)
 		{
-			RobotArm.Thrust = percent;
+			RobotArm.Right = percent;
 		}
 
 		private void OnArmElevationCommand(int percent)
 		{
-			RobotArm.Elevation = percent;
+			RobotArm.Left = percent;
 		}
 
 		private void OnArmRotationCommand(int percent)

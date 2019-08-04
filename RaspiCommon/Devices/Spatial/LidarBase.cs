@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using KanoopCommon.Extensions;
 using KanoopCommon.Logging;
+using RaspiCommon.Devices.Compass;
 using RaspiCommon.Lidar;
 using RaspiCommon.Network;
 using RaspiCommon.Spatial.LidarImaging;
@@ -21,6 +23,7 @@ namespace RaspiCommon.Devices.Spatial
 		public Double RenderPixelsPerMeter { get; set; }
 		public GpioPin SpinPin { get; set; }
 		public Double Bearing { get; set; }
+		public ICompass Compass { get; set; }
 
 		Double _offset;
 		public Double Offset
@@ -35,9 +38,14 @@ namespace RaspiCommon.Devices.Spatial
 			}
 		}
 
-		protected LidarBase(Double vectorSize)
+		protected LidarBase(Double vectorSize, ICompass compass)
 		{
+			if(compass == null)
+			{
+				throw new RaspiException("ERROR: Can not start lidar without a compass");
+			}
 			VectorSize = vectorSize;
+			Compass = compass;
 
 			RangeBlobReceived += delegate { };
 			CompassOffsetChanged += delegate { };
@@ -46,7 +54,9 @@ namespace RaspiCommon.Devices.Spatial
 		public Double GetRangeAtBearing(Double bearing)
 		{
 			Double offset = bearing / VectorSize;
-			return Vectors[(int)offset].Range;
+			Double range = Vectors[(int)offset].Range;
+			Log.SysLogText(LogLevel.DEBUG, $"LidarBase: GetRangeAtBearing {bearing.ToAngleString()} offset {offset} = range: {range.ToMetersString()}");
+			return range;
 		}
 
 		public DateTime GetLastSampleTimeAtBearing(Double bearing)

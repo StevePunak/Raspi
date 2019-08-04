@@ -76,10 +76,11 @@ namespace Testing
 
 		private static void StartTest()
 		{
-			TestCase = new ImageTest();
-			TestCase = new MqttCompassTest();
+			//TestCase = new CompassDataTest();
+			//TestCase = new ImageTest();
+			//TestCase = new MqttCompassTest();
 			//TestCase = new MqttTest();
-			//TestCase = new HCSR04Test();
+			TestCase = new HCSR04Test();
 			//TestCase = new DevTest();
 			//TestCase = new PigsTest();
 			//new BMP280Test();

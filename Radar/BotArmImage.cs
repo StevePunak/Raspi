@@ -44,7 +44,5 @@ namespace Radar
 			return image;
 		}
 
-
-
 	}
 }

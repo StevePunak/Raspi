@@ -37,7 +37,6 @@ namespace TrackBot.Network
 
 		protected override void OnLidarClientInboundSubscribedMessage(MqttClient client, PublishMessage packet)
 		{
-			Log.SysLogText(LogLevel.DEBUG, $"MQTT IN: {packet.Topic}");
 			if(packet.Topic == MqttTypes.ArmRotationTopic)
 			{
 				int percent = BitConverter.ToInt32(packet.Message, 0);

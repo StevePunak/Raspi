@@ -25,6 +25,7 @@ namespace TrackBotCommon.Controls
 		const Double CloseRange = .8;
 
 		public Double Bearing { get; set; }
+		public Double MagBearing { get; set; }
 		public Double DestinationBearing { get; set; }
 		public Double FrontPrimaryRange { get; set; }
 		public Double FrontSecondaryRange { get; set; }
@@ -89,15 +90,12 @@ namespace TrackBotCommon.Controls
 			{
 				case 1:
 					radii = new List<double>() { min, centerRadius, max };
-//					Log.SysLogText(LogLevel.DEBUG, "Max");
 					break;
 				case 2:
 					radii = new List<double>() { min + 10, centerRadius, max - 10 };
-//					Log.SysLogText(LogLevel.DEBUG, "Mid");
 					break;
 				case 3:
 					radii = new List<double>() { centerRadius - 3, centerRadius - 6, centerRadius, centerRadius + 3, centerRadius + 6 };
-//					Log.SysLogText(LogLevel.DEBUG, "min");
 					break;
 			}
 			return radii;
@@ -127,7 +125,12 @@ namespace TrackBotCommon.Controls
 			bitmap.SetTo(Color.DarkGreen.ToMCvScalar());
 
 			String bearingString = String.Format("{0:0.0}", Bearing);
-			bitmap.DrawCenteredText(bearingString, FontFace.HersheyPlain, Color.Gray, center, 1, 2);
+			bitmap.DrawCenteredText(bearingString, FontFace.HersheyPlain, Color.White, center, 1, 2);
+			bitmap.DrawCross(center, 4, Color.White);
+
+			PointD magTextPoint = new PointD(center); magTextPoint.Y += 20;
+			String magString = String.Format("mag {0:0.0}", MagBearing);
+			bitmap.DrawCenteredText(magString, FontFace.HersheyPlain, Color.Gray, magTextPoint, 1, .75);
 
 			Double radius = bitmap.Size.MinimumSize().Height / 2 - 1;
 			bitmap.DrawCircle(new Circle(center, radius), Color.White, 1);

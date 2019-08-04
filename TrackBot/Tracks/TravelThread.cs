@@ -181,7 +181,8 @@ namespace TrackBot.Tracks
 			HCSR04_RangeFinder rangeFinder;
 			if(Widgets.Instance.RangeFinders.TryGetValue(direction == Direction.Forward ? RFDir.Front : RFDir.Rear, out rangeFinder))
 			{
-				if(rangeFinder.Range != 0 && rangeFinder.Range < .3)
+				Log.LogText(LogLevel.DEBUG, $"Travel rangefinder says range: {rangeFinder.Range}  valid: {rangeFinder.Valid}");
+				if(rangeFinder.Valid && rangeFinder.Range != 0 && rangeFinder.Range < .3)
 				{
 					rangeToObstacle = Math.Min(rangeToObstacle, rangeFinder.Range);
 				}

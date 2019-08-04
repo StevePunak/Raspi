@@ -16,6 +16,10 @@ namespace RaspiCommon.Spatial
 		public Double DestinationBearing { get; set; }
 		public Double DistanceToTravel { get; set; }
 		public Double DistanceLeft { get; set; }
+		public bool ForwardPrimaryRangeValid { get; set; }
+		public bool BackwardPrimaryRangeValid { get; set; }
+		public bool ForwardSecondaryRangeValid { get; set; }
+		public bool BackwardSecondaryRangeValid { get; set; }
 
 		public object Clone()
 		{

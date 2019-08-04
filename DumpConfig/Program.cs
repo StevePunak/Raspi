@@ -34,11 +34,6 @@ namespace DumpConfig
 				Console.WriteLine($"Dumping: {configFileName}");
 				ConfigFile  configFile = new ConfigFile(configFileName);
 				RaspiConfig config = (RaspiConfig)configFile.GetConfiguration(typeof(RaspiConfig));
-				config.RangeFinderEchoPins = new Dictionary<RFDir, GpioPin>()
-				{
-					{ RFDir.Front,      GpioPin.Pin26 },
-					{ RFDir.Rear,       GpioPin.Pin23 },
-				};
 
 				List<PropertyInfo> properties = new List<PropertyInfo>(typeof(RaspiConfig).GetProperties());
 				properties.Sort(delegate (PropertyInfo x, PropertyInfo y)

@@ -26,10 +26,10 @@ namespace TrackBot.Tracks
 
 		#region Events
 
-		public event ForwardPrimaryRangeHandler ForwardPrimaryRange;
-		public event BackwardPrimaryRangeHandler BackwardPrimaryRange;
-		public event ForwardSecondaryRangeHandler ForwardSecondaryRange;
-		public event BackwardSecondaryRangeHandler BackwardSecondaryRange;
+		public event RangeHandler ForwardPrimaryRange;
+		public event RangeHandler BackwardPrimaryRange;
+		public event RangeHandler ForwardSecondaryRange;
+		public event RangeHandler BackwardSecondaryRange;
 		public event NewDestinationBearingHandler NewDestinationBearing;
 		public event DistanceToTravelHandler DistanceToTravel;
 		public event DistanceLeftHandler DistanceLeft;
@@ -286,16 +286,16 @@ namespace TrackBot.Tracks
 				Double forwardRange = Widgets.Instance.GetRangeAtDirection(Direction.Forward, false);
 				Double backwardRange = Widgets.Instance.GetRangeAtDirection(Direction.Backward, false);
 
-				ForwardPrimaryRange(forwardRange);
-				BackwardPrimaryRange(backwardRange);
+				ForwardPrimaryRange(forwardRange, true);
+				BackwardPrimaryRange(backwardRange, true);
 
 				if(Widgets.Instance.RangeFinders.Count > 0)
 				{
 					forwardRange = Math.Min(Widgets.Instance.RangeFinders[RFDir.Front].Range, forwardRange);
 					backwardRange = Math.Min(Widgets.Instance.RangeFinders[RFDir.Rear].Range, backwardRange);
 
-					ForwardSecondaryRange(forwardRange);
-					BackwardSecondaryRange(backwardRange);
+					ForwardSecondaryRange(forwardRange, Widgets.Instance.RangeFinders[RFDir.Front].Valid);
+					BackwardSecondaryRange(backwardRange, Widgets.Instance.RangeFinders[RFDir.Rear].Valid);
 				}
 
 				Double range = direction == Direction.Forward ? forwardRange : backwardRange;
@@ -350,13 +350,13 @@ namespace TrackBot.Tracks
 				Double forwardRange = Widgets.Instance.GetRangeAtDirection(Direction.Forward, useFuzzyRange);
 				Double backwardRange = Widgets.Instance.GetRangeAtDirection(Direction.Backward, useFuzzyRange);
 
-				ForwardPrimaryRange(forwardRange);
-				BackwardPrimaryRange(backwardRange);
+				ForwardPrimaryRange(forwardRange, true);
+				BackwardPrimaryRange(backwardRange, true);
 
 				if(Widgets.Instance.RangeFinders.Count > 0)
 				{
-					ForwardSecondaryRange(Widgets.Instance.RangeFinders[RFDir.Front].Range);
-					BackwardSecondaryRange(Widgets.Instance.RangeFinders[RFDir.Rear].Range);
+					ForwardSecondaryRange(Widgets.Instance.RangeFinders[RFDir.Front].Range, Widgets.Instance.RangeFinders[RFDir.Front].Valid);
+					BackwardSecondaryRange(Widgets.Instance.RangeFinders[RFDir.Rear].Range, Widgets.Instance.RangeFinders[RFDir.Rear].Valid);
 				}
 
 				Double range = direction == Direction.Forward ? forwardRange : backwardRange;

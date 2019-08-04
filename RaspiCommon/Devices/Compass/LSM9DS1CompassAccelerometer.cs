@@ -55,6 +55,7 @@ namespace RaspiCommon.Devices.Compass
 						value = Calculate(info.mx, info.my, info.mz);
 						_lastBearing = value;
 
+						Log.SysLogText(LogLevel.DEBUG, "Got new bearing from LSM9DS1 {0}", _lastBearing.ToAngleString());
 						NewBearing(_lastBearing);
 
 						_lastBearingGetTime = DateTime.UtcNow;

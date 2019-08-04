@@ -6,11 +6,9 @@ using System.Threading.Tasks;
 
 namespace RaspiCommon.Spatial
 {
-	public delegate void ForwardPrimaryRangeHandler(Double range);
-	public delegate void BackwardPrimaryRangeHandler(Double range);
-	public delegate void ForwardSecondaryRangeHandler(Double range);
-	public delegate void BackwardSecondaryRangeHandler(Double range);
+	public delegate void RangeHandler(Double range, bool valid);
 	public delegate void NewBearingHandler(Double bearing);
+	public delegate void CompassRawDataHandler(Double mx, Double my, Double mz);
 	public delegate void NewDestinationBearingHandler(Double bearing);
 	public delegate void DistanceToTravelHandler(Double range);
 	public delegate void DistanceLeftHandler(Double range);

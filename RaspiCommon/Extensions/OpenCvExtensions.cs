@@ -120,10 +120,14 @@ namespace RaspiCommon.Extensions
 
 			for(Double angle = 0;angle < 360;angle += vectorSize)
 			{
-				BearingAndRange bar = cloud[(int)(angle / vectorSize)];
-				if(bar.Range != 0)
+				BearingAndRange bearingAndRange = cloud[(int)(angle / vectorSize)];
+				if(bearingAndRange.Range != 0)
 				{
-					PointD point = center.GetPointAt(angle, bar.Range * scale);
+					if(bearingAndRange.Range < .3)
+					{
+
+					}
+					PointD point = center.GetPointAt(angle, bearingAndRange.Range * scale);
 					if(point.X >= 0 && point.Y < size.Width && point.Y >= 0 && point.Y <= size.Height)
 					{
 						mat.SetPixelBGR(point, dotColor);
@@ -293,8 +297,6 @@ namespace RaspiCommon.Extensions
 
 			PointD newPoint = new PointD(where.X - size.Width / 2, where.Y + size.Height / 2);
 			CvInvoke.PutText(dest, text, newPoint.ToPoint(), fontFace, scale, color.ToMCvScalar(), thickness);
-
-			dest.DrawCross(where, 4, Color.White);
 		}
 
 		public static void DrawImage(this Mat dest, Mat source, PointD where)

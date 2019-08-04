@@ -7,6 +7,8 @@ using KanoopCommon.Geometry;
 using RaspiCommon.Lidar;
 using RaspiCommon.Network;
 using KanoopCommon.Extensions;
+using KanoopCommon.Logging;
+using RaspiCommon.Devices.Compass;
 
 namespace RaspiCommon.Devices.Spatial
 {
@@ -17,8 +19,8 @@ namespace RaspiCommon.Devices.Spatial
 		public String HostAddress { get; set; }
 		public RPLidarClient Client { get; private set; }
 
-		public NetworkLidar(String hostAddress, Double vectorSize)
-			: base(vectorSize)
+		public NetworkLidar(String hostAddress, Double vectorSize, ICompass compass)
+			: base(vectorSize, compass)
 		{
 			HostAddress = hostAddress;
 			Client = new RPLidarClient(HostAddress);
@@ -41,7 +43,7 @@ namespace RaspiCommon.Devices.Spatial
 
 		private void OnClientRangeBlobReceived(DateTime timestamp, LidarVector[] rawInputVectors)
 		{
-			LidarVector[] inputVectors = LidarVector.AdjustForBearing(rawInputVectors, Offset);
+			LidarVector[] inputVectors = LidarVector.AdjustForBearing(rawInputVectors, Offset.AddDegrees(Compass.Bearing));
 			DateTime now = DateTime.UtcNow;
 			for(int x = 0;x < inputVectors.Length;x++)
 			{
@@ -54,6 +56,10 @@ namespace RaspiCommon.Devices.Spatial
 				{
 					Vectors[x].Range = inputVectors[x].Range;
 					Vectors[x].RefreshTime = now;
+					if(false && Vectors[x].Range > 0 && Vectors[x].Range < .5 && Vectors[x].Bearing == Math.Abs(Vectors[x].Bearing))
+					{
+						Log.SysLogText(LogLevel.DEBUG, $"Range at {Vectors[x].Bearing.ToAngleString()} is {Vectors[x].Range.ToMetersString()} offset {Offset}");
+					}
 				}
 			}
 			EmitRangeBlobReceived(timestamp);

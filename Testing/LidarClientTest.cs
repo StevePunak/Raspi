@@ -7,6 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using KanoopCommon.Addresses;
 using KanoopCommon.Logging;
+using RaspiCommon.Devices.Compass;
 using RaspiCommon.Devices.Spatial;
 using RaspiCommon.Lidar;
 using RaspiCommon.Network;
@@ -19,7 +20,9 @@ namespace Testing
 		{
 			bool fileRead = false;
 
-			NetworkLidar lidar = new NetworkLidar("raspi1:5959", .25)
+			NullCompass compass = new NullCompass();
+
+			NetworkLidar lidar = new NetworkLidar("raspi1:5959", .25, compass)
 			{
 				Offset = 90
 			};

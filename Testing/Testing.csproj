@@ -80,6 +80,7 @@
     <Compile Include="ADS1115Test.cs" />
     <Compile Include="BMP280Test.cs" />
     <Compile Include="ClawControlTest.cs" />
+    <Compile Include="CompassDataTest.cs" />
     <Compile Include="DevTest.cs" />
     <Compile Include="FrameGrabTest.cs" />
     <Compile Include="HCSR04Test.cs" />

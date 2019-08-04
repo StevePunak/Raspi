@@ -12,7 +12,7 @@ namespace Testing
 	{
 		protected override void Run()
 		{
-			MqttCompass compass = new MqttCompass("thufir", MqttTypes.BearingTopic);
+			MqttCompass compass = new MqttCompass("thufir", MqttTypes.BearingTopic, MqttTypes.RawCompassDataTopic);
 			compass.NewBearing += Compass_NewBearing;
 			compass.Start();
 			compass.WaitForCompletion();

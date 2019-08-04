@@ -39,8 +39,13 @@ namespace RaspiCommon.Devices.Optics
 		{
 			_panServo = new Servo(panPin);
 			_tiltServo = new Servo(tiltPin);
-			Pan = 50;
-			Tilt = 50;
+			Home();
+		}
+
+		public void Home()
+		{
+			Pan = RaspiConfig.Instance.PanHomePosition;
+			Tilt = RaspiConfig.Instance.TiltHomePosition;
 		}
 
 		public override string ToString()

@@ -17,10 +17,10 @@ namespace RaspiCommon
 	public interface IWidgetCollection
 	{
 		event NewBearingHandler BearingChanged;
-		event ForwardPrimaryRangeHandler ForwardPrimaryRange;
-		event BackwardPrimaryRangeHandler BackwardPrimaryRange;
-		event ForwardSecondaryRangeHandler ForwardSecondaryRange;
-		event BackwardSecondaryRangeHandler BackwardSecondaryRange;
+		event RangeHandler ForwardPrimaryRange;
+		event RangeHandler BackwardPrimaryRange;
+		event RangeHandler ForwardSecondaryRange;
+		event RangeHandler BackwardSecondaryRange;
 		event NewDestinationBearingHandler NewDestinationBearing;
 		event DistanceToTravelHandler DistanceToTravel;
 		event DistanceLeftHandler DistanceLeft;

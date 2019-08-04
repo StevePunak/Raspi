@@ -1,4 +1,4 @@
-namespace Radar
+namespace Radar.MainDisplay
 {
 	partial class RadarForm
 	{

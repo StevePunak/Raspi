@@ -50,6 +50,7 @@ namespace RaspiCommon.Network
 
 		// widgets
 		public const String BearingTopic = "trackbot/widgets/compass/bearing";
+		public const String RawCompassDataTopic = "trackbot/widgets/compass/raw";
 		public const String ChassisMetricsTopic = "trackbot/widgets/chassis/metrics";
 		public const String LidarMetricsTopic = "trackbot/widgets/lidar/metrics";
 

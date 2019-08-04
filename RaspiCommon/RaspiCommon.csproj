@@ -90,6 +90,7 @@
     <Compile Include="Devices\Chassis\Chassis.cs" />
     <Compile Include="Devices\Chassis\ChassisMetrics.cs" />
     <Compile Include="Devices\Chassis\XiaorTankTracks.cs" />
+    <Compile Include="Devices\Compass\CompassRawData.cs" />
     <Compile Include="Devices\Compass\MqttCompass.cs" />
     <Compile Include="Devices\Compass\NullCompass.cs" />
     <Compile Include="Devices\Devices.cs" />

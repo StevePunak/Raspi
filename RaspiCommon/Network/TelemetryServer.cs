@@ -105,7 +105,6 @@ namespace RaspiCommon.Network
 
 		protected override bool OnStart()
 		{
-			Log.SysLogText(LogLevel.DEBUG, "***** Telemetery server starting");
 			return base.OnStart();
 		}
 
@@ -121,7 +120,7 @@ namespace RaspiCommon.Network
 
 				if(Client.Connected)
 				{
-					SendRangeData();
+					SendLidarData();
 
 					SendSpeedAndBearing();
 
@@ -221,7 +220,7 @@ namespace RaspiCommon.Network
 				};
 				byte[] output = speed.Serialize();
 				Client.Publish(MqttTypes.SpeedAndBearingTopic, output, false);
-				}
+			}
 		}
 
 		private void SendFuzzyPath()
@@ -237,6 +236,14 @@ namespace RaspiCommon.Network
 //			Log.LogText(LogLevel.DEBUG, "Sending Bearing and Range3");
 			byte[] output = BinarySerializer.Serialize(_environmentInfo);
 			Client.Publish(MqttTypes.DistanceAndBearingTopic, output, true);
+			_distancesChanged = false;
+		}
+
+		private void SendBearing()
+		{
+						Log.LogText(LogLevel.DEBUG, "Sending Bearing {0}", Widgets.Compass.Bearing);
+			byte[] output = BitConverter.GetBytes(Widgets.Compass.Bearing);
+			Client.Publish(MqttTypes.BearingTopic, output, true);
 			_distancesChanged = false;
 		}
 
@@ -278,13 +285,11 @@ namespace RaspiCommon.Network
 				output = KVPSerializer.Serialize(imageMetrics);
 				Client.Publish(MqttTypes.LandscapeMetricsTopic, output, true);
 
-				Log.LogText(LogLevel.DEBUG, $"********************* Sending lidar offset {Widgets.ImageEnvironment.CompassOffset}");
 				LidarMetrics lidarMetrics = new LidarMetrics()
 				{
 					Offset = Widgets.ImageEnvironment.CompassOffset,
 				};
 				Client.Publish(MqttTypes.LidarMetricsTopic, lidarMetrics.Serialize(), true);
-				Log.LogText(LogLevel.DEBUG, $"********************* Lidar offset sent");
 			}
 
 			if(RaspiConfig.Instance.SendChassisTelemetry)
@@ -301,7 +306,7 @@ namespace RaspiCommon.Network
 			_sendInitialData = false;
 		}
 
-		void SendRangeData()
+		void SendLidarData()
 		{
 			if(RaspiConfig.Instance.SendRangeImagingTelemetry)
 			{
@@ -346,27 +351,31 @@ namespace RaspiCommon.Network
 			_distancesChanged = true;
 		}
 
-		private void OnWidgets_ForwardPrimaryRange(double range)
+		private void OnWidgets_ForwardPrimaryRange(double range, bool valid)
 		{
 			_environmentInfo.ForwardPrimaryRange = range;
+			_environmentInfo.ForwardPrimaryRangeValid = valid;
 			_distancesChanged = true;
 		}
 
-		private void OnWidgets_BackwardPrimaryRange(double range)
+		private void OnWidgets_BackwardPrimaryRange(double range, bool valid)
 		{
 			_environmentInfo.BackwardPrimaryRange = range;
+			_environmentInfo.BackwardPrimaryRangeValid = valid;
 			_distancesChanged = true;
 		}
 
-		private void OnWidgets_ForwardSecondaryRange(double range)
+		private void OnWidgets_ForwardSecondaryRange(double range, bool valid)
 		{
 			_environmentInfo.ForwardSecondaryRange = range;
+			_environmentInfo.ForwardSecondaryRangeValid = valid;
 			_distancesChanged = true;
 		}
 
-		private void OnWidgets_BackwardSecondaryRange(double range)
+		private void OnWidgets_BackwardSecondaryRange(double range, bool valid)
 		{
 			_environmentInfo.BackwardSecondaryRange = range;
+			_environmentInfo.BackwardSecondaryRangeValid = valid;
 			_distancesChanged = true;
 		}
 

@@ -37,7 +37,7 @@ namespace TrackBotCommon.InputDevices.GamePads
 			((AnalogMapping)States[GamePadControl.LeftTrigger]).AnalogControl.DeadZone = 3000;
 			((AnalogMapping)States[GamePadControl.RightTrigger]).AnalogControl.DeadZone = 3000;
 
-			Interval = TimeSpan.FromMilliseconds(50);
+			Interval = TimeSpan.FromMilliseconds(15);
 		}
 
 		protected override bool OnStart()

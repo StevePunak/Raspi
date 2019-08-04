@@ -41,11 +41,11 @@ namespace TrackBot.Spatial
 				HCSR04_RangeFinder rangeFinder;
 				if(Widgets.Instance.RangeFinders.TryGetValue(RFDir.Front, out rangeFinder))
 				{
-					Widgets.Instance.SetForwardSecondaryRange(rangeFinder.Range);
+					Widgets.Instance.SetForwardSecondaryRange(rangeFinder.Range, rangeFinder.Valid);
 				}
 				if(Widgets.Instance.RangeFinders.TryGetValue(RFDir.Rear, out rangeFinder))
 				{
-					Widgets.Instance.SetBackwardSecondaryRange(rangeFinder.Range);
+					Widgets.Instance.SetBackwardSecondaryRange(rangeFinder.Range, rangeFinder.Valid);
 				}
 				//Log.LogText(LogLevel.DEBUG, "There are {0} landmarks", Widgets.Instance.Environment.Landmarks.Count);
 			}

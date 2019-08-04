@@ -12,7 +12,7 @@ namespace Testing
 {
 	class PigsTest : TestBase
 	{
-		void PinCallback1(GpioPin pin, EdgeType edgeType, UInt64 microseconds)
+		void PinCallback1(GpioPin pin, EdgeType edgeType, UInt64 microseconds, UInt16 sequence)
 		{
 			Log.SysLogText(LogLevel.DEBUG, $"Callback1 {pin} {edgeType} {microseconds}");
 		}

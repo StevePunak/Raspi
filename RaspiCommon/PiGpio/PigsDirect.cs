@@ -137,10 +137,10 @@ namespace RaspiCommon.PiGpio
 							if(flags == 0)
 							{
 								EdgeType edge = (level & BitMask) != 0 ? EdgeType.Rising : EdgeType.Falling;
-								Callback(Pin, edge, StartTicks + tick);
+								Pigs.MaybeLog(LogLevel.DEBUG, $"Making callback {Pin} {edge} {Device} seq: {sequence}  flags 0x{flags:X4}  tick: {tick}  level: 0x{level:X8}",
+									sequence, flags, tick, level);
+								Callback(Pin, edge, StartTicks + tick, sequence);
 							}
-							Pigs.MaybeLog(LogLevel.DEBUG, "seq: {0}  flags 0x{1:X4}  tick: {2}  level: 0x{3:X8}",
-								sequence, flags, tick, level);
 
 						}
 						StartRead();

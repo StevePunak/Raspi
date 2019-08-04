@@ -17,6 +17,7 @@ using KanoopCommon.Geometry;
 using KanoopCommon.Logging;
 using KanoopCommon.PersistentConfiguration;
 using KanoopCommon.Serialization;
+using Radar.MainDisplay;
 using RaspiCommon;
 using RaspiCommon.Data.DataSource;
 using RaspiCommon.Data.Entities.Facial;

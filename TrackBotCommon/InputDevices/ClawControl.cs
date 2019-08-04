@@ -14,7 +14,7 @@ namespace TrackBotCommon.InputDevices
 		const int MINIMUM = 0;
 		const int MAXIMUM = 100;
 
-		static readonly TimeSpan MIN_CHANGE_INTERVAL = TimeSpan.FromMilliseconds(100);
+		static readonly TimeSpan MIN_CHANGE_INTERVAL = TimeSpan.Zero;
 
 		DateTime _lastRotationChange;
 		int _rotation;

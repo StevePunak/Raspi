@@ -18,32 +18,42 @@ namespace RaspiCommon.Devices.Compass
 		public Double MagneticDeviation { get; set; }
 
 		public String ServerAddress { get; set; }
-		public String Topic { get; set; }
+		public String BearingTopic { get; set; }
+		public String RawDataTopic { get; set; }
 
 		public event NewBearingHandler NewBearing;
+		public event CompassRawDataHandler RawData;
 
-		public MqttCompass(String serverAddress, String topic)
+		public MqttCompass(String serverAddress, String bearingTopic, String rawDataTopic)
 			: base(typeof(MqttCompass).Name,
 				  serverAddress, 
 				  $"{Environment.MachineName}-CompassClient-{DateTime.UtcNow.ToMillisecondsSinceEpoch()}", 
 				  new List<string>()
 				  {
-					  topic
+					  bearingTopic,
+					  rawDataTopic,
 				  })
 		{
 			Bearing = 0;
-			Topic = topic;
+			BearingTopic = bearingTopic;
+			RawDataTopic = rawDataTopic;
 
 			InboundSubscribedMessage += OnInboundSubscribedMessage;
 			NewBearing += delegate {};
+			RawData += delegate {};
 		}
 
 		private void OnInboundSubscribedMessage(MqttClient client, PublishMessage packet)
 		{
-			if(packet.Topic == Topic)
+			if(packet.Topic == BearingTopic)
 			{
 				Bearing = BitConverter.ToDouble(packet.Message, 0).AddDegrees(MagneticDeviation);
 				NewBearing(Bearing);
+			}
+			else if(packet.Topic == RawDataTopic)
+			{
+				CompassRawData data = new CompassRawData(packet.Message);
+				RawData(data.MX, data.MY, data.MZ);
 			}
 		}
 

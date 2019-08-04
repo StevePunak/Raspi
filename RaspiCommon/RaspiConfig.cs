@@ -45,6 +45,7 @@ namespace RaspiCommon
 		public bool SendRangeImagingTelemetry { get; set; }
 		public bool SendSpeedAndBearingTelemetry { get; set; }
 		public bool SendChassisTelemetry { get; set; }
+		public bool SendCompassBearingTelemetry { get; set; }
 
 		public String LogFileName
 		{
@@ -326,6 +327,14 @@ namespace RaspiCommon
 		public int ClawPinMin { get; set; }
 		public int ClawPinMax { get; set; }
 
+		public int PanHomePosition { get; set; }
+		public int TiltHomePosition { get; set; }
+
+		public int ClawLeftHomePosition { get; set; }
+		public int ClawRightHomePosition { get; set; }
+		public int ClawRotationHomePosition { get; set; }
+		public int ClawClawHomePosition { get; set; }
+
 		public GamePadType GamePadType { get; set; }
 
 		public LEDTravelHistoryEntryList LEDTravelHistory { get; set; }
@@ -369,17 +378,31 @@ namespace RaspiCommon
 			ClawRightPin = GpioPin.Pin27;
 			ClawPin = GpioPin.Pin17;
 
+			RangeFinderEchoPins = new Dictionary<RFDir, GpioPin>()
+			{
+				{ RFDir.Front,      GpioPin.Pin26 },
+				{ RFDir.Rear,       GpioPin.Pin16 },
+			};
+
 			ClawRotationPinMin = 1000;
 			ClawRotationPinMax = 2000;
 			ClawLeftPinMin = 800;
 			ClawLeftPinMax = 1700;
 			ClawRightPinMin = 800;
 			ClawRightPinMax = 2200;
-			ClawPinMin = 600;
-			ClawPinMax = 1600;
+			ClawPinMin = 800;
+			ClawPinMax = 1800;
 
 			PanPin = GpioPin.Pin06;
 			TiltPin = GpioPin.Pin19;
+
+			PanHomePosition = 54;
+			TiltHomePosition = 58;
+
+			ClawLeftHomePosition = 50;
+			ClawRightHomePosition = 50;
+			ClawRotationHomePosition = 58;
+			ClawClawHomePosition = 50;
 
 			LidarSpinEnablePin = GpioPin.Pin24;
 
@@ -392,6 +415,7 @@ namespace RaspiCommon
 			MqttClusterHost = "raspi2";
 			MqttPublicHost = "thufir";
 			MqttPublicHost = "192.168.0.50";
+
 
 			if(Environment.MachineName.Contains("raspi1"))
 			{
@@ -420,7 +444,7 @@ namespace RaspiCommon
 			MqttCompassEnabled = true;
 			LidarEnabled = true;
 			ActivitiesEnabled = true;
-			LiftEnabled = true;
+			LiftEnabled = false;
 			CameraEnabled = false;
 			SaveImageThreadEnabled = true;
 			SpatialPollingEnabled = true;
@@ -429,6 +453,7 @@ namespace RaspiCommon
 			TelemetryServerEnabled = true;
 			SendRangeImagingTelemetry = true;
 			SendSpeedAndBearingTelemetry = true;
+			SendCompassBearingTelemetry = true;
 			SendChassisTelemetry = true;
 		}
 
@@ -455,6 +480,7 @@ namespace RaspiCommon
 			SendRangeImagingTelemetry = false;
 			SendSpeedAndBearingTelemetry = false;
 			SendChassisTelemetry = false;
+			SendCompassBearingTelemetry = false;
 		}
 
 		public RaspiConfig()

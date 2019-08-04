@@ -15,6 +15,7 @@ using MQTT;
 using MQTT.ClientThreads;
 using MQTT.Packets;
 using RaspiCommon.Devices.Chassis;
+using RaspiCommon.Devices.Compass;
 using RaspiCommon.Devices.Locomotion;
 using RaspiCommon.Devices.Optics;
 using RaspiCommon.Devices.Spatial;
@@ -26,7 +27,7 @@ using RaspiCommon.Spatial.LidarImaging;
 
 namespace RaspiCommon.Network
 {
-	public class TelemetryClient : SubscribeThread
+	public class TelemetryClient : SubscribeThread, ICompass
 	{
 		public const Double VectorSize = .25;
 
@@ -42,6 +43,8 @@ namespace RaspiCommon.Network
 		public event CameraImagesAnalyzedHandler CameraImageAnalyzed;
 		public event SpeedAndBearingReceivedHandler SpeedAndBearing;
 		public event LidarOffsetReceivedHandler LidarOffsetReceived;
+		public event NewBearingHandler MagneticBearingReceived;
+		public event NewBearingHandler NewBearing;
 
 		public LidarVector[] Vectors;
 
@@ -50,6 +53,8 @@ namespace RaspiCommon.Network
 		public ImageVectorList ImageLandmarks { get; private set; }
 		public ImageVectorList LandscapeVectors { get; private set; }
 		public Double Bearing { get; private set; }
+		public Double MagneticBearing { get; private set; }
+		public Double MagneticDeviation { get; set; }
 		public ChassisMetrics ChassisMetrics { get; private set; }
 
 		public ImageMetrics ImageMetrics { get; private set; }
@@ -87,6 +92,8 @@ namespace RaspiCommon.Network
 			CameraImageReceived += delegate {};
 			CameraImageAnalyzed += delegate {};
 			SpeedAndBearing += delegate{};
+			MagneticBearingReceived += delegate {};
+			NewBearing += delegate {};
 		}
 
 		protected virtual void OnLidarClientInboundSubscribedMessage(MqttClient client, PublishMessage packet)
@@ -118,7 +125,8 @@ namespace RaspiCommon.Network
 					}
 					else if(packet.Topic == MqttTypes.BearingTopic)
 					{
-						Bearing = BitConverter.ToDouble(packet.Message, 0);
+						MagneticBearing = BitConverter.ToDouble(packet.Message, 0);
+						MagneticBearingReceived(Bearing);
 					}
 					else if(packet.Topic == MqttTypes.ImageMetricsTopic)
 					{
@@ -162,7 +170,11 @@ namespace RaspiCommon.Network
 					}
 					else if(packet.Topic == MqttTypes.SpeedAndBearingTopic)
 					{
-						SpeedAndBearing(new SpeedAndBearing(packet.Message));
+						SpeedAndBearing speedAndBearing = new SpeedAndBearing(packet.Message);
+						Log.SysLogText(LogLevel.DEBUG, $"{speedAndBearing.Bearing}");
+						Bearing = speedAndBearing.Bearing;
+						SpeedAndBearing(speedAndBearing);
+						NewBearing(speedAndBearing.Bearing);
 					}
 					else if(packet.Topic == MqttTypes.LidarMetricsTopic)
 					{
@@ -192,5 +204,12 @@ namespace RaspiCommon.Network
 			}
 		}
 
+		void ICompass.Start()
+		{
+		}
+
+		void ICompass.Stop()
+		{
+		}
 	}
 }

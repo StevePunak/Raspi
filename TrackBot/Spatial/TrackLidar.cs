@@ -12,10 +12,12 @@ using KanoopCommon.Extensions;
 using KanoopCommon.Geometry;
 using KanoopCommon.Logging;
 using RaspiCommon;
+using RaspiCommon.Devices.Compass;
 using RaspiCommon.Devices.Spatial;
 using RaspiCommon.Extensions;
 using RaspiCommon.Lidar;
 using RaspiCommon.Lidar.Environs;
+using RaspiCommon.PiGpio;
 using RaspiCommon.Spatial.LidarImaging;
 
 namespace TrackBot.Spatial
@@ -38,12 +40,12 @@ namespace TrackBot.Spatial
 
 		public GpioPin SpinPin { get { return Lidar.SpinPin; } set { Lidar.SpinPin = value; } }
 
-		public TrackLidar(Double metersSquare, Double pixelsPerMeter, GpioPin spinPin)
+		public TrackLidar(Double metersSquare, Double pixelsPerMeter, GpioPin spinPin, ICompass compass)
 			: base(metersSquare, pixelsPerMeter)
 		{
 			CompassOffsetChanged += delegate { };
 
-			Lidar = new NetworkLidar(Program.Config.LidarServer, .25);
+			Lidar = new NetworkLidar(Program.Config.LidarServer, .25, compass);
 			Lidar.CompassOffsetChanged += OnLidarCompassOffsetChanged;
 			SpinPin = spinPin;
 			Lidar.Offset = Program.Config.LidarOffsetDegrees;
@@ -58,12 +60,14 @@ namespace TrackBot.Spatial
 
 		public void Start()
 		{
+			Pigs.SetOutputPin(SpinPin, true);
 			Lidar.Start();
 			Log.SysLogText(LogLevel.DEBUG, "Retrieving LIDAR info");
 		}
 
 		public void Stop()
 		{
+			Pigs.SetOutputPin(SpinPin, false);
 			Lidar.Stop();
 			Log.SysLogText(LogLevel.DEBUG, "LIDAR stopped");
 		}
@@ -112,7 +116,10 @@ namespace TrackBot.Spatial
 
 		public double GetRangeAtBearing(double bearing)
 		{
-			return Lidar.GetRangeAtBearing(bearing);
+			Double currentBearing = Widgets.Instance.Compass.Bearing;
+			Double lidarBearing = bearing.AddDegrees(currentBearing);
+			Log.SysLogText(LogLevel.DEBUG, $"GetRangeAtBearing({bearing.ToAngleString()})  Current bearing is {currentBearing.ToAngleString()} so getting lidar bearing at {lidarBearing.ToAngleString()}");
+			return Lidar.GetRangeAtBearing(lidarBearing);
 		}
 
 		public DateTime GetLastSampleTimeAtBearing(Double bearing)
