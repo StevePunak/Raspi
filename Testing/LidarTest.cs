@@ -4,31 +4,34 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using KanoopCommon.Addresses;
 using RaspiCommon.Devices.Compass;
 using RaspiCommon.Devices.Spatial;
+using RaspiCommon.Lidar;
 
 namespace Testing
 {
-	class LidarTest
+	class LidarTest : TestBase
 	{
-		public LidarTest()
+		protected override void Run()
 		{
 			NullCompass compass = new NullCompass();
-			RPLidar lidar = new RPLidar("/dev/ttyS0", 360.0/4, compass);
+//			RPLidarBase lidar = new RPLidarNetwork(new IPv4AddressPort("raspi1:5960"), 360.0/4, compass);
+			RPLidarBase lidar = new RPFileLidar(@"c:/pub/tmp/lidar.bin.input", 360.0/4, compass);
 			lidar.Sample += OnLidarSample;
 			lidar.Start();
-			lidar.GetDeviceInfo();
-			lidar.StartScan();
 
-			Thread.Sleep(30000);
+			while(!Quit)
+			{
+				Thread.Sleep(1000);
+			}
 			lidar.StopScan();
 			lidar.Stop();
-
-			Console.WriteLine("Received {0} bytes int {1} gos", lidar.Port.TotalBytesReceived, lidar.Port.TotalDeliveries);
 		}
 
-		private void OnLidarSample(RaspiCommon.Lidar.LidarSample sample)
+		private void OnLidarSample(LidarSample sample)
 		{
+			Console.WriteLine($"{sample}");
 		}
 	}
 }

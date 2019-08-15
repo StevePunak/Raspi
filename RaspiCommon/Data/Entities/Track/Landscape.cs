@@ -11,7 +11,7 @@ namespace RaspiCommon.Data.Entities.Track
 	public class Landscape
 	{
 		[ColumnName("landscape_id")]
-		public UInt32 LandscapeID { get; set; }
+		public GpioPin LandscapeID { get; set; }
 		[ColumnName("name")]
 		public String Name { get; set; }
 		[ColumnName("meters_square")]

@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using KanoopCommon.CommonObjects;
 
-namespace RaspiCommon
+namespace RaspiCommon.PiGpio
 {
 	public class PigsException : CommonException
 	{

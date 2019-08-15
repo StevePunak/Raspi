@@ -1,4 +1,4 @@
-#define DEBUG_SERIAL
+#undef DEBUG_SERIAL
 #undef TRACE_SERIAL
 
 using System;
@@ -25,22 +25,21 @@ using RaspiCommon.PiGpio;
 namespace RaspiCommon.Devices.Spatial
 {
 
-	public partial class RPLidar : LidarBase
+	public abstract class RPLidarBase : LidarBase
 	{
 		#region Public Properties
 
 		public event LidarResponseHandler LidarResponseData;
 		public event LidarSampleHandler Sample;
 
-		public String PortName { get; private set; }
-
-		public MonoSerialPort Port { get; private set; }
-
 		public bool Active { get { return _lastGoodSampleTime > DateTime.UtcNow - TimeSpan.FromSeconds(1); } }
 
 		public TimeSpan VectorRefreshTime { get; set; }
 
 		public int _lastScanOffset;
+
+		public String Source { get; private set; }
+		public bool ForceMultiScanMeasurement { get; set; }
 
 		#endregion
 
@@ -59,11 +58,11 @@ namespace RaspiCommon.Devices.Spatial
 		ResponseMode _responseMode;
 		LidarTypes.ResponseType _responseType;
 
-		byte[] _responseData;
+		protected byte[] _responseData;
 
-		MemoryQueue<LidarResponse> _responseQueue;
+		protected MemoryQueue<LidarResponse> _responseQueue;
 
-		int _responseWaiters;
+		protected int _responseWaiters;
 #if TRACE_SERIAL
 		FileStream _traceFile;
 #endif
@@ -87,9 +86,11 @@ namespace RaspiCommon.Devices.Spatial
 			Reserved2 = 0x03,
 		}
 
-		public RPLidar(String portName, Double vectorSize, ICompass compass)
+		protected RPLidarBase(String source, Double vectorSize, ICompass compass)
 			: base(vectorSize, compass)
 		{
+			Source = source;
+
 			RenderPixelsPerMeter = 50;
 
 			VectorSize = vectorSize;
@@ -104,13 +105,6 @@ namespace RaspiCommon.Devices.Spatial
 
 			Bearing = 0;
 
-			List<String> ports = new List<String>(SerialPort.GetPortNames());
-			ports.TerminateAll();
-			if(ports.Contains(portName) == false)
-			{
-				throw new RaspiException("Invalid port name '{0}'", portName);
-			}
-			PortName = portName;
 			_receiveBuffer = new byte[1000000];
 			_responseQueue = new MemoryQueue<LidarResponse>();
 			_responseWaiters = 0;
@@ -136,48 +130,10 @@ namespace RaspiCommon.Devices.Spatial
 			Log.SysLogText(LogLevel.INFO, "Opening serial trace file '{0}'", traceFile);
 #endif
 
-			Port = new MonoSerialPort(PortName);
-			Port.Port.BaudRate = 115200;
-			Port.BufferTime = TimeSpan.FromMilliseconds(500);
-			Port.DataReceived += OnSerialDataReceived;
-			Port.Open();
-
-			if(GetDeviceInfo())
-			{
-				Log.SysLogText(LogLevel.DEBUG, "Retrieved LIDAR info");
-				Pigs.SetMode(SpinPin, PinMode.Output);
-				Pigs.SetOutputPin(SpinPin, PinState.High);
-				StartScan();
-				Log.SysLogText(LogLevel.DEBUG, "LIDAR scan started");
-			}
-			else
-			{
-
-			}
 		}
 
 		public override void Stop()
 		{
-			Pigs.SetOutputPin(SpinPin, PinState.Low);
-			StopScan();
-			Thread.Sleep(250);
-			Reset();
-			Thread.Sleep(250);
-
-			if(Port != null && Port.IsOpen)
-			{
-				Log.SysLogText(LogLevel.DEBUG, "Closing Port");
-				Port.Port.DtrEnable = true;
-				Port.DataReceived -= OnSerialDataReceived;
-				Port.Close();
-				Log.SysLogText(LogLevel.DEBUG, "Done");
-			}
-		}
-
-		public bool TryGetResponse(TimeSpan waitTime, out LidarResponse response)
-		{
-			_responseWaiters++;
-			return _tryGetResponse(waitTime, out response);
 		}
 
 		public Bitmap GenerateBitmap()
@@ -210,84 +166,48 @@ namespace RaspiCommon.Devices.Spatial
 
 		public virtual bool StartExpressScan()
 		{
-			LidarCommand command = new StartExpressScanCommand();
-			SendCommand(command);
-
-			LidarResponse response;
-			return _tryGetResponse(TimeSpan.FromMilliseconds(500), out response);
+			return false;
 		}
 
 		public virtual bool StopExpressScan()
 		{
-			_responseQueue.Clear();
-			LidarCommand command = new StopCommand();
-			SendCommand(command);
-
-			LidarResponse response;
-			_tryGetResponse(TimeSpan.FromMilliseconds(250), out response);
-			return true;
+			return false;
 		}
 
 		public virtual bool GetDeviceInfo()
 		{
-			LidarCommand command = new GetDeviceInfoCommand();
-			SendCommand(command);
-
-			LidarResponse response;
-			bool result = TryGetResponse(TimeSpan.FromMilliseconds(5500), out response);
-			Log.SysLogText(LogLevel.INFO, "LIDAR: GetDeviceInfo {0}", result);
-			return result;
+			return false;
 		}
 
 		public virtual bool StartScan()
 		{
-			LidarCommand command = new StartScanCommand();
-			SendCommand(command);
-			return true;
+			return false;
 		}
 
 		public virtual bool StopScan()
 		{
-			_responseQueue.Clear();
-			LidarCommand command = new StopCommand();
-			SendCommand(command);
-
-			LidarResponse response;
-			_tryGetResponse(TimeSpan.FromMilliseconds(250), out response);
-			return true;
+			return false;
 		}
 
-		public bool StopMotor()
+		public virtual bool StopMotor()
 		{
-			Port.Port.DtrEnable = true;
-
-			_responseQueue.Clear();
-			LidarCommand command = new SetMotorPwm(0);
-			SendCommand(command);
-
-			LidarResponse response;
-			_tryGetResponse(TimeSpan.FromMilliseconds(250), out response);
-			return true;
+			return false;
 		}
 
-		public bool Reset()
+		public virtual bool Reset()
 		{
-			LidarCommand command = new ResetCommand();
-			SendCommand(command);
-
-			LidarResponse response;
-			return _tryGetResponse(TimeSpan.FromMilliseconds(500), out response);
+			return false;
 		}
 
-		public bool _tryGetResponse(TimeSpan waitTime, out LidarResponse response)
+		protected void HandleDataReceived(byte[] buffer, int length)
 		{
-			response = _responseQueue.BlockDequeue(waitTime);
-//			Log.SysLogText(LogLevel.DEBUG, "Got {0}", response == null ? "null" : response.ToString());
-			return response != null;
-		}
-
-		private void OnSerialDataReceived(byte[] buffer, int length)
-		{
+			if(ForceMultiScanMeasurement)
+			{
+				_state = State.MultiResponse;
+				_chunkLength = 5;
+				_responseMode = ResponseMode.SingleRequestMultipleResponse;
+				_responseType = LidarTypes.ResponseType.Measurement;
+			}
 			try
 			{
 #if DEBUG_SERIAL
@@ -379,23 +299,41 @@ namespace RaspiCommon.Devices.Spatial
 								LidarResponse response = LidarResponse.Create(_responseType, _responseData);
 								if(response != null)
 								{
+									bool processed = false;
 									if(response is ExpressScanResponse)
 									{
 										ProcessExpressScanResponse(response as ExpressScanResponse);
+										processed = true;
 									}
 									else if(response is ScanResponse)
 									{
-										ProcessScanResponse(response as ScanResponse);
+										// if we are forcing the response type (in the middle of a datastream) make sure we're good
+										if(ForceMultiScanMeasurement && ((ScanResponse)response).Valid == false)
+										{
+											Log.SysLogText(LogLevel.WARNING, "LIDAR Syncing to datastream");
+											_recvOffset -= _responseData.Length - 1;		// put the repsonse data back in the buffer (all but one byte)
+										}
+										else
+										{
+											ProcessScanResponse(response as ScanResponse);
+											processed = true;
+										}
 									}
-									LidarResponseData(response);
-									if(_responseWaiters > 0)
+
+									// only fire the event if we processed the data
+									if(processed)
 									{
-//										_responseQueue.Enqueue(response);
+										LidarResponseData(response);
+										if(_responseWaiters > 0)
+										{
+	//										_responseQueue.Enqueue(response);
+										}
 									}
 								}
 								else
 								{
-									StartSync();
+									_recvOffset++;
+									//StartSync();
 								}
 							}
 							break;
@@ -436,16 +374,16 @@ namespace RaspiCommon.Devices.Spatial
 				Log.SysLogText(LogLevel.DEBUG, "response Angle {0:0.000}°  adjusted {1:000}° + {2:0.000}° to {3:0.000}°  Range: {4:0.00}m  Quality {5}",
 					response.Angle, Bearing, Offset, angle, response.Range, response.Quality);
 			}
-			if(response.Quality > 10 && response.CheckBit == 1 && response.StartFlag == 1 && response.Angle < 360 && response.Angle >= 0)
+			if(response.Quality > 10 && response.CheckBit == 1 && response.Angle < 360 && response.Angle >= 0)
 			{
 				Double offset = angle / VectorSize;
 
 								//Console.WriteLine("Got entry at {0}... Clear from {1} to {2}", intOffset, VectorArrayInc(_lastScanOffset), intOffset);
-				if(response.Range > .010)
+				if(response.Range > .001)
 				{
 					Double distance = Math.Max(response.Range, .001);
 					DateTime now = DateTime.UtcNow;
-					Log.SysLogText(LogLevel.DEBUG, "Putting sample at offset {0}  Bearing {1}  Offset {2}", offset, Bearing, Offset);
+					//Log.SysLogText(LogLevel.DEBUG, "Putting sample at offset {0}  Bearing {1}  Offset {2}", offset, angle, Offset);
 					Vectors[(int)offset].Range = distance;
 					Vectors[(int)offset].RefreshTime = now;
 					_lastGoodSampleTime = now;
@@ -564,6 +502,7 @@ namespace RaspiCommon.Devices.Spatial
 			bool result = false;
 			if(_bytesInBuffer - _recvOffset >= _chunkLength)
 			{
+				// Need to check check bit and 
 				_responseData = new byte[_chunkLength];
 				Array.Copy(_receiveBuffer, _recvOffset, _responseData, 0, _chunkLength);
 				_recvOffset += _chunkLength;
@@ -579,17 +518,9 @@ namespace RaspiCommon.Devices.Spatial
 			_state = State.Sync;
 		}
 
-		public void SendCommand(LidarCommand command)
-		{
-			byte[] data = command.Serialize();
-			Log.SysLogText(LogLevel.DEBUG, "OUTPUT!!!!!");
-			Log.SysLogHex(LogLevel.DEBUG, data);
-			Port.Write(data, 0, data.Length);
-		}
-
 		public override string ToString()
 		{
-			return String.Format("RPLIDAR @ {0}", PortName);
+			return String.Format("RPLIDAR @ {0}", Source);
 		}
 	}
 }

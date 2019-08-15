@@ -78,13 +78,19 @@ namespace RaspiCommon.Devices.MotorControl
 
 		void SetFrequency(UInt32 frequency)
 		{
+			throw new NotImplementedException("The signature of this call needs to change");
+#if not_implemented
 			Pigs.SetHardwarePWM(StepPin, frequency, 50);
+#endif
 		}
 
 		public void Stop()
 		{
+			throw new NotImplementedException("The signature of this call needs to change");
+#if not_implemented
 			Pigs.SetHardwarePWM(StepPin, 0, 50);
 			Enabled = false;
+#endif
 		}
 
 	}

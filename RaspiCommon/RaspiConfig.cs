@@ -399,8 +399,8 @@ namespace RaspiCommon
 			PanHomePosition = 54;
 			TiltHomePosition = 58;
 
-			ClawLeftHomePosition = 50;
-			ClawRightHomePosition = 50;
+			ClawLeftHomePosition = 0;
+			ClawRightHomePosition = 100;
 			ClawRotationHomePosition = 58;
 			ClawClawHomePosition = 50;
 

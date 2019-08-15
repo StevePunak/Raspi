@@ -51,6 +51,12 @@ namespace RaspiCommon.PiGpio
 		[DllImport("libpigpiod_if2.so")]
 		public static extern int set_pull_up_down(int pi, uint gpio, uint pud);
 
+		[DllImport("libpigpiod_if2.so")]
+		public static extern GpioPin time_sleep(Double seconds);
+
+		[DllImport("libpigpiod_if2.so")]
+		public static extern int gpio_read(int pi, uint gpio);
+
 		public bool Running
 		{
 			get
@@ -234,15 +240,11 @@ namespace RaspiCommon.PiGpio
 			set_mode(PiHandle, (uint)gpioPin, (uint)mode);
 		}
 
-		public void SetHardwarePWM(GpioPin gpioPin, UInt32 frequency, UInt32 dutyCyclePercent)
+		public void SetHardwarePWM(GpioPin gpioPin, UInt32 frequency, UInt32 dutyCycle)
 		{
+			Pigs.MaybeLog(LogLevel.DEBUG, "PIGS set Hardware PWM {0} freq {1}  duty cycle {2}", gpioPin, frequency, dutyCycle);
 			EnsurePigsReady();
-			Pigs.MaybeLog(LogLevel.DEBUG, "PIGS set Hardware PWM {0} freq {1}  duty cycle {2}", gpioPin, frequency, dutyCyclePercent);
-			if(dutyCyclePercent > 100)
-			{
-				throw new RaspiException("Duty cycle must be 0-100");
-			}
-			hardware_PWM(PiHandle, (uint)gpioPin, frequency, dutyCyclePercent * 10000);
+			hardware_PWM(PiHandle, (uint)gpioPin, frequency, dutyCycle);
 		}
 
 		public void SetPWM(GpioPin gpioPin, UInt32 dutyCycle)
@@ -284,6 +286,17 @@ namespace RaspiCommon.PiGpio
 			set_pull_up_down(PiHandle, (uint)gpioPin, (uint)state);
 		}
 
+		public PinState ReadInputPin(GpioPin gpioPin)
+		{
+			int result = gpio_read(PiHandle, (uint)gpioPin);
+			return (PinState)result;
+		}
+
+		public void Delay(TimeSpan time)
+		{
+			Pigs.MaybeLog(LogLevel.DEBUG, $"Sleep {time.TotalMilliseconds}ms");
+			time_sleep(time.TotalSeconds);
+		}
 	}
 
 	#endregion

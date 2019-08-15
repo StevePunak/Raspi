@@ -54,7 +54,7 @@ namespace Radar
 
 			Application.EnableVisualStyles();
 			Application.SetCompatibleTextRenderingDefault(false);
-			Application.Run(new RadarForm());
+			Application.Run(new MainForm());
 		}
 
 		static void Test()

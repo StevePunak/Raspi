@@ -13,11 +13,13 @@ namespace RaspiCommon.Lidar
 	{
 		public int Quality { get; private set; }
 		public int StartFlag { get; private set; }
+		public int InverseStartFlag { get; private set; }
 		public int CheckBit { get; private set; }
 		public int AngleQ6 { get; private set; }
 		public Double Angle { get; private set; }
 		public int DistanceQ2 { get; private set; }
 		public Double Range { get; private set; }
+		public bool Valid { get; private set; }
 
 		public byte[] Bytes { get; private set; }
 
@@ -34,11 +36,14 @@ namespace RaspiCommon.Lidar
 				byte b3 = Bytes[3];
 
 				Quality = Bytes[0] >> 2;
-				StartFlag = (Bytes[0] >> 1) & 0x01;
+				StartFlag = Bytes[0] & 0x01;
+				InverseStartFlag = (Bytes[0] >> 1) & 0x01;
 				CheckBit = Bytes[1] & 0x01;
 				AngleQ6 = (Bytes[2] << 7) | (Bytes[1] >> 1);
 				Angle = (Double)AngleQ6 / 64.0;
 				Range = (((Bytes[4] << 8) | Bytes[3]) / 4.0) / 1000;
+
+				Valid = CheckBit == 1 && StartFlag != InverseStartFlag && Angle < 360 && Range >= 0 && Range < 100;
 			}
 		}
 

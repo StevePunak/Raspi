@@ -6,33 +6,58 @@ using System.Text;
 using System.Threading.Tasks;
 using KanoopCommon.Logging;
 
-namespace RaspiCommon
+namespace RaspiCommon.PiGpio
 {
 
-	public class PigCommand
+	public class PigsCommand
 	{
 		public CommandType Type { get; set; }
-		public UInt32 ParameterPin { get; set; }
-		public UInt32 Parmameter1 { get; set; }
+		public UInt32 Parameter1 { get; set; }
 		public UInt32 Parameter2 { get; set; }
+		public UInt32 ExtendedData { get; set; }
 
 		public bool Extended { get { return _extendedItems != null && _extendedItems.Count > 0; } }
 
 		List<Object> _extendedItems;
 
-		public PigCommand(CommandType type, GpioPin ping, UInt32 parm1)
-			: this(type, ping, parm1, 0, null) { }
+		public PigsCommand(CommandType type, UInt32 parm1)
+			: this(type, parm1, 0, 0, null) { }
 
-		public PigCommand(CommandType type, GpioPin pin, UInt32 parm1, UInt32 ext1)
-			: this(type, pin, parm1, 4, new List<object>() { ext1 }) {}
+		public PigsCommand(CommandType type, UInt32 pin, UInt32 parm1)
+			: this(type, pin, parm1, 0, null) { }
 
-		public PigCommand(CommandType type, GpioPin pin, UInt32 p1, UInt32 p2, List<Object> extended)
+		public PigsCommand(CommandType type, GpioPin pin, UInt32 parm1)
+			: this(type, (UInt32)pin, parm1, 0, null) { }
+
+		public PigsCommand(CommandType type, GpioPin pin, UInt32 parm1, UInt32 ext1)
+			: this(type, (UInt32)pin, parm1, 4, new List<object>() { ext1 }) {}
+
+		public PigsCommand(CommandType type, UInt32 pin, UInt32 p1, UInt32 p2, List<Object> extended)
 		{
 			Type = type;
-			ParameterPin = (UInt32)pin;
-			Parmameter1 = p1;
-			Parameter2 = p2;
+			Parameter1 = pin;
+			Parameter2 = p1;
+			ExtendedData = p2;
 			_extendedItems = extended;
+		}
+
+		public PigsCommand(byte[] buffer, int length)
+		{
+			const int BASE_SIZE = sizeof(UInt32) * 4;
+
+			if(length != BASE_SIZE)
+			{
+				throw new PigsException("Invalid buffer sent to command deserializer");
+			}
+
+			using(MemoryStream ms = new MemoryStream(buffer))
+			using(BinaryReader br = new BinaryReader(ms))
+			{
+				Type = (CommandType)br.ReadInt32();
+				Parameter1 = br.ReadUInt32();
+				Parameter2 = br.ReadUInt32();
+				ExtendedData = br.ReadUInt32();
+			}
 		}
 
 		public byte[] Serialize()
@@ -61,9 +86,9 @@ namespace RaspiCommon
 			using(BinaryWriter bw = new BinaryWriter(ms))
 			{
 				bw.Write((UInt32)Type);
-				bw.Write(ParameterPin);
-				bw.Write(Parmameter1);
+				bw.Write((UInt32)Parameter1);
 				bw.Write(Parameter2);
+				bw.Write(ExtendedData);
 				if(Extended)
 				{
 					foreach(Object item in _extendedItems)
@@ -83,7 +108,7 @@ namespace RaspiCommon
 
 		public override string ToString()
 		{
-			return String.Format("{0} {1:X4} {2:X4} {3:X4}", Type, ParameterPin, Parmameter1, Parameter2);
+			return String.Format("{0} {1:X4} {2:X4} {3:X4}", Type, Parameter1, Parameter2, ExtendedData);
 		}
 
 		public enum CommandType

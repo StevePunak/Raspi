@@ -17,7 +17,6 @@ namespace Testing
 			thread.InboundSubscribedMessage += OnInboundSubscribedMessage;
 			thread.Start();
 
-			Double bearing = 0;
 			while(!Quit)
 			{
 				//byte[] output = BitConverter.GetBytes(bearing);

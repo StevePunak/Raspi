@@ -44,13 +44,11 @@ namespace TrackBot.Network
 			}
 			else if(packet.Topic == MqttTypes.ArmElevationTopic)
 			{
-				Log.LogText(LogLevel.DEBUG, "Elevation");
 				int percent = BitConverter.ToInt32(packet.Message, 0);
 				ArmElevation(percent);
 			}
 			else if(packet.Topic == MqttTypes.ArmThrustTopic)
 			{
-				Log.LogText(LogLevel.DEBUG, "Thrust");
 				int percent = BitConverter.ToInt32(packet.Message, 0);
 				ArmThrust(percent);
 			}

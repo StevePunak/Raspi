@@ -18,6 +18,8 @@ namespace RaspiCommon.PiGpio
 		void SetOutputPin(GpioPin gpioPin, bool value);
 		void StartInputPin(GpioPin pin, EdgeType edgeType, GpioInputCallback callback);
 		void StopInputPin(GpioPin pin);
+		PinState ReadInputPin(GpioPin gpioPin);
+		void Delay(TimeSpan time);
 
 		void Stop();
 		void Start();

@@ -31,7 +31,7 @@ namespace RaspiCommon.Devices.Locomotion
 			set { _hardwarePWM = Motors[RIGHT_MOTOR].HardwarePWM = Motors[LEFT_MOTOR].HardwarePWM = value ; }
 		}
 
-		L298N_DC_MotorControl[] Motors { get; set; }
+		L298NDCMotorController[] Motors { get; set; }
 
 		int _leftspeed;
 		/// <summary>
@@ -81,9 +81,9 @@ namespace RaspiCommon.Devices.Locomotion
 
 		public L298N_DC_TankTracks(GpioPin leftIn1, GpioPin leftIn2, GpioPin leftSpeed, GpioPin rightIn1, GpioPin rightIn2, GpioPin rightSpeed)
 		{
-			Motors = new L298N_DC_MotorControl[2];
-			Motors[LEFT_MOTOR] = new L298N_DC_MotorControl(leftIn1, leftIn2, leftSpeed);
-			Motors[RIGHT_MOTOR] = new L298N_DC_MotorControl(rightIn1, rightIn2, rightSpeed);
+			Motors = new L298NDCMotorController[2];
+			Motors[LEFT_MOTOR] = new L298NDCMotorController(leftIn1, leftIn2, leftSpeed);
+			Motors[RIGHT_MOTOR] = new L298NDCMotorController(rightIn1, rightIn2, rightSpeed);
 
 			Motors[LEFT_MOTOR].Start();
 			Motors[RIGHT_MOTOR].Start();
@@ -116,7 +116,7 @@ namespace RaspiCommon.Devices.Locomotion
 
 		#region Private Methods
 
-		void SetValue(L298N_DC_MotorControl motor, double value)
+		void SetValue(L298NDCMotorController motor, double value)
 		{
 			if(HardwarePWM)
 			{

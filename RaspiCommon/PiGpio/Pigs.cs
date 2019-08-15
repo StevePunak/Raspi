@@ -4,6 +4,7 @@ using System.Linq;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
+using KanoopCommon.Addresses;
 using KanoopCommon.Logging;
 
 namespace RaspiCommon.PiGpio
@@ -17,16 +18,38 @@ namespace RaspiCommon.PiGpio
 			Direct
 		}
 
+		public static readonly List<GpioPin> HardwarePWMPins = new List<GpioPin>() { GpioPin.Pin12, GpioPin.Pin13, GpioPin.Pin18, GpioPin.Pin19 };
+
 		public static bool DebugLogging { get; set; }
+
+		public static bool IsHardwarePWM(GpioPin pin) { return HardwarePWMPins.Contains(pin); }
+
+		public static void SetTcpPigsHost(String hostName, int port)
+		{
+			if(!(Instance is PigsIP))
+			{
+				throw new ArgumentException("Can only perform this action on IP Pigs");
+			}
+			((PigsIP)Instance).Host = new IPv4AddressPort(hostName, port);
+		}
+
+		public static void SetTcpPigsPollInterval(TimeSpan interval)
+		{
+			if(!(Instance is PigsIP))
+			{
+				throw new ArgumentException("Can only perform this action on IP Pigs");
+			}
+			((PigsIP)Instance).PollInterval = interval;
+		}
 
 		public static void SetMode(GpioPin gpioPin, PinMode mode)
 		{
 			Instance.SetMode(gpioPin, mode);
 		}
 
-		public static void SetHardwarePWM(GpioPin gpioPin, UInt32 frequency, UInt32 dutyCyclePercent)
+		public static void SetHardwarePWM(GpioPin gpioPin, UInt32 frequency, UInt32 dutyCycle)
 		{
-			Instance.SetHardwarePWM(gpioPin, frequency, dutyCyclePercent);
+			Instance.SetHardwarePWM(gpioPin, frequency, dutyCycle);
 		}
 
 		public static void SetPWM(GpioPin gpioPin, UInt32 dutyCycle)
@@ -67,6 +90,21 @@ namespace RaspiCommon.PiGpio
 		public static void SetPullUp(GpioPin gpioPin, PullUp state)
 		{
 			Instance.SetPullUp(gpioPin, state);
+		}
+
+		public static PinState ReadInputPin(GpioPin gpioPin)
+		{
+			return Instance.ReadInputPin(gpioPin);
+		}
+
+		public static void Delay(TimeSpan time)
+		{
+			Instance.Delay(time);
+		}
+
+		public static void Delay(double microseconds)
+		{
+			Instance.Delay(TimeSpan.FromTicks((long)((Double)(microseconds / 1000.0 * (Double)TimeSpan.TicksPerMillisecond))));
 		}
 
 		internal static void MaybeLog(LogLevel level, String format, params object[] parms)

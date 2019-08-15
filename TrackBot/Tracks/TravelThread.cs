@@ -1,4 +1,4 @@
-﻿#define DEBUG_LOG
+﻿#undef DEBUG_LOG
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -89,9 +89,7 @@ namespace TrackBot.Tracks
 			if(DateTime.UtcNow - _lastEStopTime < TimeSpan.FromSeconds(3) && (LeftSpeed != 0 || RightSpeed != 0))
 			{
 				_eStopped = true;
-#if DEBUG_LOG
 				Log.LogText(LogLevel.DEBUG, "Won't move because of ESTOP");
-#endif
 			}
 			else
 			{
@@ -181,7 +179,9 @@ namespace TrackBot.Tracks
 			HCSR04_RangeFinder rangeFinder;
 			if(Widgets.Instance.RangeFinders.TryGetValue(direction == Direction.Forward ? RFDir.Front : RFDir.Rear, out rangeFinder))
 			{
+#if DEBUG_LOG
 				Log.LogText(LogLevel.DEBUG, $"Travel rangefinder says range: {rangeFinder.Range}  valid: {rangeFinder.Valid}");
+#endif
 				if(rangeFinder.Valid && rangeFinder.Range != 0 && rangeFinder.Range < .3)
 				{
 					rangeToObstacle = Math.Min(rangeToObstacle, rangeFinder.Range);

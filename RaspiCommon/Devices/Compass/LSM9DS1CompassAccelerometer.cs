@@ -8,6 +8,8 @@ using RaspiCommon.Spatial;
 
 namespace RaspiCommon.Devices.Compass
 {
+	[Obsolete(  "If this is to be used, we need a shared-object c++ implementation, or a port of the SparkFun code to C#\n" +
+				"In the meantime, use the TCP compass daemon at https://github.com/StevePunak/CompassQt")]
 	public class LSM9DS1CompassAccelerometer : ICompass
 	{
 		public event NewBearingHandler NewBearing;

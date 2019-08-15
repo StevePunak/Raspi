@@ -86,8 +86,14 @@
     <Compile Include="HCSR04Test.cs" />
     <Compile Include="ImageConvert.cs" />
     <Compile Include="ImageTest.cs" />
+    <Compile Include="L298NDCMotorTest.cs" />
+    <Compile Include="L298NStepperTest.cs" />
     <Compile Include="LidarClientTest.cs" />
     <Compile Include="LidarTest.cs" />
+    <Compile Include="LinearActuator.cs" />
+    <Compile Include="MicroStepDriver.cs" />
+    <Compile Include="LinearDriverTest.cs" />
+    <Compile Include="MicroStepDriverTest.cs" />
     <Compile Include="MqttCompassTest.cs" />
     <Compile Include="MqttTest.cs" />
     <Compile Include="PigsTest.cs" />

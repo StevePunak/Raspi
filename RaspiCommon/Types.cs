@@ -146,4 +146,18 @@ namespace RaspiCommon
 		Unknown = 0,
 		Current = 1,
 	}
+
+	public enum StepType
+	{
+		FullStep, HalfStep
+	}
+
+	public class StepList : List<bool>
+	{
+
+	}
+
+	public class TwoPhaseSequence : List<StepList>
+	{
+	}
 }

@@ -55,6 +55,15 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\KanoopControls\Ookii.Dialogs.dll</HintPath>
     </Reference>
+    <Reference Include="OpenGL.Net, Version=0.8.4.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\OpenGL.Net.0.8.4\lib\net461\OpenGL.Net.dll</HintPath>
+    </Reference>
+    <Reference Include="OpenGL.Net.WinForms, Version=0.8.4.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\OpenGL.Net.WinForms.0.8.4\lib\net461\OpenGL.Net.WinForms.dll</HintPath>
+    </Reference>
+    <Reference Include="OpenTK, Version=3.1.0.0, Culture=neutral, PublicKeyToken=bad199fe84eb3df4, processorArchitecture=MSIL">
+      <HintPath>..\packages\OpenTK.3.1.0\lib\net20\OpenTK.dll</HintPath>
+    </Reference>
     <Reference Include="SharpDX, Version=4.2.0.0, Culture=neutral, PublicKeyToken=b4dcf0f35e5521f1, processorArchitecture=MSIL">
       <HintPath>..\packages\SharpDX.4.2.0\lib\net45\SharpDX.dll</HintPath>
     </Reference>
@@ -100,6 +109,12 @@
     <Compile Include="MainDisplay\Gamepad.cs">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="MainForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="MainForm.Designer.cs">
+      <DependentUpon>MainForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="ObjectDetect.cs" />
     <Compile Include="MainDisplay\ObjectRecognition.cs">
       <SubType>Form</SubType>
@@ -124,8 +139,22 @@
     <Compile Include="MainDisplay\RadarForm.Designer.cs">
       <DependentUpon>RadarForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="Scan3D\Exception3D.cs" />
+    <Compile Include="Scan3D\MainWindow.cs" />
+    <Compile Include="Scan3D\RenderObject.cs" />
+    <Compile Include="Scan3D\ScanDisplay.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Scan3D\ScanDisplay.Designer.cs">
+      <DependentUpon>ScanDisplay.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Scan3D\TestWindow.cs" />
+    <Compile Include="Scan3D\Vector.cs" />
     <EmbeddedResource Include="ChooseBotForm.resx">
       <DependentUpon>ChooseBotForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="MainForm.resx">
+      <DependentUpon>MainForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="PreferencesForm.resx">
       <DependentUpon>PreferencesForm.cs</DependentUpon>
@@ -146,6 +175,10 @@
     <EmbeddedResource Include="MainDisplay\RadarForm.resx">
       <DependentUpon>RadarForm.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Scan3D\ScanDisplay.resx">
+      <DependentUpon>ScanDisplay.cs</DependentUpon>
+    </EmbeddedResource>
+    <None Include="OpenTK.dll.config" />
     <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>

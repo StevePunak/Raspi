@@ -61,7 +61,7 @@ namespace Testing
 
 			Console.CancelKeyPress += OnConsoleCancelKeyPress;
 
-			StartTest();
+			StartTest(args);
 			TestCase.WaitForCompletion();
 
 			Console.WriteLine("Done");
@@ -74,13 +74,17 @@ namespace Testing
 			e.Cancel = true;
 		}
 
-		private static void StartTest()
+		private static void StartTest(string[] args)
 		{
+			TestCase = new MicroStepDriverTest();
+			//TestCase = new LinearDriverTest();
+			//TestCase = new L298NStepperTest();
+			//TestCase = new L298NDCMotorTest();
 			//TestCase = new CompassDataTest();
 			//TestCase = new ImageTest();
 			//TestCase = new MqttCompassTest();
 			//TestCase = new MqttTest();
-			TestCase = new HCSR04Test();
+			//TestCase = new HCSR04Test();
 			//TestCase = new DevTest();
 			//TestCase = new PigsTest();
 			//new BMP280Test();
@@ -90,7 +94,7 @@ namespace Testing
 			//new LidarClientTest();
 			//new PigsTest();
 			//new SerialTest();
-			//new LidarTest();
+			//TestCase = new LidarTest();
 		}
 
 		private static void RecTests()

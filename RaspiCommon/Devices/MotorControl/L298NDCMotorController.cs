@@ -9,10 +9,10 @@ using RaspiCommon.PiGpio;
 
 namespace RaspiCommon.Devices.MotorControl
 {
-	public class L298N_DC_MotorControl
+	public class L298NDCMotorController
 	{
-		public GpioPin IN1 { get; private set; }
-		public GpioPin IN2 { get; private set; }
+		public GpioPin ForwardDirectionPin { get; private set; }
+		public GpioPin BackwardDirectionPin { get; private set; }
 		public GpioPin SpeedPin { get; private set; }
 
 		public bool HardwarePWM { get; set; }
@@ -26,13 +26,13 @@ namespace RaspiCommon.Devices.MotorControl
 				_direction = value;
 				if(value == Direction.Forward)
 				{
-					Pigs.SetOutputPin(IN1, PinState.High);
-					Pigs.SetOutputPin(IN2, PinState.Low);
+					Pigs.SetOutputPin(ForwardDirectionPin, PinState.High);
+					Pigs.SetOutputPin(BackwardDirectionPin, PinState.Low);
 				}
 				else
 				{
-					Pigs.SetOutputPin(IN1, PinState.Low);
-					Pigs.SetOutputPin(IN2, PinState.High);
+					Pigs.SetOutputPin(ForwardDirectionPin, PinState.Low);
+					Pigs.SetOutputPin(BackwardDirectionPin, PinState.High);
 				}
 			}
 		}
@@ -53,20 +53,23 @@ namespace RaspiCommon.Devices.MotorControl
 				}
 				else if(HardwarePWM == true && value >= 0 && value <= 100)
 				{
+					throw new NotImplementedException("The signature of this call needs to change");
+#if zero
 					_speed = value;
 					Pigs.SetHardwarePWM(SpeedPin, 800, _speed);
+#endif
 				}
 			}
 		}
 
-		public L298N_DC_MotorControl(GpioPin in1, GpioPin in2, GpioPin enable)
+		public L298NDCMotorController(GpioPin forwardDirectionPin, GpioPin backwardDirectionPin, GpioPin enable)
 		{
-			IN1 = in1;
-			IN2 = in2;
+			ForwardDirectionPin = forwardDirectionPin;
+			BackwardDirectionPin = backwardDirectionPin;
 			SpeedPin = enable;
 
-			Pigs.SetMode(IN1, PinMode.Output);
-			Pigs.SetMode(IN2, PinMode.Output);
+			Pigs.SetMode(ForwardDirectionPin, PinMode.Output);
+			Pigs.SetMode(BackwardDirectionPin, PinMode.Output);
 			Pigs.SetMode(SpeedPin, PinMode.Output);
 			Direction = Direction.Forward;
 			Speed = 0;
@@ -81,8 +84,8 @@ namespace RaspiCommon.Devices.MotorControl
 
 		public void Stop()
 		{
-			Pigs.SetOutputPin(IN1, PinState.Low);
-			Pigs.SetOutputPin(IN2, PinState.Low);
+			Pigs.SetOutputPin(ForwardDirectionPin, PinState.Low);
+			Pigs.SetOutputPin(BackwardDirectionPin, PinState.Low);
 		}
 
 	}
